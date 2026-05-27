@@ -1,0 +1,131 @@
+// import Database from 'better-sqlite3'
+import initSqlJs, { Database } from 'sql.js';
+
+import path from 'node:path'
+import { app } from 'electron'
+
+const dbPath = path.join(app.getPath('userData'), 'school.db')
+const db = new Database(dbPath)
+
+export function initDatabase() {
+  db.exec(`
+    -- 1. School Years
+    CREATE TABLE IF NOT EXISTS school_years (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      start_date TEXT,
+      end_date TEXT,
+      is_active BOOLEAN DEFAULT 0
+    );
+
+    -- 2. Classes
+    CREATE TABLE IF NOT EXISTS classes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      level TEXT,
+      description TEXT
+    );
+
+    -- 3. Subjects
+    CREATE TABLE IF NOT EXISTS subjects (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      coefficient INTEGER DEFAULT 1
+    );
+
+    -- 4. Staff
+    CREATE TABLE IF NOT EXISTS staff (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      first_name TEXT NOT NULL,
+      last_name TEXT NOT NULL,
+      role TEXT,
+      phone TEXT,
+      email TEXT,
+      address TEXT,
+      salary_base REAL,
+      photo_url TEXT,
+      hire_date TEXT
+    );
+
+    -- 5. Parents
+    CREATE TABLE IF NOT EXISTS parents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      phone TEXT,
+      email TEXT,
+      address TEXT,
+      profession TEXT
+    );
+
+    -- 6. Students
+    CREATE TABLE IF NOT EXISTS students (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      first_name TEXT NOT NULL,
+      last_name TEXT NOT NULL,
+      gender TEXT,
+      birth_date TEXT,
+      address TEXT,
+      photo_url TEXT,
+      parent_id INTEGER,
+      FOREIGN KEY (parent_id) REFERENCES parents(id)
+    );
+
+    -- 7. Enrollments
+    CREATE TABLE IF NOT EXISTS enrollments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      student_id INTEGER,
+      class_id INTEGER,
+      school_year_id INTEGER,
+      registration_date TEXT,
+      FOREIGN KEY (student_id) REFERENCES students(id),
+      FOREIGN KEY (class_id) REFERENCES classes(id),
+      FOREIGN KEY (school_year_id) REFERENCES school_years(id)
+    );
+
+    -- 8. Cash Transactions
+    CREATE TABLE IF NOT EXISTS cash_transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT CHECK(type IN ('IN', 'OUT')),
+      amount REAL NOT NULL,
+      reason TEXT,
+      date TEXT DEFAULT CURRENT_TIMESTAMP,
+      reference_id INTEGER
+    );
+
+    -- 9. Grades
+    CREATE TABLE IF NOT EXISTS grades (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      student_id INTEGER,
+      subject_id INTEGER,
+      score REAL,
+      exam_type TEXT,
+      term TEXT,
+      FOREIGN KEY (student_id) REFERENCES students(id),
+      FOREIGN KEY (subject_id) REFERENCES subjects(id)
+    );
+
+    -- 10. Student Attendance
+    CREATE TABLE IF NOT EXISTS student_attendance (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      student_id INTEGER,
+      date TEXT,
+      status TEXT,
+      FOREIGN KEY (student_id) REFERENCES students(id)
+    );
+
+    -- 11. Payments (Scolarité)
+    CREATE TABLE IF NOT EXISTS payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      student_id INTEGER,
+      amount REAL NOT NULL,
+      payment_date TEXT DEFAULT CURRENT_TIMESTAMP,
+      payment_method TEXT,
+      description TEXT,
+      FOREIGN KEY (student_id) REFERENCES students(id)
+    );
+  `)
+
+  console.log('Database initialized at:', dbPath)
+}
+
+export default db

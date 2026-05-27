@@ -1,0 +1,174 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── École color variables ──────────────────────────────────────────────────── */
+:root {
+  --sidebar-bg:    #1a2f6e;
+  --sidebar-hover: rgba(255,255,255,0.08);
+  --sidebar-text:  #ffffff;
+  --sidebar-muted: rgba(255,255,255,0.55);
+  --accent:        #2563eb;
+  --accent-dark:   #1d4ed8;
+  --accent-glow:   rgba(37,99,235,0.25);
+  --accent-light:  rgba(37,99,235,0.10);
+  --primary-color: #2563eb;
+
+  /* UI tokens */
+  --text-main:     #1a1a1a;
+  --text-sub:      #4b5563;
+  --text-muted:    #6b7280;
+  --bg-page:       #f2f3f5;
+  --bg-card:       #f8f9fb;
+  --border-light:  #e0e0e0;
+  --border-input:  #d1d5db;
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    @apply antialiased;
+    background-color: var(--bg-page);
+    color: var(--text-main);
+    font-weight: 400;
+  }
+
+  /* Titres en majuscule, poids réduit */
+  h1, h2, h3, h4 {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+}
+
+/* ── Components ─────────────────────────────────────────────────────────────── */
+@layer components {
+  .btn-primary {
+    @apply px-5 py-2.5 text-white rounded-xl text-sm transition-all;
+    font-weight: 500;
+    background-color: var(--accent);
+  }
+  .btn-primary:hover {
+    background-color: var(--accent-dark);
+    box-shadow: 0 4px 12px var(--accent-glow);
+  }
+  .btn-secondary {
+    @apply px-5 py-2.5 rounded-xl text-sm transition-all;
+    font-weight: 500;
+    border: 1px solid var(--border-light);
+    background-color: var(--bg-card);
+    color: var(--text-sub);
+  }
+  .btn-secondary:hover {
+    background-color: #ececec;
+    color: var(--text-main);
+  }
+}
+
+/* ── Global screen overrides ────────────────────────────────────────────────── */
+@media screen {
+
+  /* ── Font weight : réduire les gras excessifs ── */
+  .font-black  { font-weight: 700 !important; }
+  .font-bold   { font-weight: 600 !important; }
+
+  /* ── Couleurs texte : gris → plus proches du noir ── */
+  .text-gray-900, .text-gray-800 { color: #1a1a1a !important; }
+  .text-gray-700                 { color: #2d2d2d !important; }
+  .text-gray-600                 { color: #3d3d3d !important; }
+  .text-gray-500                 { color: #555555 !important; }
+  .text-gray-400                 { color: #6b6b6b !important; }
+  .text-gray-300                 { color: #888888 !important; }
+
+  /* ── Fonds : légèrement gris ── */
+  .bg-white                { background-color: var(--bg-card) !important; }
+  .bg-gray-50, .bg-slate-50 { background-color: var(--bg-page) !important; }
+  .bg-gray-100             { background-color: #e8e8e8 !important; }
+
+  /* ── Bordures ── */
+  .border-gray-100 { border-color: var(--border-light) !important; }
+  .border-gray-200 { border-color: #d0d0d0 !important; }
+  .divide-gray-100 > * + * { border-color: var(--border-light) !important; }
+  .divide-gray-50  > * + * { border-color: var(--border-light) !important; }
+
+  /* ── Inputs : fond légèrement gris, texte sombre ── */
+  input:not([type="color"]):not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    background-color: #f5f5f5 !important;
+    color: #1a1a1a !important;
+    border-color: var(--border-input) !important;
+  }
+  input::placeholder, textarea::placeholder { color: #aaa !important; }
+  input:focus, select:focus, textarea:focus {
+    outline: none !important;
+    border-color: var(--accent) !important;
+    background-color: #fff !important;
+    box-shadow: 0 0 0 2px var(--accent-light) !important;
+  }
+
+  /* ── Hover states ── */
+  .hover\:bg-gray-50:hover  { background-color: #ececec !important; }
+  .hover\:bg-gray-100:hover { background-color: #e0e0e0 !important; }
+
+  /* ── Accents primaires ── */
+  .bg-primary    { background-color: var(--accent) !important; }
+  .text-primary  { color: var(--accent) !important; }
+  .border-primary{ border-color: var(--accent) !important; }
+
+  /* ── Tables ── */
+  table thead tr { background-color: #eeeeee !important; }
+  .bg-gray-50.sticky { background-color: #eeeeee !important; }
+
+  /* ── Shadows ── */
+  .shadow-sm  { box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important; }
+  .shadow-md  { box-shadow: 0 2px 8px rgba(0,0,0,0.10) !important; }
+  .shadow-lg  { box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important; }
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c8c8c8; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ── Sidebar ────────────────────────────────────────────────────────────────── */
+.school-sidebar { background-color: var(--sidebar-bg); color: var(--sidebar-text); }
+.school-sidebar .nav-item { color: var(--sidebar-muted); border-radius: 0.75rem; transition: all 0.15s; }
+.school-sidebar .nav-item:hover { background-color: var(--sidebar-hover); color: var(--sidebar-text); }
+.school-sidebar .nav-item.active { background-color: var(--accent); color: #fff; box-shadow: 0 4px 14px var(--accent-glow); }
+
+/* ── Accent utilities ───────────────────────────────────────────────────────── */
+.accent-bg       { background-color: var(--accent) !important; }
+.accent-text     { color: var(--accent) !important; }
+.accent-border   { border-color: var(--accent) !important; }
+.accent-light-bg { background-color: var(--accent-light) !important; }
+
+/* ── Print ──────────────────────────────────────────────────────────────────── */
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { background: white !important; margin: 0 !important; padding: 0 !important; }
+  h1, h2, h3, h4 { text-transform: none; letter-spacing: normal; }
+  .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl { box-shadow: none !important; }
+
+  /* ── Cas 1 : overlay plein écran (PrintPreview) ──
+     Masquer tout, ne montrer que l'overlay et son contenu */
+  body:has(.print-overlay) * { visibility: hidden !important; }
+  body:has(.print-overlay) .print-overlay { visibility: visible !important; position: fixed !important; inset: 0 !important; overflow: visible !important; background: white !important; z-index: 9999 !important; }
+  body:has(.print-overlay) .print-overlay * { visibility: visible !important; }
+  body:has(.print-overlay) .print-overlay .no-print { visibility: hidden !important; display: none !important; }
+
+  /* ── Cas 2 : impression inline (PrintPreviewBar) ──
+     Masquer les éléments non imprimables, garder le reste */
+  .no-print        { display: none !important; }
+  .print-preview-bar { display: none !important; }
+  .school-sidebar  { display: none !important; }
+
+  @page { margin: 5mm; }
+}

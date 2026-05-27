@@ -1,0 +1,75 @@
+# Product Requirements Document (PRD): School Management System (SMS)
+
+**Version**: 1.0  
+**Status**: Draft  
+**Tech Stack**: Electron, React, TypeScript, Tailwind CSS, SQLite
+
+---
+
+## 1. Executive Summary
+The School Management System (SMS) is a desktop application designed to streamline administrative, academic, and financial operations for educational institutions. It provides a centralized platform for managing students, staff, grades, and schedules across various educational levels (Maternelle to Lycée).
+
+## 2. User Personas
+- **Admin**: Full access to all modules, configuration, and user management.
+- **Teacher**: Access to grade entry, attendance, and student profiles within their assigned classes.
+- **Tutor (Parent)**: Access to student progress, report cards, and payment history.
+- **Student**: View personal grades, timetable, and school notices.
+
+## 3. Functional Requirements
+
+### 3.1 Dashboard & Analytics
+- **Overview Stats**: Real-time display of total students, teachers, classes, and current enrollment (effectif).
+- **Recent Activities**: List of latest grade entries, registrations, or system updates.
+- **Quick Links**: Access to common tasks like "Add Student" or "Print Report Card".
+
+### 3.2 Academic Structure & Management
+- **Staff & Payroll Management**: Teacher records, Clock-in (Pointage), Hourly rates, Monthly payments.
+- **School Year Management**: Define current and past academic years.
+- **Class & Level Management**: 
+    - Support for multiple levels: **Maternelle**, **Primaire**, **Collège**, **Lycée**.
+    - Define classes (e.g., 6ème A, Terminale S) and assign students/teachers.
+- **Timetable (Emploi du temps)**: Create and display weekly schedules for each class.
+
+### 3.3 Student & Tutor Management
+- **Registration**: Capture comprehensive data (Name, Date of Birth, Gender, Photo, Address).
+- **Student Profiles**: Add, modify, and view detailed information for each student.
+- **Tutor Linkage**: Every student must be linked to a tutor (Parent/Guardian) with contact details.
+
+### 3.4 Staff & Payroll Management (Pointage et Paie)
+- **Teacher Profiles**: Manage hourly rates and contract details.
+- **Clock-in System (Pointage)**: Daily tracking of hours taught per teacher.
+- **Automated Payroll**: Calculate monthly salary based on total hours and hourly rate.
+- **Payment History**: Log teacher payments in the Cash Management (Caisse) module.
+
+### 3.5 Academic Performance (Grades & Report Cards)
+- **Grade Entry (Insertion de notes)**: Intuitive interface for teachers to input marks by subject and trimester/semester.
+- **Report Cards (Impression bulletins)**: Generate and print PDF report cards with automated calculations (averages, rank, comments).
+
+### 3.5 Financial & Cash Management (Gestion de la caisse)
+- **Fee Management**: Track tuition fees, registration fees, and other costs.
+- **Monthly Payments**: Specific tracking for monthly tuition (paiement de mensualité).
+- **Cash Flow (Entrée/Sortie)**: Log all cash inflows and outflows with timestamps and amounts.
+- **Expense Reasoning**: Mandatory field for the reason/category of every cash exit (raison de sortie).
+- **Invoicing & Receipts**: Generate invoices and provide printed receipts for payments.
+
+## 4. Technical Requirements
+- **Framework**: Electron for desktop environment (Windows/macOS/Linux).
+- **Frontend**: React (Functional Components, Hooks) with TypeScript for type safety.
+- **Styling**: **Tailwind CSS** for a modern, responsive, and premium UI.
+- **Database**: SQLite (Local storage) for offline-first reliability.
+- **Reporting**: PDF generation for report cards and invoices (e.g., `jspdf` or `react-pdf`).
+
+## 5. UI/UX Design Goals (Inspiration: Dribbble)
+- **Premium Aesthetics**: Inspired by top-tier Dribbble designs (e.g., "Academix Dashboard").
+    - **Color Palette**: Light Gray background (#F8F9FA), Deep Purple/Indigo sidebar, and vibrant accents (Orange for alerts, Green for success, Coral for parents).
+    - **Components**: Use modern rounded cards (20-24px radius) with subtle soft shadows.
+    - **Typography**: Clean sans-serif (e.g., *Inter* or *Outfit*) with clear weight hierarchy.
+- **Responsive Layout**: Sidebar navigation with a searchable top bar and collapsible panels.
+- **Accessibility**: High contrast text, keyboard shortcuts for frequent actions, and clear status badges.
+
+---
+
+## 6. Future Roadmap
+- Cloud Synchronization for multi-device access.
+- SMS/Email notifications for parents.
+- Mobile application for Tutors and Students.
