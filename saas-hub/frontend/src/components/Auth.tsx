@@ -5,7 +5,7 @@ import {
   Upload, FileText, CheckCircle, User, Phone,
   MapPin, Building2, X
 } from 'lucide-react';
-import axios from 'axios';
+import apiClient from '../lib/apiClient';
 
 interface AuthProps {
   onBack: () => void;
@@ -73,7 +73,7 @@ function LoginForm({ onBack, onSuccess }: AuthProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true);
     try {
-      const res = await axios.post('/api/user/login', form);
+      const res = await apiClient.post('/user/login', form);
       onSuccess(res.data);
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Identifiants incorrects');
@@ -462,7 +462,7 @@ export const Auth: React.FC<AuthProps> = ({ onBack, onSuccess }) => {
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setError(''); setLoading(true);
     try {
-      await axios.post('/api/user/register', {
+      await apiClient.post('/user/register', {
         schoolName:     regData.schoolName,
         email:          regData.email,
         password:       regData.password,
