@@ -450,6 +450,7 @@ function RegisterSuccess({ schoolName, onBack }: { schoolName: string; onBack: (
 export const Auth: React.FC<AuthProps> = ({ onBack, onSuccess }) => {
   const [view, setView]   = useState<'choice' | 'login' | 'register-1' | 'register-2' | 'success'>('choice');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const [regData, setRegData] = useState({
     email: '', password: '', confirmPassword: '', terms: false,

@@ -933,7 +933,7 @@ function SettingsTab({ schools }: { schools: School[] }) {
     const CFG_SECTIONS = ['site','contact','tarification','application','accueil'] as const
     fetch(SETTINGS_API)
       .then(r => r.ok ? r.json() : {})
-      .then(all => {
+      .then((all: any) => {
         const newStatuts: Record<string, 0|1> = {}
         let merged: Partial<SiteConfig> = {}
         for (const sec of CFG_SECTIONS) {
