@@ -38,6 +38,10 @@ app.use(async (_req: Request, res: Response, next: NextFunction) => {
 
 app.use(checkUser);
 
+app.get('/', (_req, res) => {
+    res.json({ status: 'ok', message: 'Djoli API is running' });
+});
+
 app.get('/jwtid', requireAuth, (req, res) => {
     res.status(200).json({ id: req.user?.id });
 });
