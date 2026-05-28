@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "saas-hub/backend/src/index.ts",
+      "use": "@vercel/node",
+      "config": {
+        "externalNodeModules": [
+          "pg",
+          "pg-hstore",
+          "pg-pool",
+          "pg-protocol",
+          "pg-types",
+          "pgpass",
+          "sequelize",
+          "bcrypt"
+        ]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "saas-hub/backend/src/index.ts"
+    }
+  ]
+}
