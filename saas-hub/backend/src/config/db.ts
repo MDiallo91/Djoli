@@ -1,11 +1,14 @@
 import { Sequelize } from 'sequelize';
-import pg from 'pg'; // force @vercel/node bundler to include pg
+import pg from 'pg';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Pass pg directly via dialectModule so Sequelize never does require('pg')
+// dynamically — this is required when bundled with ncc (@vercel/node)
 const sequelize = new Sequelize(process.env.DATABASE_URL!, {
     dialect: 'postgres',
+    dialectModule: pg,
     dialectOptions: {
         ssl: process.env.NODE_ENV === 'production'
             ? { require: true, rejectUnauthorized: false }
