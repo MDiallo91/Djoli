@@ -19,7 +19,7 @@ function useLegal() {
 
 const DEFAULT_CFG = { siteName: 'SMS Pro Cloud', logoUrl: '', primaryColor: '#4f46e5' };
 function useSiteCfg() {
-  const [cfg, setCfg] = useState(() => {
+  const [cfg, setCfg] = useState<typeof DEFAULT_CFG>(() => {
     try { const s = localStorage.getItem('hub_site_config'); return s ? { ...DEFAULT_CFG, ...JSON.parse(s) } : DEFAULT_CFG; } catch { return DEFAULT_CFG; }
   });
   useEffect(() => {
