@@ -3,7 +3,10 @@
   "builds": [
     {
       "src": "src/index.ts",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "externalNodeModules": ["pg", "pg-hstore", "pg-pool", "pg-protocol", "pg-types", "pgpass", "sequelize", "bcrypt"]
+      }
     }
   ],
   "routes": [
