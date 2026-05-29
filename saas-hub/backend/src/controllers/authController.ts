@@ -15,12 +15,24 @@ const createToken = (id: string): string => {
 export const signUp = async (req: Request, res: Response): Promise<void> => {
     const { schoolName, email, password, country, city, level, directorName,
             prefecture, sousPrefecture, district, rccm, logoUrl } = req.body;
+    let user: UserModel | null = null;
     try {
-        const user = await UserModel.create({
+        user = await UserModel.create({
             schoolName, email, password, country, city, level,
             directorName, prefecture, sousPrefecture, rccm, logoUrl,
             approvalStatus: 'pending',
         });
+    } catch (error: any) {
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            res.status(409).json({ message: 'Cet email est déjà enregistré' });
+        } else {
+            console.error('[signUp] DB Error:', error);
+            res.status(500).json({ message: "Erreur lors de l'enregistrement en base de données" });
+        }
+        return;
+    }
+
+    try {
         const token = createToken(user.id);
         const license_key = generateLicenseKey(user);
         res.cookie('jwt', token, { httpOnly: true, maxAge: TOKEN_MAX_AGE_MS });
@@ -30,12 +42,8 @@ export const signUp = async (req: Request, res: Response): Promise<void> => {
             message: 'Compte créé. En attente d\'approbation par l\'administrateur.',
         });
     } catch (error: any) {
-        if (error.name === 'SequelizeUniqueConstraintError') {
-            res.status(409).json({ message: 'Cet email est déjà enregistré' });
-        } else {
-            console.error('[signUp] Error:', error);
-            res.status(400).json({ message: "Erreur lors de l'enregistrement" });
-        }
+        console.error('[signUp] Token Error:', error.message);
+        res.status(500).json({ message: error.message });
     }
 };
 
