@@ -1,4 +1,4 @@
-import { app, BrowserWindow, nativeImage } from 'electron'
+import { app, BrowserWindow, nativeImage, shell, ipcMain } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { initDatabase } from './db'
@@ -109,6 +109,12 @@ app.whenReady().then(async () => {
     registerAttendanceHandlers()
     registerSchoolHandlers()
     registerBackupHandlers()
+
+    // Ouvre la page de renouvellement d'abonnement dans le navigateur par défaut
+    ipcMain.handle('open-payment-page', () => {
+        const url = process.env.PORTAL_URL || 'https://djoli-edu-git-main-mamadou-diallos-projects-d590c316.vercel.app'
+        shell.openExternal(url)
+    })
 
     createWindow()
 
