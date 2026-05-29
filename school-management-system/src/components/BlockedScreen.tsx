@@ -1,5 +1,5 @@
 import React from 'react'
-import { ShieldX, RefreshCw, AlertTriangle, Clock } from 'lucide-react'
+import { ShieldX, AlertTriangle, Clock, Phone } from 'lucide-react'
 
 interface BlockedScreenProps {
     status:          'expired' | 'warning' | 'trial'
@@ -52,17 +52,19 @@ export const BlockedScreen: React.FC<BlockedScreenProps> = ({
                 )}
 
                 <div className="space-y-3">
-                    <button
-                        onClick={onRenew}
-                        className={`w-full py-4 rounded-2xl font-black text-white transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2
-                            ${isBlocked
-                                ? 'bg-red-600 hover:bg-red-700 shadow-red-200'
-                                : 'bg-amber-500 hover:bg-amber-600 shadow-amber-200'
-                            }`}
-                    >
-                        <RefreshCw size={18} />
-                        {isBlocked ? 'Réactiver mon abonnement' : 'Souscrire maintenant'}
-                    </button>
+                    {isBlocked ? (
+                        <div className={`w-full py-4 rounded-2xl flex items-center justify-center gap-3 bg-red-50 border border-red-200`}>
+                            <Phone size={18} className="text-red-500 flex-shrink-0" />
+                            <span className="text-red-700 font-semibold text-sm">Contactez votre administrateur pour réactiver votre accès</span>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={onRenew}
+                            className="w-full py-4 rounded-2xl font-black text-white transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 shadow-amber-200"
+                        >
+                            {isBlocked ? 'Réactiver mon abonnement' : 'Souscrire maintenant'}
+                        </button>
+                    )}
 
                     {!isBlocked && onDismiss && (
                         <button
