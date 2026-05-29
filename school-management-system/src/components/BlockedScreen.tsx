@@ -52,19 +52,12 @@ export const BlockedScreen: React.FC<BlockedScreenProps> = ({
                 )}
 
                 <div className="space-y-3">
-                    {isBlocked ? (
-                        <div className={`w-full py-4 rounded-2xl flex items-center justify-center gap-3 bg-red-50 border border-red-200`}>
-                            <Phone size={18} className="text-red-500 flex-shrink-0" />
-                            <span className="text-red-700 font-semibold text-sm">Contactez votre administrateur pour réactiver votre accès</span>
-                        </div>
-                    ) : (
-                        <button
-                            onClick={onRenew}
-                            className="w-full py-4 rounded-2xl font-black text-white transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 shadow-amber-200"
-                        >
-                            {isBlocked ? 'Réactiver mon abonnement' : 'Souscrire maintenant'}
-                        </button>
-                    )}
+                    <div className={`w-full py-4 rounded-2xl flex items-center justify-center gap-3 ${isBlocked ? 'bg-red-50 border border-red-200' : 'bg-amber-50 border border-amber-200'}`}>
+                        <Phone size={18} className={isBlocked ? 'text-red-500 flex-shrink-0' : 'text-amber-500 flex-shrink-0'} />
+                        <span className={`font-semibold text-sm ${isBlocked ? 'text-red-700' : 'text-amber-700'}`}>
+                            Contactez votre administrateur pour renouveler votre abonnement
+                        </span>
+                    </div>
 
                     {!isBlocked && onDismiss && (
                         <button
