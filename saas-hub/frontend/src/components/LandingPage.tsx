@@ -10,7 +10,7 @@ const NAV_LINKS = ['Fonctionnalités', 'Tarification', 'Témoignages', 'Contact'
 
 // ─── Site config ──────────────────────────────────────────────
 const DEFAULT_CFG = {
-  siteName: 'SMS Pro Cloud', logoUrl: '', email: '', youtubeUrl: '', whatsappPhone: '',
+  siteName: 'DJOLI', logoUrl: '', email: '', youtubeUrl: '', whatsappPhone: '',
   primaryColor: '#4f46e5', secondaryColor: '#10b981',
   currency: 'EUR', price30: '29', price90: '79', price365: '249',
   appVersion: '2.0', appDownloadUrl: '',
@@ -127,7 +127,7 @@ const STATS = [
 
 const TESTIMONIALS = [
   {
-    text: '"Depuis SMS Pro, nos recouvrements ont augmenté de 30%. La sync cloud me permet de suivre les finances même en déplacement."',
+    text: '"Depuis DJOLI, nos recouvrements ont augmenté de 30%. La sync cloud me permet de suivre les finances même en déplacement."',
     name: 'M. Diallo',
     role: 'Directeur, Excellence Académie',
     avatar: 'D',
@@ -193,7 +193,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
   const handleContact = (e: React.FormEvent) => {
     e.preventDefault();
     if (!cfg.email) return;
-    const subject = encodeURIComponent(`Message depuis ${cfg.siteName || 'SMS Pro Cloud'}`);
+    const subject = encodeURIComponent(`Message depuis ${cfg.siteName || 'DJOLI'}`);
     const body = encodeURIComponent(`De: ${contactEmail}\n\n${contactMsg}`);
     window.open(`mailto:${cfg.email}?subject=${subject}&body=${body}`);
     setContactSent(true);
@@ -253,7 +253,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
                 : <BookOpen size={16} className="text-white" />}
             </div>
             <span className="font-bold text-lg text-slate-900" style={{ fontFamily: 'Space Grotesk, Inter, sans-serif' }}>
-              {cfg.siteName || 'SMS Pro Cloud'}
+              {cfg.siteName || 'DJOLI'}
             </span>
           </div>
 
@@ -425,7 +425,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
             <h2 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
               Une plateforme complète, <br className="hidden md:block" />pas un assemblage d'outils.
             </h2>
-            <p className="text-slate-500 text-lg max-w-2xl mx-auto">SMS Pro couvre l'intégralité de la gestion d'un établissement scolaire dans une interface unique et cohérente.</p>
+            <p className="text-slate-500 text-lg max-w-2xl mx-auto">DJOLI couvre l'intégralité de la gestion d'un établissement scolaire dans une interface unique et cohérente.</p>
           </div>
 
           <div className="space-y-6">
@@ -500,7 +500,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 text-white">
           <div className="space-y-2">
             <h3 className="text-2xl md:text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Prêt à moderniser votre école ?</h3>
-            <p className="text-indigo-200 font-medium">Rejoignez 500+ établissements qui gèrent mieux grâce à SMS Pro.</p>
+            <p className="text-indigo-200 font-medium">Rejoignez 500+ établissements qui gèrent mieux grâce à DJOLI.</p>
           </div>
           <button onClick={onGetStarted} className="site-btn-outline flex items-center gap-3 bg-white px-8 py-4 rounded-2xl font-bold text-sm border-2 hover:-translate-y-1 transition-all shadow-2xl whitespace-nowrap">
             Commencer gratuitement <ArrowRight size={16} />
@@ -621,7 +621,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
             Téléchargez l'application de bureau
           </h2>
           <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-            SMS Pro fonctionne 100% hors ligne. Vos données restent sur votre machine, le cloud ne sert que de sauvegarde et de synchronisation.
+            DJOLI fonctionne 100% hors ligne. Vos données restent sur votre machine, le cloud ne sert que de sauvegarde et de synchronisation.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             {cfg.appDownloadUrl ? (
@@ -669,7 +669,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
                   ? <img src={cfg.logoUrl} alt="Logo" className="w-full h-full object-contain" />
                   : <BookOpen size={16} className="text-white" />}
               </div>
-              <span className="font-bold text-lg text-slate-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{cfg.siteName || 'SMS Pro Cloud'}</span>
+              <span className="font-bold text-lg text-slate-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{cfg.siteName || 'DJOLI'}</span>
             </div>
             <h2 className="text-2xl font-bold text-slate-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
               Vous avez une question ?
@@ -741,7 +741,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
                   ? <img src={cfg.logoUrl} alt="Logo" className="w-full h-full object-contain" />
                   : <BookOpen size={14} className="text-white" />}
               </div>
-              <span className="font-bold text-white" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{cfg.siteName || 'SMS Pro Cloud'}</span>
+              <span className="font-bold text-white" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{cfg.siteName || 'DJOLI'}</span>
             </div>
             <p className="text-slate-400 text-sm leading-relaxed">La plateforme de gestion scolaire Offline-First pour les établissements africains.</p>
           </div>
@@ -767,7 +767,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-10 pt-6 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500">
-          <p>© 2026 {cfg.siteName || 'SMS Pro SaaS Solution'}. Tous droits réservés.</p>
+          <p>© 2026 {cfg.siteName || 'DJOLI'}. Tous droits réservés.</p>
           <p>Conçu avec ❤️ pour l'éducation africaine</p>
         </div>
       </footer>

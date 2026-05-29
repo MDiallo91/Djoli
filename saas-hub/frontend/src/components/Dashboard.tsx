@@ -195,7 +195,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
             <BookOpen size={16} className="text-white" />
           </div>
           <div>
-            <span className="font-bold text-slate-900 text-base block leading-none" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>SMS Pro</span>
+            <span className="font-bold text-slate-900 text-base block leading-none" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>DJOLI</span>
             <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Cloud Portal</span>
           </div>
         </div>
@@ -288,7 +288,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   <h2 className="text-lg lg:text-2xl font-bold text-slate-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                     Bonjour{window.innerWidth >= 640 ? `, ${user.schoolName}` : ''} 👋
                   </h2>
-                  <p className="text-slate-500 text-xs lg:text-sm mt-0.5 hidden sm:block">Aperçu de votre compte SMS Pro Cloud.</p>
+                  <p className="text-slate-500 text-xs lg:text-sm mt-0.5 hidden sm:block">Aperçu de votre compte DJOLI.</p>
                 </div>
                 <button
                   onClick={() => { fetchStats(); fetchDashboard(); }}
@@ -307,7 +307,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                     <AlertCircle size={18} className="text-red-500 flex-shrink-0" />
                     <div className="min-w-0">
                       <p className="font-semibold text-red-800 text-sm">Abonnement expiré</p>
-                      <p className="text-red-600 text-xs mt-0.5 hidden sm:block">Renouvelez pour continuer à utiliser SMS Pro.</p>
+                      <p className="text-red-600 text-xs mt-0.5 hidden sm:block">Renouvelez pour continuer à utiliser DJOLI.</p>
                     </div>
                   </div>
                   <button onClick={() => handleRenew(30)} disabled={activating} className="bg-red-600 text-white px-4 py-1.5 rounded-xl text-xs font-semibold hover:bg-red-700 transition-all disabled:opacity-50 flex-shrink-0">
@@ -549,7 +549,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                         {isActive ? 'Abonnement Actif' : 'Expiré'}
                       </div>
                       <h3 className="text-base lg:text-xl font-bold text-slate-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Plan Gestion Scolaire</h3>
-                      <p className="text-slate-500 text-xs mt-1 leading-relaxed hidden sm:block">Accès complet à SMS Pro avec synchronisation cloud.</p>
+                      <p className="text-slate-500 text-xs mt-1 leading-relaxed hidden sm:block">Accès complet à DJOLI avec synchronisation cloud.</p>
                     </div>
                     <div className="text-right bg-slate-50 px-3 lg:px-5 py-3 lg:py-4 rounded-xl lg:rounded-2xl flex-shrink-0">
                       <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mb-0.5">Expire</p>
@@ -588,7 +588,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center"><Download size={20} /></div>
                   <div className="flex-1">
                     <h3 className="text-base font-bold mb-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Application Desktop</h3>
-                    <p className="text-indigo-200 text-xs leading-relaxed hidden sm:block">Téléchargez la dernière version de SMS Pro pour Windows.</p>
+                    <p className="text-indigo-200 text-xs leading-relaxed hidden sm:block">Téléchargez la dernière version de DJOLI pour Windows.</p>
                     <div className="mt-3 space-y-1.5">
                       {['Offline-first', 'Sync automatique', 'Bulletins PDF'].map(f => (
                         <div key={f} className="flex items-center gap-2 text-indigo-200 text-xs"><CheckCircle size={11} /> {f}</div>
@@ -705,7 +705,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 <div className="rounded-2xl lg:rounded-3xl p-6 lg:p-8 text-white flex flex-col gap-5" style={{ backgroundColor: '#0f172a' }}>
                   <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center"><Package size={24} /></div>
                   <div className="flex-1">
-                    <h2 className="text-xl font-bold mb-1.5" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>SMS Pro Desktop</h2>
+                    <h2 className="text-xl font-bold mb-1.5" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>DJOLI Desktop</h2>
                     <p className="text-indigo-200 text-sm leading-relaxed">Application de gestion scolaire hors-ligne avec synchronisation automatique.</p>
                     <div className="mt-4 space-y-2">
                       {['Gestion des élèves, classes et notes', 'Paiements & facturation', 'Bulletins & rapports PDF', 'Synchronisation cloud automatique'].map(f => (
@@ -731,13 +731,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 
                 <div className="bg-white rounded-2xl lg:rounded-3xl border border-slate-100 p-6 lg:p-8 shadow-sm">
                   <h3 className="font-bold text-slate-900 mb-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Guide d'installation</h3>
-                  <p className="text-slate-500 text-xs mb-5">Suivez ces étapes pour installer SMS Pro sur votre poste.</p>
+                  <p className="text-slate-500 text-xs mb-5">Suivez ces étapes pour installer DJOLI sur votre poste.</p>
                   <ol className="space-y-4">
                     {[
                       { step: '01', title: 'Télécharger',  desc: "Cliquez sur le bouton et sauvegardez le fichier .exe." },
                       { step: '02', title: 'Installer',    desc: "Exécutez l'installateur en tant qu'administrateur." },
                       { step: '03', title: 'Connecter',    desc: "Saisissez votre email et mot de passe au premier lancement." },
-                      { step: '04', title: 'Synchroniser', desc: "SMS Pro télécharge automatiquement vos données depuis le cloud." },
+                      { step: '04', title: 'Synchroniser', desc: "DJOLI télécharge automatiquement vos données depuis le cloud." },
                     ].map(s => (
                       <li key={s.step} className="flex gap-3">
                         <span className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0">{s.step}</span>

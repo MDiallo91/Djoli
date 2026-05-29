@@ -822,7 +822,7 @@ function SubscriptionsTab({ schools, onRefresh }: { schools: School[]; onRefresh
 
 // ─── SETTINGS TAB ─────────────────────────────────────────────
 export const DEFAULT_SITE_CONFIG = {
-  siteName:       'SMS Pro Cloud',
+  siteName:       'DJOLI',
   logoUrl:        '',
   email:          '',
   youtubeUrl:     '',
@@ -1037,7 +1037,7 @@ function SettingsTab({ schools }: { schools: School[] }) {
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
             <div>
               <label className={labelCls}>Nom du site</label>
-              <input className={inputCls} value={cfg.siteName} onChange={e => set('siteName', e.target.value)} placeholder="SMS Pro Cloud" />
+              <input className={inputCls} value={cfg.siteName} onChange={e => set('siteName', e.target.value)} placeholder="DJOLI" />
             </div>
             <FileUpload label="Logo du site" value={cfg.logoUrl} onChange={v => set('logoUrl', v)} accept="image/*" hint="PNG ou SVG avec fond transparent recommandé" />
           </div>

@@ -93,7 +93,7 @@ function LoginForm({ onBack, onSuccess }: AuthProps) {
           </div>
           <h2 className="text-3xl font-bold text-white mb-4 leading-tight">Content de vous revoir !</h2>
           <p className="text-slate-400 text-base leading-relaxed">
-            Accédez à votre espace école pour gérer vos données et votre abonnement SMS Pro.
+            Accédez à votre espace école pour gérer vos données et votre abonnement DJOLI.
           </p>
           <div className="mt-10 space-y-3">
             {['Synchronisation cloud illimitée', 'Mode hors-ligne complet', 'Support technique inclus'].map(f => (
@@ -103,7 +103,7 @@ function LoginForm({ onBack, onSuccess }: AuthProps) {
             ))}
           </div>
         </div>
-        <p className="text-slate-600 text-xs">© 2026 SMS Pro Cloud</p>
+        <p className="text-slate-600 text-xs">© 2026 DJOLI</p>
       </div>
 
       {/* Right panel */}
@@ -187,7 +187,7 @@ function RegisterStep1({ onBack, onNext, data, setData }: {
           <h2 className="text-3xl font-bold text-white mb-4 leading-tight">Créez votre compte en 2 étapes</h2>
           <p className="text-slate-400 leading-relaxed">Vos informations de connexion d'abord, puis les détails de votre établissement.</p>
         </div>
-        <p className="text-slate-600 text-xs">© 2026 SMS Pro Cloud</p>
+        <p className="text-slate-600 text-xs">© 2026 DJOLI</p>
       </div>
 
       <div className="flex-1 flex items-center justify-center p-8">
@@ -499,7 +499,7 @@ export const Auth: React.FC<AuthProps> = ({ onBack, onSuccess }) => {
             <BookOpen size={18} className="text-white" />
           </div>
           <div>
-            <p className="font-bold text-slate-900">SMS Pro Cloud</p>
+            <p className="font-bold text-slate-900">DJOLI</p>
             <p className="text-xs text-slate-400">Portail établissements</p>
           </div>
         </div>
