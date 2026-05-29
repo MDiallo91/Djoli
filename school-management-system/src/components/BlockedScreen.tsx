@@ -35,7 +35,7 @@ export const BlockedScreen: React.FC<BlockedScreenProps> = ({
 
                 <p className="text-gray-600 mb-8 leading-relaxed">
                     {isBlocked
-                        ? "L'accès à SMS Pro a été suspendu. Renouvelez votre abonnement pour continuer à utiliser toutes les fonctionnalités."
+                        ? "L'accès à DJOLI a été suspendu. Renouvelez votre abonnement pour continuer à utiliser toutes les fonctionnalités."
                         : status === 'trial'
                             ? `Votre période d'essai gratuite se termine dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}. Souscrivez maintenant pour ne pas interrompre votre activité.`
                             : `Votre abonnement expire dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}. Renouvelez avant l'expiration pour éviter toute interruption.`
@@ -75,7 +75,7 @@ export const BlockedScreen: React.FC<BlockedScreenProps> = ({
                 </div>
 
                 <p className="mt-8 text-xs text-gray-400">
-                    Pour toute question : support@smspro.app
+                    Pour toute question : support@djoli.app
                 </p>
             </div>
         </div>

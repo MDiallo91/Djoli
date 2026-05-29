@@ -88,7 +88,7 @@ export const ClassRankingPrint: React.FC<ClassRankingPrintProps> = ({
 
             <div className="mt-4 text-center border-t border-gray-200 pt-2">
                 <p className="text-[8px] italic text-gray-400">
-                    Édité le {new Date().toLocaleDateString('fr-FR')} — SMS Pro
+                    Édité le {new Date().toLocaleDateString('fr-FR')} — DJOLI
                 </p>
             </div>
         </div>
