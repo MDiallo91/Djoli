@@ -27,7 +27,7 @@ export const signUp = async (req: Request, res: Response): Promise<void> => {
             res.status(409).json({ message: 'Cet email est déjà enregistré' });
         } else {
             console.error('[signUp] DB Error:', error);
-            res.status(500).json({ message: "Erreur lors de l'enregistrement en base de données" });
+            res.status(500).json({ message: "Erreur lors de l'enregistrement en base de données", detail: error.message, type: error.name });
         }
         return;
     }
