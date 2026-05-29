@@ -336,7 +336,18 @@ function SchoolDetailPage({ school, onBack, onEdit, onRefresh }: {
       const res = await fetch(`${API}/subscription/${school.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'suspended' }) });
       if (!res.ok) { toast.error('Erreur lors du blocage'); return; }
       toast.warning('Établissement bloqué');
-      onRefresh(); onBack();
+      onRefresh();
+    } catch { toast.error('Erreur réseau'); }
+    finally { setBusy(''); }
+  };
+  const unblock = async () => {
+    setBusy('unblock');
+    try {
+      const expiry = new Date(); expiry.setDate(expiry.getDate() + 30);
+      const res = await fetch(`${API}/subscription/${school.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'active', expiry: expiry.toISOString() }) });
+      if (!res.ok) { toast.error('Erreur lors du déblocage'); return; }
+      toast.success('Établissement débloqué (30 jours)');
+      onRefresh();
     } catch { toast.error('Erreur réseau'); }
     finally { setBusy(''); }
   };
@@ -440,11 +451,18 @@ function SchoolDetailPage({ school, onBack, onEdit, onRefresh }: {
         {/* Danger zone */}
         <div className="bg-white border border-red-100 rounded-2xl p-5">
           <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest mb-4">Zone dangereuse</p>
-          <div className="flex gap-3">
-            <button onClick={block} disabled={!!busy}
-              className="flex items-center gap-1.5 px-4 py-2.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-sm font-medium hover:bg-amber-600 hover:text-white hover:border-amber-600 transition-all disabled:opacity-50">
-              <Ban size={14} /> Bloquer l'accès
-            </button>
+          <div className="flex flex-wrap gap-3">
+            {school.subscriptionStatus === 'suspended' ? (
+              <button onClick={unblock} disabled={!!busy}
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-sm font-medium hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all disabled:opacity-50">
+                <CheckCircle size={14} /> Débloquer l'accès
+              </button>
+            ) : (
+              <button onClick={block} disabled={!!busy}
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-sm font-medium hover:bg-amber-600 hover:text-white hover:border-amber-600 transition-all disabled:opacity-50">
+                <Ban size={14} /> Bloquer l'accès
+              </button>
+            )}
             <button onClick={remove} disabled={!!busy}
               className="flex items-center gap-1.5 px-4 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-medium hover:bg-red-600 hover:text-white hover:border-red-600 transition-all disabled:opacity-50">
               <Trash2 size={14} /> Supprimer définitivement
