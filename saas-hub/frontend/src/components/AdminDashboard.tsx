@@ -5,7 +5,7 @@ import {
   School as SchoolIcon, CheckCircle, AlertCircle, Clock,
   Trash2, RefreshCw, BarChart3, Activity, ShieldCheck,
   Plus, Edit2, Eye, Ban, ArrowLeft, Upload, FileText,
-  X, User, Phone, Mail, MapPin, Building2
+  X, User, Phone, Mail, MapPin, Building2, Menu
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────
@@ -473,7 +473,7 @@ function DashboardTab({ schools }: { schools: School[] }) {
   return (
     <div className="space-y-6">
       <h1 className="text-base font-semibold text-slate-900">Tableau de bord</h1>
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {[
           { l: 'Total',      v: s.total,    i: SchoolIcon,  c: 'text-indigo-600 bg-indigo-50' },
           { l: 'Actifs',     v: s.active,   i: CheckCircle, c: 'text-emerald-600 bg-emerald-50' },
@@ -600,7 +600,8 @@ function SchoolsTab({ schools, onRefresh }: { schools: School[]; onRefresh: () =
       </div>
 
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <table className="w-full">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[600px]">
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50/70">
               {['École','Localisation','Statut','Expiration','Actions'].map(h => (
@@ -642,6 +643,7 @@ function SchoolsTab({ schools, onRefresh }: { schools: School[]; onRefresh: () =
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
@@ -975,19 +977,24 @@ function SettingsTab({ schools }: { schools: School[] }) {
       ['accueil',      { featureImages: cfg.featureImages, clientSchoolIds: cfg.clientSchoolIds }],
     ]
     try {
-      await Promise.all([
+      const responses = await Promise.all([
         ...SECTION_DATA.map(([key, data]) =>
           fetch(`${SETTINGS_API}/${key}`, { method: 'PUT', headers: H, body: JSON.stringify({ statut: statuts[key] ?? 1, data }) })
         ),
         fetch(`${SETTINGS_API}/legal`, { method: 'PUT', headers: H, body: JSON.stringify({ statut: statuts.legal ?? 1, data: legal }) }),
       ])
+      const failed = responses.filter(r => !r.ok)
+      if (failed.length > 0) {
+        const errData = await failed[0].json().catch(() => ({}))
+        throw new Error(errData.error || `Erreur serveur (${failed[0].status})`)
+      }
       localStorage.setItem('hub_site_config', JSON.stringify(cfg))
       localStorage.setItem('hub_legal',       JSON.stringify(legal))
       window.dispatchEvent(new Event('site-config-updated'))
       logAudit('Paramètres sauvegardés', `Onglet: ${section}`)
       toast.success('Configuration sauvegardée')
-    } catch {
-      toast.error('Erreur lors de la sauvegarde (API indisponible)')
+    } catch (e: any) {
+      toast.error(e.message || 'Erreur lors de la sauvegarde')
     } finally {
       setSaving(false)
     }
@@ -1016,11 +1023,11 @@ function SettingsTab({ schools }: { schools: School[] }) {
         </button>
       </div>
 
-      {/* Tabs — underline style, no background */}
-      <div className="flex border-b border-slate-200 mb-6">
+      {/* Tabs — underline style, scrollable on mobile */}
+      <div className="flex border-b border-slate-200 mb-6 overflow-x-auto scrollbar-none">
         {SETTINGS_TABS.map(t => (
           <button key={t.id} type="button" onClick={() => setSection(t.id)}
-            className={`px-4 py-3 text-sm font-semibold border-b-2 -mb-px transition-all whitespace-nowrap ${
+            className={`flex-shrink-0 px-4 py-3 text-sm font-semibold border-b-2 -mb-px transition-all whitespace-nowrap ${
               section === t.id
                 ? 'border-slate-900 text-slate-900'
                 : 'border-transparent text-slate-400 hover:text-slate-600'
@@ -1369,6 +1376,7 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
   const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<MainView>('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const siteCfg = useSiteConfigLive();
 
   const fetchSchools = useCallback(async () => {
@@ -1394,53 +1402,81 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
     </div>
   );
 
+  const SidebarContent = () => (
+    <>
+      <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {siteCfg.logoUrl
+              ? <img src={siteCfg.logoUrl} alt="Logo" className="w-full h-full object-contain" />
+              : <ShieldCheck size={14} className="text-white" />}
+          </div>
+          <div>
+            <p className="text-sm font-bold text-white leading-none truncate max-w-[120px]">
+              {siteCfg.siteName || 'SaaS Admin'}
+            </p>
+            <p className="text-[10px] text-indigo-400 font-medium mt-0.5">Master Panel</p>
+          </div>
+        </div>
+      </div>
+      <nav className="flex-1 px-3 py-4 space-y-0.5">
+        {NAV.map(({ id, label, icon: Icon, badge }) => (
+          <button key={id} onClick={() => { setActiveTab(id); setSidebarOpen(false); }}
+            className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-all ${activeTab === id ? 'bg-indigo-600/20 text-indigo-300' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}>
+            <Icon size={15} />
+            <span className="flex-1 text-left">{label}</span>
+            {badge ? <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full">{badge}</span> : null}
+          </button>
+        ))}
+      </nav>
+      <div className="p-3" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="flex items-center justify-between px-3 py-2 mb-1">
+          <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" /><span className="text-[11px] text-slate-400">En ligne</span></div>
+          <button onClick={fetchSchools} className="p-1 text-slate-500 hover:text-white transition-colors"><RefreshCw size={12} /></button>
+        </div>
+        <button onClick={onLogout} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-all">
+          <LogOut size={14} /> Déconnexion
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: '#f8fafc' }}>
-      {/* Sidebar */}
-      <aside className="w-56 flex-shrink-0 flex flex-col" style={{ backgroundColor: '#0f172a' }}>
-        <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-              {siteCfg.logoUrl
-                ? <img src={siteCfg.logoUrl} alt="Logo" className="w-full h-full object-contain" />
-                : <ShieldCheck size={14} className="text-white" />}
-            </div>
-            <div>
-              <p className="text-sm font-bold text-white leading-none truncate max-w-[120px]">
-                {siteCfg.siteName || 'SaaS Admin'}
-              </p>
-              <p className="text-[10px] text-indigo-400 font-medium mt-0.5">Master Panel</p>
-            </div>
-          </div>
-        </div>
-        <nav className="flex-1 px-3 py-4 space-y-0.5">
-          {NAV.map(({ id, label, icon: Icon, badge }) => (
-            <button key={id} onClick={() => setActiveTab(id)}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-all ${activeTab === id ? 'bg-indigo-600/20 text-indigo-300' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}>
-              <Icon size={15} />
-              <span className="flex-1 text-left">{label}</span>
-              {badge ? <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full">{badge}</span> : null}
-            </button>
-          ))}
-        </nav>
-        <div className="p-3" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="flex items-center justify-between px-3 py-2 mb-1">
-            <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" /><span className="text-[11px] text-slate-400">En ligne</span></div>
-            <button onClick={fetchSchools} className="p-1 text-slate-500 hover:text-white transition-colors"><RefreshCw size={12} /></button>
-          </div>
-          <button onClick={onLogout} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-all">
-            <LogOut size={14} /> Déconnexion
-          </button>
-        </div>
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* Sidebar — drawer on mobile, static on desktop */}
+      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-56 flex-shrink-0 flex flex-col transition-transform duration-200 md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        style={{ backgroundColor: '#0f172a' }}>
+        <SidebarContent />
       </aside>
 
-      <main className="flex-1 overflow-y-auto p-6">
-        {activeTab === 'dashboard'     && <DashboardTab     schools={schools} />}
-        {activeTab === 'schools'       && <SchoolsTab       schools={schools} onRefresh={fetchSchools} />}
-        {activeTab === 'subscriptions' && <SubscriptionsTab schools={schools} onRefresh={fetchSchools} />}
-        {activeTab === 'pending'       && <PendingTab       schools={schools} onRefresh={fetchSchools} />}
-        {activeTab === 'settings'      && <SettingsTab schools={schools} />}
-      </main>
+      {/* Right side */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile topbar */}
+        <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-slate-200 sticky top-0 z-30">
+          <button onClick={() => setSidebarOpen(true)} className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg">
+            <Menu size={20} />
+          </button>
+          <span className="font-semibold text-slate-900 text-sm flex-1">
+            {NAV.find(n => n.id === activeTab)?.label}
+          </span>
+          {pendingCount > 0 && (
+            <span className="px-2 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full">{pendingCount}</span>
+          )}
+        </header>
+
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          {activeTab === 'dashboard'     && <DashboardTab     schools={schools} />}
+          {activeTab === 'schools'       && <SchoolsTab       schools={schools} onRefresh={fetchSchools} />}
+          {activeTab === 'subscriptions' && <SubscriptionsTab schools={schools} onRefresh={fetchSchools} />}
+          {activeTab === 'pending'       && <PendingTab       schools={schools} onRefresh={fetchSchools} />}
+          {activeTab === 'settings'      && <SettingsTab schools={schools} />}
+        </main>
+      </div>
     </div>
   );
 };
