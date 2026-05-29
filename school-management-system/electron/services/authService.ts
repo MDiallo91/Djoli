@@ -75,7 +75,7 @@ export function registerAuthHandlers() {
     ipcMain.handle('cloud-activate', async (_event, credentials: { username: string, password: string }) => {
         const { username, password } = credentials
 
-        const apiUrl = process.env.SAAS_API_URL || 'http://localhost:3001'
+        const apiUrl = process.env.SAAS_API_URL || 'https://djoli.vercel.app'
         const response = await fetch(`${apiUrl}/api/user/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -252,7 +252,7 @@ export function registerAuthHandlers() {
         const row = db.prepare('SELECT * FROM local_license WHERE school_id = ?').get(schoolId) as any
         if (!row) return null
 
-        const apiUrl = process.env.SAAS_API_URL || 'http://localhost:3001'
+        const apiUrl = process.env.SAAS_API_URL || 'https://djoli.vercel.app'
         try {
             const response = await fetch(`${apiUrl}/api/license/refresh-by-key`, {
                 method: 'POST',

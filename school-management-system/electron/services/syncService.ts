@@ -13,7 +13,7 @@ let win: BrowserWindow | null = null;
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function apiUrl(): string {
-    return process.env.SAAS_API_URL || 'http://localhost:3001';
+    return process.env.SAAS_API_URL || 'https://djoli.vercel.app';
 }
 
 function getLastPullAt(schoolId: string): string {
