@@ -111,6 +111,7 @@ app.whenReady().then(async () => {
     registerBackupHandlers()
 
     // Ouvre la page de renouvellement d'abonnement dans le navigateur par défaut
+    ipcMain.removeHandler('open-payment-page')
     ipcMain.handle('open-payment-page', () => {
         const url = process.env.PORTAL_URL || 'https://djoli-edu-git-main-mamadou-diallos-projects-d590c316.vercel.app'
         shell.openExternal(url)
