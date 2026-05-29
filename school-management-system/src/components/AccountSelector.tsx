@@ -48,7 +48,7 @@ export const AccountSelector: React.FC<AccountSelectorProps> = ({ accounts, onSe
                     <div className="w-16 h-16 bg-indigo-600 rounded-[1.5rem] flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-200">
                         <GraduationCap size={28} className="text-white" />
                     </div>
-                    <h1 className="text-2xl font-black text-gray-900">SMS Pro</h1>
+                    <h1 className="text-2xl font-black text-gray-900">DJOLI</h1>
                     <p className="text-gray-500 mt-1 text-sm">Choisissez votre établissement</p>
                 </div>
 
