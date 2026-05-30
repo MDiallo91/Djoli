@@ -32,7 +32,9 @@ function setLastPushAt(schoolId: string, dt: string): void {
 }
 
 function pendingCount(): number {
-    return (db.prepare(`SELECT COUNT(*) as c FROM sync_queue WHERE sync_status = 'pending'`).get() as any)?.c ?? 0;
+    const session = currentSyncSession;
+    if (!session) return 0;
+    return (db.prepare(`SELECT COUNT(*) as c FROM sync_queue WHERE sync_status = 'pending' AND school_id = ?`).get(session.schoolId) as any)?.c ?? 0;
 }
 
 // ── Apply a pulled record to local SQLite ────────────────────────────────────
@@ -47,6 +49,7 @@ const TABLE_MAP: Record<string, string> = {
     staff:            'staff',
     class:            'classes',
     subject:          'subjects',
+    school_year:      'school_years',
 };
 
 function applyPulledRecord(entityType: string, entityId: string, data: any): void {
@@ -67,8 +70,8 @@ function applyPulledRecord(entityType: string, entityId: string, data: any): voi
 
 async function pushChanges(schoolId: string, licenseKey: string): Promise<number> {
     const pending = db.prepare(
-        `SELECT * FROM sync_queue WHERE sync_status = 'pending' ORDER BY created_at ASC LIMIT 200`
-    ).all() as any[];
+        `SELECT * FROM sync_queue WHERE sync_status = 'pending' AND school_id = ? ORDER BY created_at ASC LIMIT 200`
+    ).all(schoolId) as any[];
 
     if (pending.length === 0) return 0;
 
@@ -256,6 +259,7 @@ export function registerSyncHandlers(mainWin: BrowserWindow): void {
 
     ipcMain.handle('force-full-sync', async () => {
         const TABLES: Array<{ table: string; entityType: string }> = [
+            { table: 'school_years',      entityType: 'school_year'       },
             { table: 'students',          entityType: 'student'           },
             { table: 'parents',           entityType: 'parent'            },
             { table: 'enrollments',       entityType: 'enrollment'        },
@@ -283,7 +287,7 @@ export function registerSyncHandlers(mainWin: BrowserWindow): void {
         }
 
         // Step 2: clear pending queue to avoid conflicts with the incoming fresh push
-        db.prepare(`DELETE FROM sync_queue WHERE sync_status = 'pending'`).run();
+        db.prepare(`DELETE FROM sync_queue WHERE sync_status = 'pending' AND school_id = ?`).run(session.schoolId);
 
         // Step 3: queue every current local record
         const deviceId = getDeviceId();
@@ -305,14 +309,15 @@ export function registerSyncHandlers(mainWin: BrowserWindow): void {
             for (const row of rows) {
                 if (!row.id) continue;
                 db.prepare(`
-                    INSERT INTO sync_queue (id, operation, entity_type, entity_id, payload, device_id, created_at, sync_status)
-                    VALUES (?, 'INSERT', ?, ?, ?, ?, ?, 'pending')
+                    INSERT INTO sync_queue (id, operation, entity_type, entity_id, payload, device_id, school_id, created_at, sync_status)
+                    VALUES (?, 'INSERT', ?, ?, ?, ?, ?, ?, 'pending')
                 `).run(
                     crypto.randomUUID(),
                     entityType,
                     row.id,
                     JSON.stringify(row),
                     deviceId,
+                    session.schoolId,
                     now
                 );
                 total++;

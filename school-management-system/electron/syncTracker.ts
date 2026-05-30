@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import db from './db';
+import db, { getCurrentSchoolId } from './db';
 
 export function getDeviceId(): string {
     const row = db.prepare('SELECT value FROM global_config WHERE key = ?').get('device_id') as any;
@@ -15,9 +15,10 @@ export function trackChange(
     entityId:   string,
     payload:    Record<string, any> | null
 ): void {
+    const schoolId = getCurrentSchoolId() ?? '';
     db.prepare(`
-        INSERT INTO sync_queue (id, operation, entity_type, entity_id, payload, device_id, created_at, sync_status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
+        INSERT INTO sync_queue (id, operation, entity_type, entity_id, payload, device_id, school_id, created_at, sync_status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')
     `).run(
         crypto.randomUUID(),
         operation,
@@ -25,6 +26,7 @@ export function trackChange(
         entityId,
         payload ? JSON.stringify(payload) : null,
         getDeviceId(),
+        schoolId,
         new Date().toISOString()
     );
 }

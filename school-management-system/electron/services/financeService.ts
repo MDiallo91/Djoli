@@ -24,7 +24,7 @@ export function registerFinanceHandlers() {
             .run(cashId, amount, `Paiement Scolarité: ${description}`, paymentId, yearId, now, now)
 
         trackChange('INSERT', 'payment', paymentId, { id: paymentId, student_id: studentId, amount, payment_method: method, description, school_year_id: yearId, months: monthsStr, updated_at: now })
-        trackChange('INSERT', 'cash_transaction', cashId, { id: cashId, type: 'IN', amount, reason: `Paiement Scolarité: ${description}`, reference_id: paymentId, created_at: now, updated_at: now })
+        trackChange('INSERT', 'cash_transaction', cashId, { id: cashId, type: 'IN', amount, reason: `Paiement Scolarité: ${description}`, reference_id: paymentId, school_year_id: yearId, created_at: now, updated_at: now })
 
         const studentRow = db.prepare('SELECT first_name, last_name FROM students WHERE id = ?').get(studentId) as any
         const label = studentRow ? `${studentRow.first_name} ${studentRow.last_name} — ${amount} GNF` : `${amount} GNF`
