@@ -69,6 +69,10 @@ export const signIn = async (req: Request, res: Response): Promise<void> => {
             res.status(403).json({ message: 'Votre demande d\'inscription a été refusée. Contactez le support.' });
             return;
         }
+        if (user.role !== 'super_admin' && user.subscriptionStatus === 'suspended') {
+            res.status(403).json({ message: 'Votre accès a été suspendu par l\'administrateur. Contactez le support.' });
+            return;
+        }
 
         const token = createToken(user.id);
         const license_key = generateLicenseKey(user);
