@@ -202,6 +202,7 @@ export async function initDatabase() {
   try { globalSqlDb!.exec("ALTER TABLE users ADD COLUMN email TEXT"); } catch {}
   try { globalSqlDb!.exec("ALTER TABLE users ADD COLUMN phone TEXT"); } catch {}
   try { globalSqlDb!.exec("ALTER TABLE school_users ADD COLUMN phone TEXT"); } catch {}
+  try { globalSqlDb!.exec("ALTER TABLE sync_queue ADD COLUMN school_id TEXT"); } catch {}
 
   // Configuration globale du poste (device_id, etc.)
   globalSqlDb!.exec(`CREATE TABLE IF NOT EXISTS global_config (
