@@ -229,6 +229,7 @@ function App() {
                 daysLeft={daysLeft}
                 schoolName={user.name}
                 onRenew={renewSubscription}
+                onLogout={logout}
             />
         )
     }

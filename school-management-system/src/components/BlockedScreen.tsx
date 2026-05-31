@@ -1,5 +1,5 @@
 import React from 'react'
-import { ShieldX, AlertTriangle, Clock, Phone } from 'lucide-react'
+import { ShieldX, AlertTriangle, Clock, Phone, LogIn } from 'lucide-react'
 
 interface BlockedScreenProps {
     status:          'expired' | 'warning' | 'trial'
@@ -7,10 +7,11 @@ interface BlockedScreenProps {
     schoolName?:     string
     onRenew:         () => void
     onDismiss?:      () => void // only for 'warning' and 'trial'
+    onLogout?:       () => void
 }
 
 export const BlockedScreen: React.FC<BlockedScreenProps> = ({
-    status, daysLeft, schoolName, onRenew, onDismiss
+    status, daysLeft, schoolName, onRenew, onDismiss, onLogout
 }) => {
     const isBlocked = status === 'expired'
 
@@ -65,6 +66,16 @@ export const BlockedScreen: React.FC<BlockedScreenProps> = ({
                             className="w-full py-3 rounded-2xl font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all text-sm"
                         >
                             Me rappeler plus tard
+                        </button>
+                    )}
+
+                    {onLogout && (
+                        <button
+                            onClick={onLogout}
+                            className="w-full py-3 rounded-2xl font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all text-sm flex items-center justify-center gap-2"
+                        >
+                            <LogIn size={15} />
+                            Changer de compte
                         </button>
                     )}
                 </div>
