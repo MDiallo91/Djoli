@@ -124,6 +124,11 @@ function App() {
                 } else {
                     toast.success('Synchronisé', 'Toutes les données sont à jour.')
                 }
+                // Recharge l'UI si des données ont été reçues du cloud
+                if (pulled > 0) {
+                    triggerRefresh()
+                    fetchSchoolData()
+                }
             }
 
             if (data.status === 'offline' && prevStatus === 'syncing') {
