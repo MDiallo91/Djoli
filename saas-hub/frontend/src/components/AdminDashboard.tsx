@@ -1221,41 +1221,44 @@ function SettingsTab({ schools }: { schools: School[] }) {
             ].map(([label, idx]) => {
               const i = idx as number;
               const imgs = Array.isArray(cfg.featureImages) ? cfg.featureImages : ['','',''];
+              const setImg = (val: string) => { const next = Array.isArray(cfg.featureImages) ? [...cfg.featureImages] : ['','','']; next[i] = val; set('featureImages', next); };
               return (
-                <div key={i}>
+                <div key={i} className="space-y-2">
                   <label className={labelCls}>{label as string}</label>
-                  {imgs[i] ? (
-                    <div className="relative rounded-xl overflow-hidden border border-slate-200 group">
-                      <img src={imgs[i]} alt="" className="w-full h-36 object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-2">
-                        <label className="cursor-pointer px-3 py-1.5 bg-white text-slate-800 rounded-lg text-xs font-semibold">
-                          Changer
-                          <input type="file" accept="image/*" className="hidden" onChange={e => {
-                            const f = e.target.files?.[0]; if (!f) return;
-                            const r = new FileReader(); r.onloadend = () => {
-                              const next = [...imgs]; next[i] = r.result as string;
-                              set('featureImages', next);
-                            }; r.readAsDataURL(f);
-                          }} />
-                        </label>
-                        <button type="button" onClick={() => { const next = [...imgs]; next[i] = ''; set('featureImages', next); }}
-                          className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-semibold">Supprimer</button>
-                      </div>
+
+                  {/* Champ URL */}
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Pinterest-logo.png" alt="pinterest" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none" />
+                      <input
+                        type="url"
+                        placeholder="Coller un lien image (Pinterest, etc.)"
+                        value={imgs[i] && !imgs[i].startsWith('data:') ? imgs[i] : ''}
+                        onChange={e => setImg(e.target.value)}
+                        className={inputCls + ' pl-9 text-xs'}
+                      />
                     </div>
-                  ) : (
-                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl h-24 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/40 transition-all group">
-                      <Upload size={16} className="text-slate-400 group-hover:text-indigo-500 mb-1 transition-colors" />
-                      <p className="text-xs text-slate-400 group-hover:text-indigo-600 font-medium transition-colors">Uploader une image</p>
-                      <p className="text-[10px] text-slate-300 mt-0.5">PNG, JPG, WebP</p>
+                    <label title="Uploader un fichier" className="flex-shrink-0 cursor-pointer w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-500 hover:bg-indigo-50 hover:border-indigo-400 hover:text-indigo-600 transition-all">
+                      <Upload size={15} />
                       <input type="file" accept="image/*" className="hidden" onChange={e => {
                         const f = e.target.files?.[0]; if (!f) return;
-                        const r = new FileReader(); r.onloadend = () => {
-                          const next = Array.isArray(cfg.featureImages) ? [...cfg.featureImages] : ['','',''];
-                          next[i] = r.result as string;
-                          set('featureImages', next);
-                        }; r.readAsDataURL(f);
+                        const r = new FileReader(); r.onloadend = () => setImg(r.result as string); r.readAsDataURL(f);
                       }} />
                     </label>
+                    {imgs[i] && (
+                      <button type="button" onClick={() => setImg('')} title="Supprimer"
+                        className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-red-200 rounded-xl text-red-400 hover:bg-red-50 hover:text-red-600 transition-all">
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Aperçu */}
+                  {imgs[i] && (
+                    <div className="relative rounded-xl overflow-hidden border border-slate-200 h-36">
+                      <img src={imgs[i]} alt="" className="w-full h-full object-cover"
+                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                    </div>
                   )}
                 </div>
               );
