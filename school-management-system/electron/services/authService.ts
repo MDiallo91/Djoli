@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs'
 import db, { switchSchoolDatabase } from '../db'
 import { verifyLicense, computeLicenseStatus, getDaysRemaining, LicenseData } from '../licenseVerifier'
 import { setSyncSession } from '../syncState'
+import { triggerSyncNow } from './syncService'
 import { setCurrentUser } from '../currentSession'
 import { logAction } from '../auditLogger'
 
@@ -141,7 +142,7 @@ export function registerAuthHandlers() {
         await switchSchoolDatabase(data.id)
 
         // Start background sync for this school
-        if (data.license_key) setSyncSession(data.id, data.license_key)
+        if (data.license_key) { setSyncSession(data.id, data.license_key); triggerSyncNow(); }
         setCurrentUser({ id: data.id, name: data.schoolName, username, role: 'SUPER_ADMIN' })
         logAction({ action: 'cloud_login', entityType: 'session', entityLabel: data.schoolName, schoolId: data.id })
 
@@ -230,7 +231,7 @@ export function registerAuthHandlers() {
         await switchSchoolDatabase(schoolId)
 
         // Resume sync session for this school
-        if (row?.license_key) setSyncSession(schoolId, row.license_key)
+        if (row?.license_key) { setSyncSession(schoolId, row.license_key); triggerSyncNow(); }
 
         return {
             id:           account.school_id,
@@ -306,6 +307,7 @@ export function registerAuthHandlers() {
         const row = db.prepare('SELECT license_key FROM local_license WHERE school_id = ?').get(userId) as any
         if (row?.license_key) {
             setSyncSession(userId, row.license_key)
+            triggerSyncNow()
         }
         return { success: true }
     })
