@@ -107,43 +107,56 @@ async function pushChanges(schoolId: string, licenseKey: string): Promise<number
 
 // ── Pull ─────────────────────────────────────────────────────────────────────
 
+const PULL_PAGE_SIZE = 500;
+
 async function pullChanges(schoolId: string, licenseKey: string): Promise<number> {
-    const since = getLastPullAt(schoolId);
+    let since = getLastPullAt(schoolId);
     const serverNow = new Date().toISOString();
     const deviceId = getDeviceId();
-
-    const response = await fetch(
-        `${apiUrl()}/api/sync/pull?since=${encodeURIComponent(since)}`,
-        { headers: { Authorization: `Bearer ${licenseKey}` }, signal: AbortSignal.timeout(120_000) }
-    );
-    if (!response.ok) throw new Error(`Erreur serveur lors de la réception (code ${response.status}). Vérifiez votre connexion.`);
-
-    const result = await response.json();
-    const records: any[] = result.records ?? [];
-
     const inboundConflicts: any[] = [];
+    let totalPulled = 0;
 
-    for (const record of records) {
-        if (record.device_id === deviceId) continue; // Own changes already applied locally
+    // Paginate: keep fetching until a page returns fewer than PULL_PAGE_SIZE records
+    while (true) {
+        const response = await fetch(
+            `${apiUrl()}/api/sync/pull?since=${encodeURIComponent(since)}`,
+            { headers: { Authorization: `Bearer ${licenseKey}` }, signal: AbortSignal.timeout(120_000) }
+        );
+        if (!response.ok) throw new Error(`Erreur serveur lors de la réception (code ${response.status}). Vérifiez votre connexion.`);
 
-        const localPending = db.prepare(
-            `SELECT * FROM sync_queue WHERE entity_id = ? AND sync_status = 'pending'`
-        ).get(record.entity_id) as any;
+        const result = await response.json();
+        const records: any[] = result.records ?? [];
 
-        if (localPending && CRITICAL_ENTITIES.has(record.entity_type)) {
-            // Conflict on critical entity — alert the user
-            inboundConflicts.push({
-                conflict_id:  localPending.id,
-                entity_type:  record.entity_type,
-                entity_id:    record.entity_id,
-                local_data:   localPending.payload ? JSON.parse(localPending.payload) : null,
-                remote_data:  record.data ? JSON.parse(record.data) : null,
-                remote_updated_at: record.updated_at,
-            });
-            db.prepare(`UPDATE sync_queue SET sync_status = 'conflict' WHERE id = ?`).run(localPending.id);
-        } else {
-            applyPulledRecord(record.entity_type, record.entity_id, record.data ? JSON.parse(record.data) : null);
+        for (const record of records) {
+            if (record.device_id === deviceId) continue;
+
+            const localPending = db.prepare(
+                `SELECT * FROM sync_queue WHERE entity_id = ? AND sync_status = 'pending'`
+            ).get(record.entity_id) as any;
+
+            if (localPending && CRITICAL_ENTITIES.has(record.entity_type)) {
+                inboundConflicts.push({
+                    conflict_id:  localPending.id,
+                    entity_type:  record.entity_type,
+                    entity_id:    record.entity_id,
+                    local_data:   localPending.payload ? JSON.parse(localPending.payload) : null,
+                    remote_data:  record.data ? JSON.parse(record.data) : null,
+                    remote_updated_at: record.updated_at,
+                });
+                db.prepare(`UPDATE sync_queue SET sync_status = 'conflict' WHERE id = ?`).run(localPending.id);
+            } else {
+                applyPulledRecord(record.entity_type, record.entity_id, record.data ? JSON.parse(record.data) : null);
+            }
         }
+
+        totalPulled += records.length;
+
+        // If fewer records than page size, we've received everything
+        if (records.length < PULL_PAGE_SIZE) break;
+
+        // Advance cursor to 1ms after the last record's timestamp to get the next page
+        const lastUpdatedAt = records[records.length - 1].updated_at;
+        since = new Date(new Date(lastUpdatedAt).getTime() + 1).toISOString();
     }
 
     if (inboundConflicts.length > 0) {
@@ -151,7 +164,7 @@ async function pullChanges(schoolId: string, licenseKey: string): Promise<number
     }
 
     setLastPullAt(schoolId, serverNow);
-    return records.length;
+    return totalPulled;
 }
 
 // ── Main sync cycle ───────────────────────────────────────────────────────────
@@ -207,6 +220,10 @@ async function syncCycle(): Promise<void> {
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
+
+export function triggerSyncNow(): void {
+    setTimeout(() => syncCycle(), 500);
+}
 
 export function startSyncLoop(mainWin: BrowserWindow): void {
     win = mainWin;
