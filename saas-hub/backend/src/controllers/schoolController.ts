@@ -158,6 +158,70 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     }
 };
 
+export const getStudents = async (req: Request, res: Response) => {
+    try {
+        const schoolId = req.user!.id;
+
+        const records = await SchoolRecord.findAll({
+            where: { school_id: schoolId, deleted_at: null },
+            attributes: ['entity_type', 'entity_id', 'data'],
+            raw: true,
+        });
+
+        const students: any[]            = [];
+        const classes   = new Map<string, any>();
+        const enrollments: any[]         = [];
+        const paidIds   = new Set<string>();
+        const schoolYears: any[]         = [];
+
+        for (const rec of records as any[]) {
+            if (!rec.data) continue;
+            let data: any;
+            try { data = JSON.parse(rec.data); } catch { continue; }
+            switch (rec.entity_type) {
+                case 'student':     students.push(data);              break;
+                case 'class':       classes.set(rec.entity_id, data); break;
+                case 'enrollment':  enrollments.push(data);           break;
+                case 'payment':     if (data.student_id) paidIds.add(data.student_id); break;
+                case 'school_year': schoolYears.push(data);           break;
+            }
+        }
+
+        const activeYear = schoolYears.find(y => y.is_active == 1 || y.is_active === true)
+            || [...schoolYears].sort((a, b) => new Date(b.start_date || 0).getTime() - new Date(a.start_date || 0).getTime())[0]
+            || null;
+
+        const enrollmentMap = new Map<string, any>();
+        for (const e of enrollments) {
+            if (!activeYear || e.school_year_id === activeYear.id) {
+                enrollmentMap.set(e.student_id, e);
+            }
+        }
+
+        const result = students
+            .filter(s => s.id)
+            .map(s => {
+                const enrollment = enrollmentMap.get(s.id);
+                const cls = enrollment ? classes.get(enrollment.class_id) : null;
+                return {
+                    id:         s.id,
+                    first_name: s.first_name || '',
+                    last_name:  s.last_name  || '',
+                    gender:     s.gender     || null,
+                    matricule:  s.matricule  || null,
+                    phone:      s.phone      || null,
+                    class_name: cls?.name    || null,
+                    has_paid:   paidIds.has(s.id),
+                };
+            })
+            .sort((a, b) => a.last_name.localeCompare(b.last_name, 'fr'));
+
+        res.json({ students: result, total: result.length, year: activeYear ? { id: activeYear.id, name: activeYear.name } : null });
+    } catch {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+};
+
 export const changePassword = async (req: Request, res: Response) => {
     try {
         const { oldPassword, newPassword } = req.body;
