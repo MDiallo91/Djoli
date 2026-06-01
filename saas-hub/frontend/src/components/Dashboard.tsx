@@ -37,8 +37,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState(user.subscriptionStatus);
   const [subscriptionExpiry, setSubscriptionExpiry] = useState(user.subscriptionExpiry);
-  const [activating, setActivating] = useState(false);
-
   const [profile, setProfile] = useState({
     schoolName:     user.schoolName     || '',
     directorName:   user.directorName   || '',
@@ -55,8 +53,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [savingPwd, setSavingPwd] = useState(false);
 
   const [appInfo, setAppInfo] = useState<{ appVersion: string; appDownloadUrl: string } | null>(null);
-  const [prices, setPrices] = useState<{ currency: string; price30: string; price90: string; price365: string } | null>(null);
-
   const [syncStats, setSyncStats] = useState<{ counts: Record<string, number>; lastSyncAt: string | null } | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
 
@@ -114,36 +110,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         .then(d => { if (d?.data) setAppInfo(d.data); })
         .catch(() => {});
     }
-    if (activeNav === 'billing' && !prices) {
-      fetch(`${API}/settings/tarification`)
-        .then(r => r.ok ? r.json() : null)
-        .then(d => { if (d?.data) setPrices(d.data); })
-        .catch(() => {});
-    }
   }, [activeNav]);
 
   // Fermer sidebar mobile quand on change d'onglet
   const navigate = (id: string) => {
     setActiveNav(id);
     setSidebarOpen(false);
-  };
-
-  const handleRenew = async (days: number) => {
-    setActivating(true);
-    try {
-      const res = await apiClient.post(`/subscription/activate`, { userId: user.id, days });
-      if (res.data.success) {
-        setSubscriptionStatus('active');
-        setSubscriptionExpiry(res.data.newExpiry);
-        toast.success(`Abonnement renouvelé pour ${days} jours !`);
-      } else {
-        toast.error('Activation échouée', { description: 'Veuillez contacter le support.' });
-      }
-    } catch {
-      toast.error("Erreur lors du renouvellement");
-    } finally {
-      setActivating(false);
-    }
   };
 
   const saveProfile = async () => {
@@ -202,7 +174,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const isActive = subscriptionStatus === 'active' || (subscriptionStatus === 'trial' && !isExpired);
   const daysLeft = Math.ceil((new Date(subscriptionExpiry).getTime() - Date.now()) / 86400000);
   const initials = (user.schoolName || 'U').slice(0, 2).toUpperCase();
-  const currency = prices?.currency || 'GNF';
   const setField = (f: string, v: string) => setProfile(p => ({ ...p, [f]: v }));
 
   const SidebarContent = () => (
@@ -320,17 +291,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 
               {/* Alerte abonnement expiré */}
               {!isActive && (
-                <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <AlertCircle size={18} className="text-red-500 flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="font-semibold text-red-800 text-sm">Abonnement expiré</p>
-                      <p className="text-red-600 text-xs mt-0.5 hidden sm:block">Renouvelez pour continuer à utiliser DJOLI.</p>
-                    </div>
+                <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-center gap-3">
+                  <AlertCircle size={18} className="text-red-500 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-red-800 text-sm">Abonnement expiré</p>
+                    <p className="text-red-600 text-xs mt-0.5">Contactez votre administrateur pour renouveler votre abonnement.</p>
                   </div>
-                  <button onClick={() => handleRenew(30)} disabled={activating} className="bg-red-600 text-white px-4 py-1.5 rounded-xl text-xs font-semibold hover:bg-red-700 transition-all disabled:opacity-50 flex-shrink-0">
-                    {activating ? '...' : 'Renouveler'}
-                  </button>
                 </div>
               )}
 
@@ -590,16 +556,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                       </div>
                     ))}
                   </div>
-                  <div className="flex gap-2 flex-wrap">
-                    {!isActive && (
-                      <button onClick={() => handleRenew(30)} disabled={activating} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-semibold text-xs hover:bg-indigo-700 transition-all disabled:opacity-50">
-                        {activating ? 'En cours...' : 'Payer & Activer'}
-                      </button>
-                    )}
-                    <button onClick={() => navigate('billing')} className="border border-slate-200 text-slate-700 px-4 py-2 rounded-xl font-semibold text-xs hover:bg-slate-50 transition-all">
-                      Renouveler
-                    </button>
-                  </div>
+                  {!isActive && (
+                    <p className="text-xs text-slate-500 flex items-center gap-1.5">
+                      <AlertCircle size={13} className="text-red-400 flex-shrink-0" />
+                      Contactez votre administrateur pour renouveler votre abonnement.
+                    </p>
+                  )}
                 </div>
 
                 <div className="rounded-2xl lg:rounded-3xl p-5 lg:p-7 text-white flex flex-col gap-4 lg:gap-6 shadow-xl shadow-slate-900/20" style={{ backgroundColor: '#0f172a' }}>
@@ -830,49 +792,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </div>
               </div>
 
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-3 lg:mb-5">Choisir une durée de renouvellement</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-5">
-                  {([
-                    { days: 30,  label: '1 Mois', price: prices?.price30  || '—', highlight: false },
-                    { days: 90,  label: '3 Mois', price: prices?.price90  || '—', highlight: true  },
-                    { days: 365, label: '1 An',   price: prices?.price365 || '—', highlight: false },
-                  ] as const).map(plan => (
-                    <div key={plan.days} className={`rounded-2xl lg:rounded-3xl p-5 lg:p-7 flex flex-col gap-4 border transition-all ${plan.highlight ? 'border-indigo-200 bg-indigo-600 text-white shadow-xl shadow-indigo-500/20' : 'border-slate-100 bg-white shadow-sm'}`}>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs font-semibold uppercase tracking-wider ${plan.highlight ? 'text-indigo-200' : 'text-slate-400'}`}>{plan.label}</span>
-                        {plan.highlight && <span className="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full font-semibold">Recommandé</span>}
-                      </div>
-                      <div>
-                        <p className={`text-2xl lg:text-3xl font-bold ${plan.highlight ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{plan.price}</p>
-                        <p className={`text-xs mt-0.5 ${plan.highlight ? 'text-indigo-200' : 'text-slate-400'}`}>{currency}</p>
-                      </div>
-                      <div className={`flex flex-col gap-1.5 text-xs ${plan.highlight ? 'text-indigo-100' : 'text-slate-500'}`}>
-                        {[`${plan.days} jours d'accès`, 'Synchronisation cloud', 'Support inclus'].map(f => (
-                          <div key={f} className="flex items-center gap-2"><CheckCircle size={11} />{f}</div>
-                        ))}
-                      </div>
-                      <button
-                        onClick={() => handleRenew(plan.days)}
-                        disabled={activating}
-                        className={`mt-auto py-2.5 rounded-xl font-semibold text-sm transition-all disabled:opacity-50 ${plan.highlight ? 'bg-white text-indigo-600 hover:bg-indigo-50' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
-                      >
-                        {activating ? 'En cours...' : 'Choisir ce plan'}
-                      </button>
-                    </div>
-                  ))}
+              <div className="bg-amber-50 border border-amber-100 rounded-2xl lg:rounded-3xl p-8 flex flex-col items-center text-center gap-4">
+                <div className="w-14 h-14 bg-amber-100 rounded-2xl flex items-center justify-center">
+                  <AlertCircle size={26} className="text-amber-600" />
                 </div>
-              </div>
-
-              <div className="bg-white rounded-2xl lg:rounded-3xl border border-slate-100 p-5 lg:p-8 shadow-sm">
-                <h3 className="font-bold text-slate-900 mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Historique de facturation</h3>
-                <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl">
-                  <div className="w-9 h-9 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0"><Calendar size={16} /></div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-900 text-sm">Abonnement d'essai</p>
-                    <p className="text-xs text-slate-400">{new Date(user.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
-                  </div>
-                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full flex-shrink-0">Gratuit</span>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base mb-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Renouvellement géré par l'administrateur</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed max-w-sm">
+                    Le renouvellement de votre abonnement est effectué par l'administrateur DJOLI.<br />
+                    Contactez-le pour prolonger votre accès.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 bg-white border border-amber-200 rounded-xl px-4 py-2.5 text-sm font-medium text-amber-800">
+                  <span>support@djoli.app</span>
                 </div>
               </div>
             </>
