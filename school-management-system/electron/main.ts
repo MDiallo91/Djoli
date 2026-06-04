@@ -9,7 +9,7 @@ import { registerStaffHandlers } from './services/staffService'
 import { registerAttendanceHandlers } from './services/attendanceService'
 import { registerSchoolHandlers } from './services/schoolService'
 import { registerAuthHandlers } from './services/authService'
-import { registerSyncHandlers, startSyncLoop } from './services/syncService'
+import { registerSyncHandlers, startupSync, syncOnQuit } from './services/syncService'
 import { registerUserHandlers } from './services/userService'
 import { registerAuditHandlers } from './services/auditService'
 import { registerBackupHandlers } from './services/backupService'
@@ -77,6 +77,14 @@ function createWindow() {
     }
 }
 
+let isQuitting = false
+app.on('before-quit', (event) => {
+    if (isQuitting) return
+    event.preventDefault()
+    isQuitting = true
+    syncOnQuit().finally(() => app.quit())
+})
+
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit()
@@ -119,9 +127,9 @@ app.whenReady().then(async () => {
 
     createWindow()
 
-    // Register sync handlers and start loop on the window just created
+    // Register sync handlers and trigger startup pull
     if (win) {
         registerSyncHandlers(win)
-        startSyncLoop(win)
+        startupSync(win)
     }
 })
