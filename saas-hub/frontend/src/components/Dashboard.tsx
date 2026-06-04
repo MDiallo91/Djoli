@@ -16,6 +16,7 @@ import {
 } from 'react-icons/ri';
 import { toast } from 'sonner';
 import apiClient from '../lib/apiClient';
+import { fetchLatestRelease, GithubRelease } from '../lib/githubRelease';
 
 const API = '/api';
 
@@ -52,7 +53,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [pwd, setPwd] = useState({ oldPassword: '', newPassword: '', confirm: '' });
   const [savingPwd, setSavingPwd] = useState(false);
 
-  const [appInfo, setAppInfo] = useState<{ appVersion: string; appDownloadUrl: string } | null>(null);
+  const [release, setRelease] = useState<GithubRelease | null>(null);
   const [syncStats, setSyncStats] = useState<{ counts: Record<string, number>; lastSyncAt: string | null } | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
 
@@ -104,10 +105,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   }, [activeNav]);
 
   useEffect(() => {
-    if (activeNav === 'downloads' && !appInfo) {
+    if (activeNav === 'downloads' && !release) {
       fetch(`${API}/settings/application`)
         .then(r => r.ok ? r.json() : null)
-        .then(d => { if (d?.data) setAppInfo(d.data); })
+        .then(d => {
+          const repo = d?.data?.githubRepo;
+          if (repo) fetchLatestRelease(repo).then(r => { if (r) setRelease(r); });
+        })
         .catch(() => {});
     }
   }, [activeNav]);
@@ -829,16 +833,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   </div>
                   <div>
                     <div className="flex items-center gap-3 mb-3 text-xs text-indigo-300">
-                      <span className="bg-white/10 px-3 py-1.5 rounded-lg font-mono">v{appInfo?.appVersion || '2.0.1'}</span>
+                      <span className="bg-white/10 px-3 py-1.5 rounded-lg font-mono">
+                        {release ? `v${release.version}` : '…'}
+                      </span>
                       <span>Windows 10/11</span>
                     </div>
                     <a
-                      href={appInfo?.appDownloadUrl || '#'}
-                      target="_blank"
+                      href={release?.downloadUrl || '#'}
+                      target={release ? '_blank' : undefined}
                       rel="noopener noreferrer"
-                      className="w-full py-3 bg-white text-indigo-600 rounded-xl font-semibold text-sm hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"
+                      className={`w-full py-3 bg-white text-indigo-600 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${release ? 'hover:bg-indigo-50' : 'opacity-50 cursor-not-allowed pointer-events-none'}`}
                     >
-                      <Download size={16} /> Télécharger (.exe)
+                      <Download size={16} /> {release ? 'Télécharger (.exe)' : 'Chargement…'}
                     </a>
                   </div>
                 </div>
