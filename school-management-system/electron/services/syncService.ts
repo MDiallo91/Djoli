@@ -1,13 +1,12 @@
 import { ipcMain, BrowserWindow } from 'electron';
 import crypto from 'node:crypto';
 import db from '../db';
-import { getDeviceId } from '../syncTracker';
+import { getDeviceId } from '../deviceId';
 import { currentSyncSession } from '../syncState';
 
-const SYNC_INTERVAL_MS  = 30_000;          // 30 s
+const SYNC_THRESHOLD    = 10;              // déclenche un sync après N modifications locales
 const CRITICAL_ENTITIES = new Set(['grade', 'payment']);
 
-let syncTimer: ReturnType<typeof setInterval> | null = null;
 let win: BrowserWindow | null = null;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -225,15 +224,23 @@ export function triggerSyncNow(): void {
     setTimeout(() => syncCycle(), 500);
 }
 
-export function startSyncLoop(mainWin: BrowserWindow): void {
-    win = mainWin;
-    if (syncTimer) clearInterval(syncTimer);
-    setTimeout(() => syncCycle(), 2000);
-    syncTimer = setInterval(syncCycle, SYNC_INTERVAL_MS);
+/** Appelé après chaque trackChange — déclenche un sync si le seuil est atteint. */
+export function checkThresholdSync(): void {
+    if (pendingCount() >= SYNC_THRESHOLD) triggerSyncNow();
 }
 
-export function stopSyncLoop(): void {
-    if (syncTimer) { clearInterval(syncTimer); syncTimer = null; }
+/** Sync de démarrage : pull immédiat au lancement de l'app. */
+export function startupSync(mainWin: BrowserWindow): void {
+    win = mainWin;
+    setTimeout(() => syncCycle(), 2000);
+}
+
+/** Sync bloquant à la fermeture, avec timeout de 8s pour ne pas bloquer le quit. */
+export async function syncOnQuit(): Promise<void> {
+    await Promise.race([
+        syncCycle(),
+        new Promise<void>(resolve => setTimeout(resolve, 8000)),
+    ]);
 }
 
 export function registerSyncHandlers(mainWin: BrowserWindow): void {
