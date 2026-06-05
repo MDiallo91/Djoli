@@ -131,14 +131,38 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             monthlyData.push({ month: key, total_in: inMonth('IN'), total_out: inMonth('OUT') });
         }
 
-        // Taux de recouvrement
-        const enrolledIds = new Set(enrollments.map((e: any) => e.student_id));
-        const paidIds     = new Set(payments.map((p: any) => p.student_id));
-        const totalStudents = enrolledIds.size;
-        const paidStudents  = [...enrolledIds].filter(id => paidIds.has(id)).length;
+        // Recouvrement filtré sur le mois en cours
+        const now2 = new Date();
+        const startOfMonth = new Date(now2.getFullYear(), now2.getMonth(), 1);
+        const endOfMonth   = new Date(now2.getFullYear(), now2.getMonth() + 1, 1);
+        const MOIS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin',
+                         'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+        const currentMonthName = MOIS_FR[now2.getMonth()];
 
-        // Élèves sans paiement (max 8)
-        const lateIds = [...enrolledIds].filter(id => !paidIds.has(id)).slice(0, 8);
+        const enrolledIds = new Set(enrollments.map((e: any) => e.student_id));
+
+        // Un élève est "payé ce mois" si un paiement couvre le mois courant
+        // Priorité : champ months[] (noms FR) ; fallback : payment_date dans le mois
+        const currentMonthPaidIds = new Set(
+            payments
+                .filter((p: any) => {
+                    if (p.months) {
+                        try {
+                            const m = typeof p.months === 'string' ? JSON.parse(p.months) : p.months;
+                            if (Array.isArray(m) && m.includes(currentMonthName)) return true;
+                        } catch {}
+                    }
+                    const d = new Date(p.payment_date || p.created_at || 0);
+                    return d >= startOfMonth && d < endOfMonth;
+                })
+                .map((p: any) => p.student_id)
+        );
+
+        const totalStudents = enrolledIds.size;
+        const paidStudents  = [...enrolledIds].filter(id => currentMonthPaidIds.has(id)).length;
+
+        // Élèves sans paiement ce mois (max 8)
+        const lateIds = [...enrolledIds].filter(id => !currentMonthPaidIds.has(id)).slice(0, 8);
         const latePayers = lateIds.map(id => {
             const s = students.get(id);
             return {
@@ -157,6 +181,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             paidStudents,
             recoveryRate: totalStudents > 0 ? Math.round((paidStudents / totalStudents) * 100) : 0,
             latePayers,
+            currentMonth: currentMonthName,
         });
     } catch {
         res.status(500).json({ error: 'Erreur serveur' });
