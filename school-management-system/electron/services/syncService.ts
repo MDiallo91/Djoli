@@ -110,7 +110,7 @@ const PULL_PAGE_SIZE = 500;
 
 async function pullChanges(schoolId: string, licenseKey: string): Promise<number> {
     let since = getLastPullAt(schoolId);
-    const serverNow = new Date().toISOString();
+    let serverNow: string | null = null;  // sera fixé depuis l'heure serveur à la 1ère page
     const deviceId = getDeviceId();
     const inboundConflicts: any[] = [];
     let totalPulled = 0;
@@ -126,8 +126,24 @@ async function pullChanges(schoolId: string, licenseKey: string): Promise<number
         const result = await response.json();
         const records: any[] = result.records ?? [];
 
+        // Utilise l'heure du serveur (1ère page) comme curseur pour éviter les décalages d'horloge
+        if (!serverNow) serverNow = result.server_time ?? new Date().toISOString();
+
         for (const record of records) {
             if (record.device_id === deviceId) continue;
+
+            // Suppression propagée : data=null signifie que l'entité a été supprimée sur l'autre PC
+            if (!record.data) {
+                const table = TABLE_MAP[record.entity_type];
+                if (table) {
+                    const now = new Date().toISOString();
+                    try {
+                        db.prepare(`UPDATE ${table} SET deleted_at = ?, updated_at = ? WHERE id = ?`)
+                          .run(now, now, record.entity_id);
+                    } catch { /* table sans deleted_at — ignoré */ }
+                }
+                continue;
+            }
 
             const localPending = db.prepare(
                 `SELECT * FROM sync_queue WHERE entity_id = ? AND sync_status = 'pending'`
@@ -139,12 +155,12 @@ async function pullChanges(schoolId: string, licenseKey: string): Promise<number
                     entity_type:  record.entity_type,
                     entity_id:    record.entity_id,
                     local_data:   localPending.payload ? JSON.parse(localPending.payload) : null,
-                    remote_data:  record.data ? JSON.parse(record.data) : null,
+                    remote_data:  JSON.parse(record.data),
                     remote_updated_at: record.updated_at,
                 });
                 db.prepare(`UPDATE sync_queue SET sync_status = 'conflict' WHERE id = ?`).run(localPending.id);
             } else {
-                applyPulledRecord(record.entity_type, record.entity_id, record.data ? JSON.parse(record.data) : null);
+                applyPulledRecord(record.entity_type, record.entity_id, JSON.parse(record.data));
             }
         }
 
@@ -162,7 +178,7 @@ async function pullChanges(schoolId: string, licenseKey: string): Promise<number
         win?.webContents.send('sync-conflicts', inboundConflicts);
     }
 
-    setLastPullAt(schoolId, serverNow);
+    setLastPullAt(schoolId, serverNow!);
     return totalPulled;
 }
 
