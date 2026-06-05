@@ -98,7 +98,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   }, [fetchStats, fetchDashboard]);
 
   useEffect(() => {
-    if (activeNav === 'students' && students.length === 0 && !loadingStudents) {
+    if (activeNav === 'students') {
       setLoadingStudents(true);
       apiClient.get('/school/students')
         .then(r => { setStudents(r.data.students ?? []); setStudentsYear(r.data.year ?? null); setStudentsCurrentMonth(r.data.currentMonth ?? ''); })
@@ -453,53 +453,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </div>
               </div>
 
-              {/* Élèves sans paiement ce mois */}
-              <div className="bg-white rounded-2xl lg:rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-4 lg:px-7 py-4 lg:py-5 border-b border-slate-50">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-bold text-slate-900 text-sm lg:text-base" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Élèves sans paiement</h3>
-                      <span className="text-[10px] font-bold text-violet-600 bg-violet-50 border border-violet-100 px-2 py-0.5 rounded-full">
-                        {dashStats?.currentMonth ?? currentMonthName}
-                      </span>
-                    </div>
-                    <p className="text-[10px] lg:text-xs text-slate-400 font-medium mt-0.5 hidden sm:block">
-                      {(dashStats?.totalStudents ?? 0) - (dashStats?.paidStudents ?? 0)} élève(s) n'ont pas payé ce mois
-                    </p>
-                  </div>
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${(dashStats?.latePayers?.length ?? 0) === 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                    {(dashStats?.latePayers?.length ?? 0) === 0 ? '✓ À jour' : `${(dashStats?.totalStudents ?? 0) - (dashStats?.paidStudents ?? 0)} en attente`}
-                  </span>
-                </div>
-                {(dashStats?.latePayers?.length ?? 0) === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 gap-2">
-                    <CheckCircle size={28} className="text-emerald-400" />
-                    <p className="text-sm font-semibold text-emerald-600">Aucun impayé détecté</p>
-                    <p className="text-xs text-slate-400 text-center px-4">Les données sont à jour selon la dernière synchronisation.</p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-slate-50">
-                    {(dashStats?.latePayers ?? []).map((p, i) => (
-                      <div key={i} className="flex items-center justify-between px-4 lg:px-7 py-3 hover:bg-slate-50 transition-colors">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center text-xs font-bold text-amber-700 flex-shrink-0">
-                            {p.first_name.charAt(0)}{p.last_name.charAt(0)}
-                          </div>
-                          <p className="text-sm font-semibold text-slate-800 truncate">{p.first_name} {p.last_name}</p>
-                        </div>
-                        {p.parent_phone && (
-                          <a href={`tel:${p.parent_phone}`} className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors flex-shrink-0 ml-2">
-                            <RiPhoneLine size={13} />
-                            <span className="hidden sm:inline">{p.parent_phone}</span>
-                            <span className="sm:hidden">Appeler</span>
-                          </a>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               {/* Abonnement + téléchargement */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
                 <div className="lg:col-span-2 bg-white rounded-2xl lg:rounded-3xl border border-slate-100 p-5 lg:p-8 shadow-sm">
@@ -631,6 +584,42 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   ))}
                 </div>
               </div>
+
+              {/* Élèves sans paiement ce mois */}
+              {(dashStats?.latePayers?.length ?? 0) > 0 && (
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-50">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-slate-900 text-sm">Impayés</h3>
+                      <span className="text-[10px] font-bold text-violet-600 bg-violet-50 border border-violet-100 px-2 py-0.5 rounded-full">
+                        {dashStats?.currentMonth ?? currentMonthName}
+                      </span>
+                    </div>
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700">
+                      {(dashStats?.totalStudents ?? 0) - (dashStats?.paidStudents ?? 0)} en attente
+                    </span>
+                  </div>
+                  <div className="divide-y divide-slate-50">
+                    {(dashStats?.latePayers ?? []).map((p, i) => (
+                      <div key={i} className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-7 h-7 bg-amber-100 rounded-full flex items-center justify-center text-xs font-bold text-amber-700 flex-shrink-0">
+                            {p.first_name.charAt(0)}{p.last_name.charAt(0)}
+                          </div>
+                          <p className="text-sm font-semibold text-slate-800 truncate">{p.first_name} {p.last_name}</p>
+                        </div>
+                        {p.parent_phone && (
+                          <a href={`tel:${p.parent_phone}`} className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex-shrink-0 ml-2">
+                            <RiPhoneLine size={13} />
+                            <span className="hidden sm:inline">{p.parent_phone}</span>
+                            <span className="sm:hidden">Appeler</span>
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Barre recherche + filtre */}
               <div className="flex flex-wrap gap-3">
