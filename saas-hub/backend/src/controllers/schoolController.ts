@@ -201,7 +201,7 @@ export const getStudents = async (req: Request, res: Response) => {
         const students: any[]            = [];
         const classes   = new Map<string, any>();
         const enrollments: any[]         = [];
-        const paidIds   = new Set<string>();
+        const payments: any[]            = [];
         const schoolYears: any[]         = [];
 
         for (const rec of records as any[]) {
@@ -212,10 +212,32 @@ export const getStudents = async (req: Request, res: Response) => {
                 case 'student':     students.push(data);              break;
                 case 'class':       classes.set(rec.entity_id, data); break;
                 case 'enrollment':  enrollments.push(data);           break;
-                case 'payment':     if (data.student_id) paidIds.add(data.student_id); break;
+                case 'payment':     payments.push(data);              break;
                 case 'school_year': schoolYears.push(data);           break;
             }
         }
+
+        // Paiements du mois en cours uniquement
+        const nowS = new Date();
+        const startOfMonthS = new Date(nowS.getFullYear(), nowS.getMonth(), 1);
+        const endOfMonthS   = new Date(nowS.getFullYear(), nowS.getMonth() + 1, 1);
+        const MOIS_FR_S = ['Janvier','Février','Mars','Avril','Mai','Juin',
+                           'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+        const currentMonthNameS = MOIS_FR_S[nowS.getMonth()];
+
+        const currentMonthPaidIdsS = new Set(
+            payments.filter((p: any) => {
+                if (p.months) {
+                    try {
+                        const m = typeof p.months === 'string' ? JSON.parse(p.months) : p.months;
+                        if (Array.isArray(m) && m.includes(currentMonthNameS)) return true;
+                    } catch {}
+                }
+                const d = new Date(p.payment_date || p.created_at || 0);
+                return d >= startOfMonthS && d < endOfMonthS;
+            })
+            .map((p: any) => p.student_id)
+        );
 
         const activeYear = schoolYears.find(y => y.is_active == 1 || y.is_active === true)
             || [...schoolYears].sort((a, b) => new Date(b.start_date || 0).getTime() - new Date(a.start_date || 0).getTime())[0]
@@ -241,12 +263,12 @@ export const getStudents = async (req: Request, res: Response) => {
                     matricule:  s.matricule  || null,
                     phone:      s.phone      || null,
                     class_name: cls?.name    || null,
-                    has_paid:   paidIds.has(s.id),
+                    has_paid:   currentMonthPaidIdsS.has(s.id),
                 };
             })
             .sort((a, b) => a.last_name.localeCompare(b.last_name, 'fr'));
 
-        res.json({ students: result, total: result.length, year: activeYear ? { id: activeYear.id, name: activeYear.name } : null });
+        res.json({ students: result, total: result.length, year: activeYear ? { id: activeYear.id, name: activeYear.name } : null, currentMonth: currentMonthNameS });
     } catch {
         res.status(500).json({ error: 'Erreur serveur' });
     }

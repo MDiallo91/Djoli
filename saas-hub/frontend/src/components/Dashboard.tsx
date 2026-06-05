@@ -61,6 +61,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   type Student = { id: string; first_name: string; last_name: string; gender: string | null; matricule: string | null; phone: string | null; class_name: string | null; has_paid: boolean };
   const [students, setStudents]       = useState<Student[]>([]);
   const [studentsYear, setStudentsYear] = useState<{ id: string; name: string } | null>(null);
+  const [studentsCurrentMonth, setStudentsCurrentMonth] = useState<string>('');
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [studentSearch, setStudentSearch]     = useState('');
   const [studentFilter, setStudentFilter]     = useState<'all' | 'paid' | 'unpaid'>('all');
@@ -100,7 +101,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     if (activeNav === 'students' && students.length === 0 && !loadingStudents) {
       setLoadingStudents(true);
       apiClient.get('/school/students')
-        .then(r => { setStudents(r.data.students ?? []); setStudentsYear(r.data.year ?? null); })
+        .then(r => { setStudents(r.data.students ?? []); setStudentsYear(r.data.year ?? null); setStudentsCurrentMonth(r.data.currentMonth ?? ''); })
         .catch(() => {})
         .finally(() => setLoadingStudents(false));
     }
@@ -309,21 +310,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </div>
               )}
 
-              {/* KPI cards — 2 cols mobile, 4 cols desktop */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
-                {/* Élèves */}
-                <div className="bg-white rounded-2xl border border-slate-100 p-4 lg:p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-blue-600 bg-blue-50 text-lg"><RiUserLine /></div>
-                    {loadingStats && <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-200 border-t-blue-500 animate-spin" />}
-                  </div>
-                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Élèves</p>
-                  <p className="text-xl lg:text-2xl font-bold text-slate-900 mt-0.5" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                    {syncStats ? String(syncStats.counts['student'] ?? 0) : '—'}
-                  </p>
-                  <p className="text-[10px] text-blue-500 font-medium mt-1 flex items-center gap-0.5"><RiArrowUpLine /> Inscrits</p>
-                </div>
-
+              {/* KPI cards — 3 cols (sans Élèves) */}
+              <div className="grid grid-cols-3 gap-3 lg:gap-5">
                 {/* Total encaissé */}
                 <div className="bg-white rounded-2xl border border-slate-100 p-4 lg:p-5 shadow-sm">
                   <div className="flex items-center justify-between mb-3">
@@ -367,37 +355,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </div>
               </div>
 
-              {/* Taux de recouvrement — Mobile: compact card avant graphique */}
-              <div className="lg:hidden bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Recouvrement</p>
-                    <p className="text-3xl font-bold text-slate-900 mt-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{recoveryRate}%</p>
-                    <p className="text-xs text-slate-400 mt-0.5">{dashStats?.paidStudents ?? 0} / {dashStats?.totalStudents ?? 0} élèves ont payé</p>
-                  </div>
-                  <div className="relative w-20 h-20 flex-shrink-0">
-                    <PieChart width={80} height={80}>
-                      <Pie
-                        data={[
-                          { value: dashStats?.paidStudents ?? 0 },
-                          { value: Math.max((dashStats?.totalStudents ?? 0) - (dashStats?.paidStudents ?? 0), 0) },
-                        ]}
-                        cx="50%" cy="50%" innerRadius={26} outerRadius={36}
-                        paddingAngle={3} dataKey="value" strokeWidth={0}
-                        startAngle={90} endAngle={-270}
-                      >
-                        <Cell fill={recoveryRate >= 70 ? '#10b981' : recoveryRate >= 40 ? '#f59e0b' : '#ef4444'} />
-                        <Cell fill="#f1f5f9" />
-                      </Pie>
-                    </PieChart>
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span className="text-xs font-bold text-slate-900">{recoveryRate}%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Graphiques — stacked mobile, côte à côte desktop */}
+              {/* Graphiques — bar chart + donut recouvrement */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
 
                 {/* Bar chart flux mensuel */}
@@ -495,7 +453,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </div>
               </div>
 
-              {/* Élèves sans paiement */}
+              {/* Élèves sans paiement ce mois */}
               <div className="bg-white rounded-2xl lg:rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-4 lg:px-7 py-4 lg:py-5 border-b border-slate-50">
                   <div className="min-w-0">
@@ -509,11 +467,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                       {(dashStats?.totalStudents ?? 0) - (dashStats?.paidStudents ?? 0)} élève(s) n'ont pas payé ce mois
                     </p>
                   </div>
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${(dashStats?.latePayers.length ?? 0) === 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                    {(dashStats?.latePayers.length ?? 0) === 0 ? '✓ À jour' : `${(dashStats?.totalStudents ?? 0) - (dashStats?.paidStudents ?? 0)} en attente`}
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${(dashStats?.latePayers?.length ?? 0) === 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                    {(dashStats?.latePayers?.length ?? 0) === 0 ? '✓ À jour' : `${(dashStats?.totalStudents ?? 0) - (dashStats?.paidStudents ?? 0)} en attente`}
                   </span>
                 </div>
-                {(dashStats?.latePayers.length ?? 0) === 0 ? (
+                {(dashStats?.latePayers?.length ?? 0) === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 gap-2">
                     <CheckCircle size={28} className="text-emerald-400" />
                     <p className="text-sm font-semibold text-emerald-600">Aucun impayé détecté</p>
@@ -647,21 +605,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </button>
               </div>
 
-              {/* KPI rapide */}
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { label: 'Total',    value: students.length,                              color: 'text-indigo-600 bg-indigo-50' },
-                  { label: 'Ont payé', value: students.filter(s => s.has_paid).length,      color: 'text-emerald-600 bg-emerald-50' },
-                  { label: 'Impayés',  value: students.filter(s => !s.has_paid).length,     color: 'text-red-500 bg-red-50' },
-                ].map(k => (
-                  <div key={k.label} className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm text-center">
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center mx-auto mb-2 ${k.color}`}>
-                      <Users size={15} />
-                    </div>
-                    <p className="text-xl font-bold text-slate-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{k.value}</p>
-                    <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">{k.label}</p>
+              {/* KPI mois en cours */}
+              <div className="space-y-2">
+                {(studentsCurrentMonth || currentMonthName) && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-violet-600 bg-violet-50 border border-violet-100 px-2.5 py-1 rounded-full">
+                      {studentsCurrentMonth || currentMonthName}
+                    </span>
+                    <p className="text-xs text-slate-400">Paiements du mois en cours</p>
                   </div>
-                ))}
+                )}
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { label: 'Total élèves', value: students.length,                              color: 'text-indigo-600 bg-indigo-50' },
+                    { label: 'Payé ce mois', value: students.filter(s => s.has_paid).length,      color: 'text-emerald-600 bg-emerald-50' },
+                    { label: 'Non payé',     value: students.filter(s => !s.has_paid).length,     color: 'text-red-500 bg-red-50' },
+                  ].map(k => (
+                    <div key={k.label} className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm text-center">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center mx-auto mb-2 ${k.color}`}>
+                        <Users size={15} />
+                      </div>
+                      <p className="text-xl font-bold text-slate-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{k.value}</p>
+                      <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">{k.label}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Barre recherche + filtre */}
@@ -682,7 +650,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   )}
                 </div>
                 <div className="flex items-center gap-0.5 bg-white border border-slate-200 rounded-xl p-1">
-                  {([['all','Tous'],['paid','Payé'],['unpaid','Impayé']] as const).map(([k, l]) => (
+                  {([['all','Tous'],['paid','Payé ce mois'],['unpaid','Non payé']] as const).map(([k, l]) => (
                     <button key={k} onClick={() => setStudentFilter(k)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${studentFilter === k ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-900'}`}>
                       {l}
