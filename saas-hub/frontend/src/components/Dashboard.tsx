@@ -70,6 +70,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     monthlyData: { month: string; total_in: number; total_out: number }[];
     totalStudents: number; paidStudents: number; recoveryRate: number;
     latePayers: LatePayer[];
+    currentMonth?: string;
   };
   const [dashStats, setDashStats] = useState<DashStats | null>(null);
 
@@ -164,6 +165,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const formatAmt = (n: number) => n >= 1_000_000_000 ? `${(n/1_000_000_000).toFixed(1)}Md` : n >= 1_000_000 ? `${(n/1_000_000).toFixed(1)}M` : n >= 1_000 ? `${(n/1_000).toFixed(0)}K` : `${n}`;
   const formatAmtFull = (n: number) => n.toLocaleString('fr-FR') + ' GNF';
   const nowDate = new Date();
+  const currentMonthKey = `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, '0')}`;
+  const MOIS_FR_LONG = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const currentMonthName = MOIS_FR_LONG[nowDate.getMonth()];
   const months6 = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(nowDate.getFullYear(), nowDate.getMonth() - (5 - i), 1);
     return { key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, label: MONTHS_FR[d.getMonth()] };
@@ -447,7 +451,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                     </div>
                     <div>
                       <h3 className="font-bold text-slate-900 text-base" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Recouvrement</h3>
-                      <p className="text-xs text-slate-400 font-medium">Paiements scolarité</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[10px] font-bold text-violet-600 bg-violet-50 border border-violet-100 px-2 py-0.5 rounded-full">
+                          {dashStats?.currentMonth ?? currentMonthName}
+                        </span>
+                        <p className="text-[10px] text-slate-400 font-medium">Mois en cours</p>
+                      </div>
                     </div>
                   </div>
                   <div className="relative flex-1 flex items-center justify-center">
@@ -469,7 +478,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                       <span className="text-2xl font-bold text-slate-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{recoveryRate}%</span>
-                      <span className="text-[10px] font-semibold text-slate-400 mt-0.5">payé</span>
+                      <span className="text-[10px] font-semibold text-slate-400 mt-0.5">payé ce mois</span>
                     </div>
                   </div>
                   <div className="space-y-2 mt-2">
@@ -489,9 +498,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
               <div className="bg-white rounded-2xl lg:rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-4 lg:px-7 py-4 lg:py-5 border-b border-slate-50">
                   <div className="min-w-0">
-                    <h3 className="font-bold text-slate-900 text-sm lg:text-base" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Élèves sans paiement</h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-bold text-slate-900 text-sm lg:text-base" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Élèves sans paiement</h3>
+                      <span className="text-[10px] font-bold text-violet-600 bg-violet-50 border border-violet-100 px-2 py-0.5 rounded-full">
+                        {dashStats?.currentMonth ?? currentMonthName}
+                      </span>
+                    </div>
                     <p className="text-[10px] lg:text-xs text-slate-400 font-medium mt-0.5 hidden sm:block">
-                      {(dashStats?.totalStudents ?? 0) - (dashStats?.paidStudents ?? 0)} élève(s) sans paiement enregistré
+                      {(dashStats?.totalStudents ?? 0) - (dashStats?.paidStudents ?? 0)} élève(s) n'ont pas payé ce mois
                     </p>
                   </div>
                   <span className={`text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${(dashStats?.latePayers.length ?? 0) === 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
