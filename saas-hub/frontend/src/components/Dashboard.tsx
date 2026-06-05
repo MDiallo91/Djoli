@@ -355,9 +355,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </div>
               </div>
 
-              {/* Bar chart flux mensuel */}
-              <div className="grid grid-cols-1 gap-5 lg:gap-6">
-                <div className="bg-white rounded-2xl lg:rounded-3xl border border-slate-100 p-4 lg:p-7 shadow-sm">
+              {/* Graphiques — bar chart + donut recouvrement */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
+                <div className="lg:col-span-2 bg-white rounded-2xl lg:rounded-3xl border border-slate-100 p-4 lg:p-7 shadow-sm">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-base lg:text-lg">
                       <RiBarChartGroupedLine />
@@ -400,6 +400,55 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   </div>
                 </div>
 
+                {/* Donut recouvrement */}
+                <div className="hidden lg:flex bg-white rounded-3xl border border-slate-100 p-7 shadow-sm flex-col">
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center text-violet-600 text-lg">
+                      <RiMoneyDollarCircleLine />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-base" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Recouvrement</h3>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[10px] font-bold text-violet-600 bg-violet-50 border border-violet-100 px-2 py-0.5 rounded-full">
+                          {dashStats?.currentMonth ?? currentMonthName}
+                        </span>
+                        <p className="text-[10px] text-slate-400 font-medium">Mois en cours</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="relative flex-1 flex items-center justify-center">
+                    <ResponsiveContainer width="100%" height={180} debounce={50}>
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: 'Ont payé', value: dashStats?.paidStudents ?? 0 },
+                            { name: 'Non payé', value: Math.max((dashStats?.totalStudents ?? 0) - (dashStats?.paidStudents ?? 0), 0) },
+                          ]}
+                          cx="50%" cy="50%" innerRadius={52} outerRadius={72}
+                          paddingAngle={3} dataKey="value" strokeWidth={0}
+                          startAngle={90} endAngle={-270}
+                        >
+                          <Cell fill={recoveryRate >= 70 ? '#10b981' : recoveryRate >= 40 ? '#f59e0b' : '#ef4444'} />
+                          <Cell fill="#f1f5f9" />
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-2xl font-bold text-slate-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{recoveryRate}%</span>
+                      <span className="text-[10px] font-semibold text-slate-400 mt-0.5">payé ce mois</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2 mt-2">
+                    <div className="flex items-center justify-between px-3 py-2 bg-emerald-50 rounded-xl">
+                      <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5"><RiUserLine /> Ont payé</span>
+                      <span className="text-xs font-bold text-emerald-700">{dashStats?.paidStudents ?? 0} élèves</span>
+                    </div>
+                    <div className="flex items-center justify-between px-3 py-2 bg-red-50 rounded-xl">
+                      <span className="text-xs font-semibold text-red-600 flex items-center gap-1.5"><RiUserLine /> Non payé</span>
+                      <span className="text-xs font-bold text-red-600">{(dashStats?.totalStudents ?? 0) - (dashStats?.paidStudents ?? 0)} élèves</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Abonnement + téléchargement */}
