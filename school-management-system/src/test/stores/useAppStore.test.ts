@@ -42,7 +42,7 @@ describe('useAppStore', () => {
 
     it('setUser updates user state', () => {
         const { setUser } = useAppStore.getState()
-        const mockUser = { id: '1', username: 'admin', role: 'SUPER_ADMIN', name: 'Admin', permissions: null }
+        const mockUser = { id: '1', username: 'admin', role: 'SUPER_ADMIN', name: 'Admin', permissions: null, scopeLevels: [] }
         act(() => setUser(mockUser))
         expect(useAppStore.getState().user).toEqual(mockUser)
     })
@@ -54,7 +54,7 @@ describe('useAppStore', () => {
     })
 
     it('logout clears user and resets phase to login', () => {
-        useAppStore.setState({ user: { id: '1', username: 'admin', role: 'SUPER_ADMIN', name: 'Admin', permissions: null }, activeTab: 'finance', phase: 'app' })
+        useAppStore.setState({ user: { id: '1', username: 'admin', role: 'SUPER_ADMIN', name: 'Admin', permissions: null, scopeLevels: [] }, activeTab: 'finance', phase: 'app' })
         act(() => useAppStore.getState().logout())
         const state = useAppStore.getState()
         expect(state.user).toBeNull()
@@ -80,7 +80,7 @@ describe('useAppStore', () => {
     })
 
     it('checkSubscription sets licenseStatus=valid for active subscription', async () => {
-        useAppStore.setState({ user: { id: '1', username: 'admin', role: 'SUPER_ADMIN', name: 'Admin', permissions: null, isCloud: true } })
+        useAppStore.setState({ user: { id: '1', username: 'admin', role: 'SUPER_ADMIN', name: 'Admin', permissions: null, scopeLevels: [], isCloud: true } })
         await act(async () => {
             await useAppStore.getState().checkSubscription()
         })
@@ -90,7 +90,7 @@ describe('useAppStore', () => {
     it('checkSubscription sets phase=blocked for expired subscription', async () => {
         const { dbService } = await import('../../services/db')
         vi.mocked(dbService.checkLicense).mockResolvedValueOnce({ status: 'expired', daysLeft: -1 })
-        useAppStore.setState({ user: { id: '1', username: 'admin', role: 'SUPER_ADMIN', name: 'Admin', permissions: null, isCloud: true } })
+        useAppStore.setState({ user: { id: '1', username: 'admin', role: 'SUPER_ADMIN', name: 'Admin', permissions: null, scopeLevels: [], isCloud: true } })
         await act(async () => {
             await useAppStore.getState().checkSubscription()
         })

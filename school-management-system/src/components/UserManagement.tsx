@@ -31,7 +31,7 @@ interface SchoolUser {
 function ScopeLevelPicker({ selected, onChange, availableLevels }: {
     selected:        string[]
     onChange:        (l: string[]) => void
-    availableLevels: string[]
+    availableLevels: readonly string[]
 }) {
     if (availableLevels.length === 0) return null
     const toggle = (lvl: string) =>
