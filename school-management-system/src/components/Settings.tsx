@@ -3,6 +3,7 @@ import {
     Building2, Sparkles, MapPin, Phone, Mail, Camera, Save,
     GraduationCap, Hash, Plus, Trash2, RotateCcw, CheckCircle,
     School, BookOpen, Medal, Users, ScrollText, CheckSquare, Square,
+    UploadCloud, AlertTriangle,
 } from 'lucide-react'
 import { dbService } from '../services/db'
 import { UserManagement } from './UserManagement'
@@ -849,6 +850,48 @@ function BackupTab() {
             <div className="text-xs text-gray-400 bg-gray-50 rounded-xl px-4 py-3">
                 Les sauvegardes contiennent : élèves, notes, paiements, classes, matières, emplois du temps, personnel.<br/>
                 Elles ne contiennent pas les comptes utilisateurs ni la configuration de licence.
+            </div>
+
+            {/* Resync cloud */}
+            <div className="border-2 border-orange-200 rounded-2xl p-6 space-y-4 bg-orange-50/40">
+                <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <UploadCloud size={20} className="text-orange-600" />
+                    </div>
+                    <div>
+                        <h4 className="font-black text-gray-900">Renvoyer toutes les données vers le cloud</h4>
+                        <p className="text-sm text-gray-500 mt-1">
+                            Efface les données cloud de cette école puis renvoie l'intégralité de la base locale.
+                            À utiliser uniquement si les données web sont manquantes ou corrompues.
+                        </p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-2 bg-orange-100 rounded-xl text-xs font-semibold text-orange-700">
+                    <AlertTriangle size={13} />
+                    Cette opération écrase les données cloud. Elle peut prendre quelques secondes.
+                </div>
+                <button
+                    onClick={async () => {
+                        if (!confirm(
+                            'Renvoyer TOUTES les données locales vers le cloud ?\n\n' +
+                            'Les données cloud actuelles seront effacées et remplacées par les données locales.\n\n' +
+                            'Confirmer ?'
+                        )) return
+                        setBusy(true)
+                        notify('info', 'Envoi en cours…')
+                        try {
+                            const res = await ipc.invoke('force-full-sync')
+                            notify('success', `Synchronisation complète : ${res.queued} enregistrement(s) envoyés.`)
+                        } catch (e: any) {
+                            notify('error', 'Erreur : ' + (e?.message || e))
+                        } finally { setBusy(false) }
+                    }}
+                    disabled={busy}
+                    className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-orange-600 text-white rounded-xl font-bold text-sm hover:bg-orange-700 transition-all disabled:opacity-50"
+                >
+                    <UploadCloud size={16} />
+                    {busy ? 'Envoi en cours…' : 'Renvoyer tout vers le cloud'}
+                </button>
             </div>
         </div>
     )
