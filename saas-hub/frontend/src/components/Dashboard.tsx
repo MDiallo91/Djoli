@@ -16,7 +16,8 @@ import {
 } from 'react-icons/ri';
 import { toast } from 'sonner';
 import apiClient from '../lib/apiClient';
-import { fetchLatestRelease, GithubRelease } from '../lib/githubRelease';
+import { fetchLatestRelease } from '../lib/githubRelease';
+import type { GithubRelease } from '../lib/githubRelease';
 
 const API = '/api';
 
