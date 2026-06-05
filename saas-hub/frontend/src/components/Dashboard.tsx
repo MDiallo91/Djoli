@@ -585,42 +585,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </div>
               </div>
 
-              {/* Élèves sans paiement ce mois */}
-              {(dashStats?.latePayers?.length ?? 0) > 0 && (
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-50">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-slate-900 text-sm">Impayés</h3>
-                      <span className="text-[10px] font-bold text-violet-600 bg-violet-50 border border-violet-100 px-2 py-0.5 rounded-full">
-                        {dashStats?.currentMonth ?? currentMonthName}
-                      </span>
-                    </div>
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700">
-                      {(dashStats?.totalStudents ?? 0) - (dashStats?.paidStudents ?? 0)} en attente
-                    </span>
-                  </div>
-                  <div className="divide-y divide-slate-50">
-                    {(dashStats?.latePayers ?? []).map((p, i) => (
-                      <div key={i} className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-7 h-7 bg-amber-100 rounded-full flex items-center justify-center text-xs font-bold text-amber-700 flex-shrink-0">
-                            {p.first_name.charAt(0)}{p.last_name.charAt(0)}
-                          </div>
-                          <p className="text-sm font-semibold text-slate-800 truncate">{p.first_name} {p.last_name}</p>
-                        </div>
-                        {p.parent_phone && (
-                          <a href={`tel:${p.parent_phone}`} className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex-shrink-0 ml-2">
-                            <RiPhoneLine size={13} />
-                            <span className="hidden sm:inline">{p.parent_phone}</span>
-                            <span className="sm:hidden">Appeler</span>
-                          </a>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Barre recherche + filtre */}
               <div className="flex flex-wrap gap-3">
                 <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 flex-1 min-w-[180px]">
