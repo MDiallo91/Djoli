@@ -14,6 +14,7 @@ export interface LicensePayload {
     trial_end_date: string | null;
     subscription_end_date: string | null;
     issued_at: string;
+    levels?: string[];
 }
 
 export function generateLicenseKey(user: UserModel): string {
@@ -25,6 +26,9 @@ export function generateLicenseKey(user: UserModel): string {
     const trialEnd = user.subscriptionStatus === 'trial' ? toISO(user.subscriptionExpiry) : null;
     const subEnd   = user.subscriptionStatus === 'active' ? toISO(user.subscriptionExpiry) : null;
 
+    let levelsArr: string[] = [];
+    try { levelsArr = JSON.parse(user.levels || '[]'); } catch {}
+
     const payload: LicensePayload = {
         school_id:             user.id,
         school_name:           user.schoolName,
@@ -33,6 +37,7 @@ export function generateLicenseKey(user: UserModel): string {
         trial_end_date:        trialEnd,
         subscription_end_date: subEnd,
         issued_at:             new Date().toISOString(),
+        levels:                levelsArr,
     };
 
     // License token valid for 400 days — renewed on each successful login

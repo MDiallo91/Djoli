@@ -4,6 +4,7 @@ import db from '../db'
 import { studentSchema } from '../validation'
 import { trackChange } from '../syncTracker'
 import { logAction } from '../auditLogger'
+import { currentUser } from '../currentSession'
 
 export function registerStudentHandlers() {
 
@@ -20,7 +21,7 @@ export function registerStudentHandlers() {
     })
 
     ipcMain.handle('get-students', (_event, schoolYearId?: number) => {
-        let query = `
+        const base = `
             SELECT
                 s.*,
                 c.name as class_name,
@@ -35,11 +36,22 @@ export function registerStudentHandlers() {
             LEFT JOIN classes c ON e.class_id = c.id
             LEFT JOIN parents p ON s.parent_id = p.id
         `
+        const scopeLevels = currentUser?.scope_levels ?? []
+        const conditions: string[] = []
+        const params: any[] = []
+
         if (schoolYearId) {
-            query += ' WHERE e.school_year_id = ?'
-            return db.prepare(query).all(schoolYearId)
+            conditions.push('e.school_year_id = ?')
+            params.push(schoolYearId)
         }
-        return db.prepare(query).all()
+        if (scopeLevels.length > 0) {
+            const placeholders = scopeLevels.map(() => '?').join(',')
+            conditions.push(`(c.level IN (${placeholders}) OR c.level IS NULL)`)
+            params.push(...scopeLevels)
+        }
+
+        const query = conditions.length > 0 ? base + ' WHERE ' + conditions.join(' AND ') : base
+        return db.prepare(query).all(...params)
     })
 
     ipcMain.handle('search-students', (_event, searchTerm: string) => {

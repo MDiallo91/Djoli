@@ -6,6 +6,7 @@ interface SchoolState {
     schoolYears: any[]
     subjects: any[]
     schoolInfo: any | null
+    schoolLevels: string[]
     activeYear: any | null
     loading: boolean
 
@@ -26,6 +27,7 @@ export const useSchoolStore = create<SchoolState>((set, get) => ({
     schoolYears: [],
     subjects: [],
     schoolInfo: null,
+    schoolLevels: [],
     activeYear: null,
     loading: false,
 
@@ -50,7 +52,9 @@ export const useSchoolStore = create<SchoolState>((set, get) => ({
 
     fetchSchoolInfo: async () => {
         const info = await dbService.getSchoolInfo()
-        set({ schoolInfo: info })
+        let schoolLevels: string[] = []
+        try { schoolLevels = JSON.parse(info?.levels || '[]') } catch {}
+        set({ schoolInfo: info, schoolLevels })
     },
 
     addClass: async (data) => {

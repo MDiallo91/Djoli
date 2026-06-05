@@ -11,6 +11,7 @@ class UserModel extends Model {
     declare country: string;
     declare city: string;
     declare level: string;
+    declare levels: string;
     declare directorName: string;
     declare prefecture: string;
     declare sousPrefecture: string;
@@ -32,6 +33,7 @@ UserModel.init({
     country:      { type: DataTypes.STRING, allowNull: true },
     city:         { type: DataTypes.STRING, allowNull: true },
     level:        { type: DataTypes.STRING, allowNull: true },
+    levels:       { type: DataTypes.TEXT, allowNull: true, defaultValue: '[]' },
     directorName: { type: DataTypes.STRING, allowNull: true },
     prefecture:   { type: DataTypes.STRING, allowNull: true },
     sousPrefecture: { type: DataTypes.STRING, allowNull: true },

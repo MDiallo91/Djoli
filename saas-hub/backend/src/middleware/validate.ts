@@ -15,13 +15,15 @@ export const validate = (schema: ZodSchema) => (req: Request, res: Response, nex
     next()
 }
 
+const SCHOOL_LEVELS = ['Maternelle', 'Primaire', 'Collège', 'Lycée'] as const
+
 export const registerSchema = z.object({
     schoolName:     z.string().min(2, 'Nom de l\'école requis'),
     email:          z.string().email('Email invalide'),
     password:       z.string().min(8, 'Mot de passe trop court (min 8 caractères)'),
     country:        z.string().optional(),
     city:           z.string().optional(),
-    level:          z.string().optional(),
+    levels:         z.array(z.enum(SCHOOL_LEVELS)).min(1, 'Sélectionnez au moins un cycle scolaire').optional(),
     directorName:   z.string().optional(),
     prefecture:     z.string().optional(),
     sousPrefecture: z.string().optional(),

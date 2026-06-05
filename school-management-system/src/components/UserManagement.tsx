@@ -3,9 +3,13 @@ import {
     Users, UserPlus, Pencil, Trash2, KeyRound, X, Save,
     CheckSquare, Square, ShieldCheck, Eye, EyeOff,
     User as UserIcon, Mail, AtSign, Copy, CheckCircle, AlertCircle,
+    Layers,
 } from 'lucide-react'
 import { dbService } from '../services/db'
 import { PERMISSION_MODULES, PERMISSION_PRESETS, ALL_PERMISSIONS } from '../constants/permissions'
+import { useSchoolStore } from '../stores/useSchoolStore'
+
+const ALL_LEVELS = ['Maternelle', 'Primaire', 'Collège', 'Lycée'] as const
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -16,9 +20,48 @@ interface SchoolUser {
     username:       string
     role:           string
     permissions:    string   // JSON string from DB
+    scope_levels:   string   // JSON string from DB
     photo_url:      string | null
     must_change_pwd: number
     is_active:      number
+}
+
+// ── Scope level picker ────────────────────────────────────────────────────────
+
+function ScopeLevelPicker({ selected, onChange, availableLevels }: {
+    selected:        string[]
+    onChange:        (l: string[]) => void
+    availableLevels: string[]
+}) {
+    if (availableLevels.length === 0) return null
+    const toggle = (lvl: string) =>
+        onChange(selected.includes(lvl) ? selected.filter(l => l !== lvl) : [...selected, lvl])
+    return (
+        <div className="space-y-2">
+            <p className="text-[10px] text-gray-400 font-semibold">
+                Vide = accès à tous les niveaux de l'école
+            </p>
+            <div className="flex flex-wrap gap-2">
+                {availableLevels.map(lvl => {
+                    const checked = selected.includes(lvl)
+                    return (
+                        <button key={lvl} type="button" onClick={() => toggle(lvl)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 text-xs font-bold transition-all ${
+                                checked
+                                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                                    : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
+                            }`}>
+                            {checked
+                                ? <CheckSquare size={12} className="text-indigo-600" />
+                                : <Square size={12} className="text-gray-300" />
+                            }
+                            {lvl}
+                        </button>
+                    )
+                })}
+            </div>
+        </div>
+    )
 }
 
 // ── Permission grid ───────────────────────────────────────────────────────────
@@ -111,6 +154,7 @@ function UserPanel({
     onSaved: () => void
 }) {
     const isEdit = !!user
+    const { schoolLevels } = useSchoolStore()
     const [name, setName]         = useState(user?.name ?? '')
     const [email, setEmail]       = useState(user?.email ?? '')
     const [username, setUsername] = useState(user?.username ?? '')
@@ -120,19 +164,24 @@ function UserPanel({
     const [perms, setPerms]       = useState<string[]>(
         user ? JSON.parse(user.permissions) : []
     )
+    const [scopeLevels, setScopeLevels] = useState<string[]>(
+        user ? (() => { try { return JSON.parse(user.scope_levels || '[]') } catch { return [] } })() : []
+    )
     const [error, setError]   = useState('')
     const [loading, setLoading] = useState(false)
     const [created, setCreated] = useState<{ username: string; password: string } | null>(null)
+
+    const availableLevels = schoolLevels.length > 0 ? schoolLevels : ALL_LEVELS
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true); setError('')
         try {
             if (isEdit) {
-                await dbService.updateSchoolUser({ id: user!.id, name, role, permissions: perms })
+                await dbService.updateSchoolUser({ id: user!.id, name, role, permissions: perms, scope_levels: scopeLevels })
             } else {
                 if (!password) { setError('Mot de passe requis'); setLoading(false); return }
-                const result = await dbService.createSchoolUser({ name, email, username, password, role, permissions: perms })
+                const result = await dbService.createSchoolUser({ name, email, username, password, role, permissions: perms, scope_levels: scopeLevels })
                 setCreated({ username: result.username, password: result.password_plain })
                 onSaved()
                 return
@@ -253,6 +302,19 @@ function UserPanel({
                     </div>
                 </div>
 
+                {/* Niveaux d'action */}
+                <div>
+                    <p className="text-xs font-black text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                        <Layers size={13} className="text-sky-500" />
+                        Niveaux d'action
+                    </p>
+                    <ScopeLevelPicker
+                        selected={scopeLevels}
+                        onChange={setScopeLevels}
+                        availableLevels={availableLevels}
+                    />
+                </div>
+
                 {/* Permissions */}
                 <div>
                     <p className="text-xs font-black text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
@@ -370,6 +432,7 @@ export function UserManagement() {
                                         <p className="text-xs text-gray-400 mt-0.5 truncate">{u.email} · @{u.username}</p>
                                         <p className="text-[10px] text-gray-300 mt-0.5">
                                             {permCount(u.permissions)} permission{permCount(u.permissions) !== 1 ? 's' : ''}
+                                            {(() => { try { const l = JSON.parse(u.scope_levels || '[]'); return l.length > 0 ? ` · ${l.join(', ')}` : '' } catch { return '' } })()}
                                             {u.must_change_pwd ? ' · Doit changer le mdp' : ''}
                                         </p>
                                     </div>

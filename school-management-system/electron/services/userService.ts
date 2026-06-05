@@ -11,7 +11,7 @@ export function registerUserHandlers() {
         const schoolId = getCurrentSchoolId()
         if (!schoolId) return []
         return db.prepare(
-            `SELECT id, school_id, name, email, username, role, permissions, photo_url, must_change_pwd, is_active, created_at
+            `SELECT id, school_id, name, email, username, role, permissions, scope_levels, photo_url, must_change_pwd, is_active, created_at
              FROM school_users WHERE school_id = ? AND deleted_at IS NULL ORDER BY created_at ASC`
         ).all(schoolId)
     })
@@ -19,12 +19,12 @@ export function registerUserHandlers() {
     // ── Create a school user ─────────────────────────────────────────────────
     ipcMain.handle('create-school-user', async (_event, data: {
         name: string; email: string; username: string; password: string;
-        role: string; permissions: string[]; photo_url?: string;
+        role: string; permissions: string[]; photo_url?: string; scope_levels?: string[];
     }) => {
         const schoolId = getCurrentSchoolId()
         if (!schoolId) throw new Error('Aucune école active')
 
-        const { name, email, username, password, role, permissions, photo_url } = data
+        const { name, email, username, password, role, permissions, photo_url, scope_levels } = data
         if (!name || !email || !username || !password) throw new Error('Champs obligatoires manquants')
 
         const exists = db.prepare(
@@ -37,25 +37,25 @@ export function registerUserHandlers() {
         const now  = new Date().toISOString()
 
         db.prepare(`
-            INSERT INTO school_users (id, school_id, name, email, username, password_hash, role, permissions, photo_url, must_change_pwd, is_active, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?)
-        `).run(id, schoolId, name, email, username, hash, role, JSON.stringify(permissions), photo_url ?? null, now, now)
+            INSERT INTO school_users (id, school_id, name, email, username, password_hash, role, permissions, scope_levels, photo_url, must_change_pwd, is_active, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?)
+        `).run(id, schoolId, name, email, username, hash, role, JSON.stringify(permissions), JSON.stringify(scope_levels ?? []), photo_url ?? null, now, now)
 
-        logAction({ action: 'create_user', entityType: 'user', entityId: id, entityLabel: name, newValue: { name, email, username, role, permissions } })
+        logAction({ action: 'create_user', entityType: 'user', entityId: id, entityLabel: name, newValue: { name, email, username, role, permissions, scope_levels } })
         return { success: true, id, username, password_plain: password }
     })
 
-    // ── Update user (name, role, permissions, photo) ─────────────────────────
+    // ── Update user (name, role, permissions, scope_levels, photo) ───────────
     ipcMain.handle('update-school-user', (_event, data: {
-        id: string; name: string; role: string; permissions: string[]; photo_url?: string; is_active?: number;
+        id: string; name: string; role: string; permissions: string[]; scope_levels?: string[]; photo_url?: string; is_active?: number;
     }) => {
-        const { id, name, role, permissions, photo_url, is_active } = data
-        const oldUser = db.prepare('SELECT name, role, permissions FROM school_users WHERE id = ?').get(id)
+        const { id, name, role, permissions, scope_levels, photo_url, is_active } = data
+        const oldUser = db.prepare('SELECT name, role, permissions, scope_levels FROM school_users WHERE id = ?').get(id)
         db.prepare(`
-            UPDATE school_users SET name = ?, role = ?, permissions = ?, photo_url = ?, is_active = ?, updated_at = ?
+            UPDATE school_users SET name = ?, role = ?, permissions = ?, scope_levels = ?, photo_url = ?, is_active = ?, updated_at = ?
             WHERE id = ?
-        `).run(name, role, JSON.stringify(permissions), photo_url ?? null, is_active ?? 1, new Date().toISOString(), id)
-        logAction({ action: 'update_user', entityType: 'user', entityId: id, entityLabel: name, oldValue: oldUser, newValue: { name, role, permissions } })
+        `).run(name, role, JSON.stringify(permissions), JSON.stringify(scope_levels ?? []), photo_url ?? null, is_active ?? 1, new Date().toISOString(), id)
+        logAction({ action: 'update_user', entityType: 'user', entityId: id, entityLabel: name, oldValue: oldUser, newValue: { name, role, permissions, scope_levels } })
         return { success: true }
     })
 

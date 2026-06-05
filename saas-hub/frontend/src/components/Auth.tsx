@@ -271,7 +271,7 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
     if (!data.country?.trim())       { toast.error('Le pays est requis.'); return; }
     if (!data.city?.trim())          { toast.error('La ville est requise.'); return; }
     if (!data.prefecture?.trim())    { toast.error('La préfecture / commune est requise.'); return; }
-    if (!data.level)                 { toast.error('Veuillez sélectionner le cycle scolaire.'); return; }
+    if (!data.levels?.length)        { toast.error('Sélectionnez au moins un cycle scolaire.'); return; }
     if (!data.directorName?.trim())  { toast.error('Le nom du responsable est requis.'); return; }
     if (!data.directorPhone?.trim()) { toast.error('Le téléphone du responsable est requis.'); return; }
     onSubmit(e);
@@ -336,12 +336,31 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
                   <label className={labelCls}>District <span className="text-slate-400 font-normal normal-case">(optionnel)</span></label>
                   <input className={inputCls} value={data.district || ''} onChange={e => set('district', e.target.value)} placeholder="District de Conakry" />
                 </div>
-                <div>
-                  <label className={labelCls}>Cycle scolaire *</label>
-                  <select className={inputCls} value={data.level || ''} onChange={e => set('level', e.target.value)}>
-                    <option value="">Sélectionner…</option>
-                    {['Maternelle','Primaire','Collège','Lycée','Mixte'].map(l => <option key={l}>{l}</option>)}
-                  </select>
+                <div className="col-span-2">
+                  <label className={labelCls}>Cycles scolaires * <span className="text-slate-400 font-normal normal-case">(un ou plusieurs)</span></label>
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    {(['Maternelle','Primaire','Collège','Lycée'] as const).map(lvl => {
+                      const checked = (data.levels || []).includes(lvl)
+                      return (
+                        <label key={lvl}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all select-none ${
+                            checked ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 hover:border-slate-300 text-slate-700'
+                          }`}
+                          onClick={() => {
+                            const cur = data.levels || []
+                            setData({ ...data, levels: checked ? cur.filter((l: string) => l !== lvl) : [...cur, lvl] })
+                          }}
+                        >
+                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                            checked ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'
+                          }`}>
+                            {checked && <CheckCircle size={10} className="text-white" />}
+                          </div>
+                          <span className="text-sm font-medium">{lvl}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
                 </div>
               </div>
 
@@ -455,7 +474,7 @@ export const Auth: React.FC<AuthProps> = ({ onBack, onSuccess }) => {
   const [regData, setRegData] = useState({
     email: '', password: '', confirmPassword: '', terms: false,
     schoolName: '', country: '', city: '', prefecture: '', sousPrefecture: '',
-    district: '', level: '', logoUrl: '', rccm: '',
+    district: '', levels: [] as string[], logoUrl: '', rccm: '',
     directorName: '', directorTitle: '', directorPhone: '', directorEmail: '',
   });
 
@@ -468,7 +487,7 @@ export const Auth: React.FC<AuthProps> = ({ onBack, onSuccess }) => {
         password:       regData.password,
         country:        regData.country,
         city:           regData.city,
-        level:          regData.level,
+        levels:         regData.levels,
         prefecture:     regData.prefecture,
         sousPrefecture: regData.sousPrefecture,
         directorName:   regData.directorName,

@@ -3,7 +3,11 @@ import { dbService } from '../services/db';
 import { useSchoolStore } from '../stores/useSchoolStore';
 import { Layout, BookOpen, Plus, Trash2, Hash, GraduationCap, Layers, Calendar, Wallet, Settings, CheckSquare } from 'lucide-react';
 
+const ALL_CLASS_LEVELS = ['Maternelle', 'Primaire', 'Collège', 'Lycée'] as const;
+
 export function SchoolStructure() {
+    const { schoolLevels } = useSchoolStore()
+    const availableClassLevels = schoolLevels.length > 0 ? schoolLevels : [...ALL_CLASS_LEVELS]
     const [activeSubTab, setActiveSubTab] = useState<'classes' | 'subjects' | 'years'>('classes');
     const [classes, setClasses] = useState<any[]>([]);
     const [subjects, setSubjects] = useState<any[]>([]);
@@ -14,7 +18,7 @@ export function SchoolStructure() {
     const [isYearModalOpen, setIsYearModalOpen] = useState(false);
     const [isYearEditMode, setIsYearEditMode] = useState(false);
 
-    const [newClass, setNewClass] = useState({ name: '', level: 'Primaire' });
+    const [newClass, setNewClass] = useState({ name: '', level: availableClassLevels[0] ?? 'Primaire' });
     const [newSubject, setNewSubject] = useState({ name: '', coefficient: 1 });
     const [newYear, setNewYear] = useState({ id: null as string | null, name: '', start_date: '', end_date: '', is_active: false });
     const [selectedClass, setSelectedClass] = useState<any>(null);
@@ -361,10 +365,9 @@ export function SchoolStructure() {
                                     value={newClass.level}
                                     onChange={e => setNewClass({ ...newClass, level: e.target.value })}
                                 >
-                                    <option value="Maternelle">Maternelle</option>
-                                    <option value="Primaire">Primaire</option>
-                                    <option value="Collège">Collège</option>
-                                    <option value="Lycée">Lycée</option>
+                                    {availableClassLevels.map(lvl => (
+                                        <option key={lvl} value={lvl}>{lvl}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>

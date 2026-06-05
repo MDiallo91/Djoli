@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import {
     Building2, Sparkles, MapPin, Phone, Mail, Camera, Save,
     GraduationCap, Hash, Plus, Trash2, RotateCcw, CheckCircle,
-    School, BookOpen, Medal, Users, ScrollText,
+    School, BookOpen, Medal, Users, ScrollText, CheckSquare, Square,
 } from 'lucide-react'
 import { dbService } from '../services/db'
 import { UserManagement } from './UserManagement'
@@ -230,12 +230,11 @@ export function Settings() {
     const { user } = useAppStore()
     const canManageUsers = hasPermission(user?.permissions ?? null, 'manage_users')
     const [activeTab, setActiveTab] = useState<'school' | 'grading' | 'users' | 'audit' | 'backup'>('school')
-    const [activeLevel, setActiveLevel] = useState('Collège')
 
-    const [schoolInfo, setSchoolInfo] = useState({
+    const [schoolInfo, setSchoolInfo] = useState<any>({
         name: '', motto: '', address: '', phone: '', email: '', logo_url: '',
         city: '', region: '', commune: '', sous_prefecture: '', director_name: '',
-        color_sidebar: '#1a2f6e', color_accent: '#2563eb',
+        color_sidebar: '#1a2f6e', color_accent: '#2563eb', levels: '[]',
     })
     const [gradingConfigs, setGradingConfigs] = useState<Record<string, LevelConfig>>({})
     const [dirtyLevels, setDirtyLevels] = useState<Set<string>>(new Set())
@@ -243,10 +242,24 @@ export function Settings() {
     const [isSaving, setIsSaving] = useState(false)
     const [savedMsg, setSavedMsg] = useState('')
 
+    // Levels actifs pour cette école
+    const schoolActiveLevels: string[] = React.useMemo(() => {
+        try { return JSON.parse(schoolInfo.levels || '[]') } catch { return [] }
+    }, [schoolInfo.levels])
+    const visibleLevels = LEVELS.filter(l => schoolActiveLevels.length === 0 || schoolActiveLevels.includes(l.key))
+    const [activeLevel, setActiveLevel] = useState('Collège')
+
     useEffect(() => {
         dbService.getSchoolInfo().then(info => { if (info) setSchoolInfo(info) })
         dbService.getGradingConfigs().then(configs => { if (configs) setGradingConfigs(configs) })
     }, [])
+
+    // Réinitialise l'onglet actif si le niveau n'est plus disponible
+    useEffect(() => {
+        if (visibleLevels.length > 0 && !visibleLevels.find(l => l.key === activeLevel)) {
+            setActiveLevel(visibleLevels[0].key)
+        }
+    }, [schoolActiveLevels])
 
     const showSuccess = (msg = 'Enregistré !') => {
         setSavedMsg(msg)
@@ -288,7 +301,7 @@ export function Settings() {
         setDirtyLevels(prev => { const n = new Set(prev); n.delete(level); return n })
     }
 
-    const currentLevelMeta = LEVELS.find(l => l.key === activeLevel)!
+    const currentLevelMeta = visibleLevels.find(l => l.key === activeLevel) ?? visibleLevels[0] ?? LEVELS[0]
     const currentLevelConfig = gradingConfigs[activeLevel]
 
     return (
@@ -425,6 +438,40 @@ export function Settings() {
                                     </button>
                                 )}
                             </div>
+                        </div>
+
+                        {/* Cycles scolaires */}
+                        <div className="space-y-4">
+                            <h3 className="text-xs font-black text-sky-500 uppercase tracking-widest flex items-center gap-2">
+                                <GraduationCap size={13} className="text-sky-500" />
+                                Cycles scolaires
+                            </h3>
+                            <div className="flex flex-wrap gap-2">
+                                {(['Maternelle','Primaire','Collège','Lycée'] as const).map(lvl => {
+                                    let cur: string[] = []
+                                    try { cur = JSON.parse(schoolInfo.levels || '[]') } catch {}
+                                    const checked = cur.includes(lvl)
+                                    return (
+                                        <button key={lvl} type="button"
+                                            onClick={() => {
+                                                const next = checked ? cur.filter((l: string) => l !== lvl) : [...cur, lvl]
+                                                setSchoolInfo({ ...schoolInfo, levels: JSON.stringify(next) })
+                                            }}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all ${
+                                                checked
+                                                    ? 'border-sky-500 bg-sky-50 text-sky-700'
+                                                    : 'border-gray-200 bg-white text-gray-400 hover:border-gray-300'
+                                            }`}>
+                                            {checked
+                                                ? <CheckSquare size={14} className="text-sky-600" />
+                                                : <Square size={14} className="text-gray-300" />
+                                            }
+                                            {lvl}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                            <p className="text-[11px] text-gray-400">Ces cycles déterminent les options disponibles dans l'application.</p>
                         </div>
 
                         {/* Contact */}
@@ -617,7 +664,7 @@ export function Settings() {
 
                         {/* Level tabs */}
                         <div className="flex gap-2 flex-wrap">
-                            {LEVELS.map(lvl => {
+                            {visibleLevels.map(lvl => {
                                 const LvlIcon = lvl.icon
                                 const isDirty = dirtyLevels.has(lvl.key)
                                 return (

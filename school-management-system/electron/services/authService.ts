@@ -30,7 +30,9 @@ export function registerAuthHandlers() {
             const isValid = await bcrypt.compare(password, schoolUser.password_hash)
             if (!isValid) throw new Error('Identifiants incorrects')
             await switchSchoolDatabase(schoolUser.school_id)
-            setCurrentUser({ id: schoolUser.id, name: schoolUser.name, username: schoolUser.username, role: schoolUser.role })
+            let scopeLevels: string[] = []
+            try { scopeLevels = JSON.parse(schoolUser.scope_levels || '[]') } catch {}
+            setCurrentUser({ id: schoolUser.id, name: schoolUser.name, username: schoolUser.username, role: schoolUser.role, scope_levels: scopeLevels })
             logAction({ action: 'login', entityType: 'session', entityLabel: schoolUser.name, schoolId: schoolUser.school_id })
             return {
                 id:           schoolUser.id,
@@ -39,6 +41,7 @@ export function registerAuthHandlers() {
                 role:         schoolUser.role,
                 name:         schoolUser.name,
                 permissions:  JSON.parse(schoolUser.permissions),
+                scopeLevels,
                 mustChangePwd: !!schoolUser.must_change_pwd,
                 isCloud:      false,
                 isSubUser:    true,
@@ -57,9 +60,9 @@ export function registerAuthHandlers() {
         if (!isValid) throw new Error('Identifiants incorrects')
 
         await switchSchoolDatabase(user.id)
-        setCurrentUser({ id: user.id, name: user.name, username: user.username, role: user.role })
+        setCurrentUser({ id: user.id, name: user.name, username: user.username, role: user.role, scope_levels: [] })
         logAction({ action: 'login', entityType: 'session', entityLabel: user.name, schoolId: user.id })
-        return { id: user.id, schoolId: user.id, username: user.username, role: user.role, name: user.name, permissions: null, isCloud: false, isSubUser: false }
+        return { id: user.id, schoolId: user.id, username: user.username, role: user.role, name: user.name, permissions: null, scopeLevels: [], isCloud: false, isSubUser: false }
     })
 
     // ── Changement de mot de passe (premier login) ───────────────────────────
@@ -98,9 +101,13 @@ export function registerAuthHandlers() {
 
         const now = new Date().toISOString()
 
+        const levelsFromCloud: string[] = Array.isArray(data.levels) ? data.levels
+            : (licenseData?.levels ?? [])
+        const levelsJson = JSON.stringify(levelsFromCloud)
+
         // Persist licence
         db.prepare(`INSERT OR REPLACE INTO local_license
-            (school_id, email, school_name, country, level, subscription_status,
+            (school_id, email, school_name, country, levels, subscription_status,
              trial_end_date, subscription_end_date, license_key, last_verified_at, cached_until)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).run(
@@ -108,7 +115,7 @@ export function registerAuthHandlers() {
             username,
             data.schoolName,
             data.country ?? null,
-            data.level ?? null,
+            levelsJson,
             data.subscriptionStatus,
             licenseData?.trial_end_date ?? null,
             licenseData?.subscription_end_date ?? null,
@@ -119,14 +126,14 @@ export function registerAuthHandlers() {
 
         // Persist account entry (for account selector screen)
         db.prepare(`INSERT OR REPLACE INTO local_accounts
-            (school_id, school_name, email, country, level, last_login_at, subscription_status)
+            (school_id, school_name, email, country, levels, last_login_at, subscription_status)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         `).run(
             data.id,
             data.schoolName,
             username,
             data.country ?? null,
-            data.level ?? null,
+            levelsJson,
             now,
             data.subscriptionStatus
         )
@@ -141,9 +148,12 @@ export function registerAuthHandlers() {
 
         await switchSchoolDatabase(data.id)
 
+        // Propagate levels to school_info so desktop can read them without cloud
+        db.prepare(`UPDATE school_info SET levels = ? WHERE id = 1`).run(levelsJson)
+
         // Start background sync for this school
         if (data.license_key) { setSyncSession(data.id, data.license_key); triggerSyncNow(); }
-        setCurrentUser({ id: data.id, name: data.schoolName, username, role: 'SUPER_ADMIN' })
+        setCurrentUser({ id: data.id, name: data.schoolName, username, role: 'SUPER_ADMIN', scope_levels: [] })
         logAction({ action: 'cloud_login', entityType: 'session', entityLabel: data.schoolName, schoolId: data.id })
 
         const licenseStatus = licenseData ? computeLicenseStatus(licenseData) : 'invalid'
@@ -158,6 +168,8 @@ export function registerAuthHandlers() {
             isCloud:        true,
             licenseStatus,
             daysLeft,
+            scopeLevels:    [],
+            levels:         levelsFromCloud,
             subscription: {
                 status: data.subscriptionStatus,
                 expiry: data.subscriptionExpiry
@@ -267,9 +279,12 @@ export function registerAuthHandlers() {
             const licenseData = verifyLicense(data.license_key)
             const now = new Date().toISOString()
 
+            const refreshedLevels: string[] = Array.isArray(data.levels) ? data.levels : (licenseData.levels ?? [])
+            const refreshedLevelsJson = JSON.stringify(refreshedLevels)
+
             db.prepare(`UPDATE local_license SET
                 license_key = ?, subscription_status = ?, subscription_end_date = ?,
-                trial_end_date = ?, last_verified_at = ?, cached_until = ?
+                trial_end_date = ?, last_verified_at = ?, cached_until = ?, levels = ?
                 WHERE school_id = ?
             `).run(
                 data.license_key,
@@ -278,11 +293,13 @@ export function registerAuthHandlers() {
                 licenseData.trial_end_date,
                 now,
                 cachedUntil(),
+                refreshedLevelsJson,
                 schoolId
             )
 
-            db.prepare('UPDATE local_accounts SET subscription_status = ? WHERE school_id = ?')
-                .run(data.subscriptionStatus, schoolId)
+            db.prepare('UPDATE local_accounts SET subscription_status = ?, levels = ? WHERE school_id = ?')
+                .run(data.subscriptionStatus, refreshedLevelsJson, schoolId)
+            db.prepare('UPDATE school_info SET levels = ? WHERE id = 1').run(refreshedLevelsJson)
 
             return { status: computeLicenseStatus(licenseData), daysLeft: getDaysRemaining(licenseData.subscription_end_date ?? licenseData.trial_end_date) }
         } catch {

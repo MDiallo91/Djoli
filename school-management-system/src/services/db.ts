@@ -235,10 +235,10 @@ export const dbService = {
     getSchoolUsers: async (): Promise<any[]> => {
         return await (window as any).ipcRenderer.invoke('get-school-users')
     },
-    createSchoolUser: async (data: { name: string; email: string; username: string; password: string; role: string; permissions: string[]; photo_url?: string }): Promise<any> => {
+    createSchoolUser: async (data: { name: string; email: string; username: string; password: string; role: string; permissions: string[]; scope_levels?: string[]; photo_url?: string }): Promise<any> => {
         return await (window as any).ipcRenderer.invoke('create-school-user', data)
     },
-    updateSchoolUser: async (data: { id: string; name: string; role: string; permissions: string[]; photo_url?: string; is_active?: number }): Promise<any> => {
+    updateSchoolUser: async (data: { id: string; name: string; role: string; permissions: string[]; scope_levels?: string[]; photo_url?: string; is_active?: number }): Promise<any> => {
         return await (window as any).ipcRenderer.invoke('update-school-user', data)
     },
     deleteSchoolUser: async (id: string): Promise<any> => {

@@ -2,10 +2,11 @@
 // Written by authService after login; read by auditLogger.
 
 export interface SessionUser {
-    id:       string
-    name:     string
-    username: string
-    role:     string
+    id:           string
+    name:         string
+    username:     string
+    role:         string
+    scope_levels: string[]
 }
 
 export let currentUser: SessionUser | null = null

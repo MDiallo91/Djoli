@@ -203,6 +203,9 @@ export async function initDatabase() {
   try { globalSqlDb!.exec("ALTER TABLE users ADD COLUMN phone TEXT"); } catch {}
   try { globalSqlDb!.exec("ALTER TABLE school_users ADD COLUMN phone TEXT"); } catch {}
   try { globalSqlDb!.exec("ALTER TABLE sync_queue ADD COLUMN school_id TEXT"); } catch {}
+  try { globalSqlDb!.exec("ALTER TABLE local_license ADD COLUMN levels TEXT DEFAULT '[]'"); } catch {}
+  try { globalSqlDb!.exec("ALTER TABLE local_accounts ADD COLUMN levels TEXT DEFAULT '[]'"); } catch {}
+  try { globalSqlDb!.exec("ALTER TABLE school_users ADD COLUMN scope_levels TEXT DEFAULT '[]'"); } catch {}
 
   // Configuration globale du poste (device_id, etc.)
   globalSqlDb!.exec(`CREATE TABLE IF NOT EXISTS global_config (
@@ -297,6 +300,7 @@ export async function switchSchoolDatabase(userId: string) {
     try { schoolSqlDb?.exec("ALTER TABLE school_info ADD COLUMN director_name TEXT"); } catch {}
     try { schoolSqlDb?.exec("ALTER TABLE school_info ADD COLUMN color_sidebar TEXT DEFAULT '#1a2f6e'"); } catch {}
     try { schoolSqlDb?.exec("ALTER TABLE school_info ADD COLUMN color_accent  TEXT DEFAULT '#2563eb'"); } catch {}
+    try { schoolSqlDb?.exec("ALTER TABLE school_info ADD COLUMN levels TEXT DEFAULT '[]'"); } catch {}
 
     // Facturation : barème des frais par classe/année
     runExec(`CREATE TABLE IF NOT EXISTS fee_schedules (

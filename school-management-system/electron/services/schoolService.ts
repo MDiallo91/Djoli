@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'
 import crypto from 'node:crypto'
 import db, { initDatabase } from '../db'
+import { currentUser } from '../currentSession'
 
 export function registerSchoolHandlers() {
 
@@ -30,7 +31,12 @@ export function registerSchoolHandlers() {
 
     ipcMain.removeHandler('get-classes')
     ipcMain.handle('get-classes', () => {
-        return db.prepare('SELECT * FROM classes ORDER BY name ASC').all()
+        const scopeLevels = currentUser?.scope_levels ?? []
+        if (scopeLevels.length === 0) {
+            return db.prepare('SELECT * FROM classes ORDER BY name ASC').all()
+        }
+        const placeholders = scopeLevels.map(() => '?').join(',')
+        return db.prepare(`SELECT * FROM classes WHERE level IN (${placeholders}) ORDER BY name ASC`).all(...scopeLevels)
     })
 
     ipcMain.handle('add-class', (_event, info: any) => {
@@ -72,15 +78,16 @@ export function registerSchoolHandlers() {
     })
 
     ipcMain.handle('update-school-info', (_event, info: any) => {
-        const { name, address, phone, email, logo_url, motto, city, region, commune, sous_prefecture, director_name, color_sidebar, color_accent } = info
+        const { name, address, phone, email, logo_url, motto, city, region, commune, sous_prefecture, director_name, color_sidebar, color_accent, levels } = info
+        const levelsJson = JSON.stringify(Array.isArray(levels) ? levels : [])
         return db.prepare(`UPDATE school_info SET
             name=?, address=?, phone=?, email=?, logo_url=?, motto=?,
             city=?, region=?, commune=?, sous_prefecture=?,
-            director_name=?, color_sidebar=?, color_accent=?
+            director_name=?, color_sidebar=?, color_accent=?, levels=?
             WHERE id=1`
         ).run(name, address, phone, email, logo_url, motto,
               city ?? null, region ?? null, commune ?? null, sous_prefecture ?? null,
-              director_name ?? null, color_sidebar ?? '#1a2f6e', color_accent ?? '#2563eb')
+              director_name ?? null, color_sidebar ?? '#1a2f6e', color_accent ?? '#2563eb', levelsJson)
     })
 
     ipcMain.handle('get-timetable', (_event, classId: number) => {

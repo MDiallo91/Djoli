@@ -73,7 +73,7 @@ function App() {
     } = useAppStore()
 
     const { setStatus: setSyncStatus, addConflicts } = useSyncStore()
-    const { activeYear, schoolYears, fetchAll: fetchSchoolData } = useSchoolStore()
+    const { activeYear, schoolYears, fetchAll: fetchSchoolData, fetchSchoolInfo } = useSchoolStore()
     const [isFormOpen, setIsFormOpen] = useState(false)
     const [editingStudent, setEditingStudent] = useState<any>(null)
     const [schoolLogo, setSchoolLogo] = useState<string | null>(null)
@@ -91,9 +91,9 @@ function App() {
         return () => clearInterval(interval)
     }, [])
 
-    // Charge les années scolaires dès que l'utilisateur est connecté
+    // Charge les données école dès que l'utilisateur est connecté
     useEffect(() => {
-        if (user) fetchSchoolData()
+        if (user) { fetchSchoolData(); fetchSchoolInfo() }
     }, [user?.id])
 
     // Quand les années sont chargées, initialise dashboardYearId sur l'année active

@@ -21,14 +21,19 @@ export const updateProfile = async (req: Request, res: Response) => {
         const user = await UserModel.findByPk(req.user!.id);
         if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
 
-        const allowed = ['schoolName', 'directorName', 'country', 'city', 'level', 'prefecture', 'sousPrefecture', 'rccm', 'logoUrl'];
+        const allowed = ['schoolName', 'directorName', 'country', 'city', 'prefecture', 'sousPrefecture', 'rccm', 'logoUrl'];
         for (const field of allowed) {
             if (req.body[field] !== undefined) (user as any)[field] = req.body[field];
         }
+        if (req.body.levels !== undefined) {
+            user.levels = JSON.stringify(req.body.levels);
+        }
 
         await user.save();
-        const { password: _pw, ...data } = user.toJSON() as any;
-        res.json(data);
+        const { password: _pw, levels: levelsRaw, ...rest } = user.toJSON() as any;
+        let levelsArr: string[] = [];
+        try { levelsArr = JSON.parse(levelsRaw || '[]'); } catch {}
+        res.json({ ...rest, levels: levelsArr });
     } catch {
         res.status(500).json({ error: 'Erreur serveur' });
     }

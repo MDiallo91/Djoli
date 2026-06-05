@@ -13,6 +13,7 @@ export interface LicenseData {
     trial_end_date:        string | null;
     subscription_end_date: string | null;
     issued_at:             string;
+    levels?:               string[];
 }
 
 export type LicenseStatus = 'valid' | 'trial' | 'warning' | 'expired' | 'invalid';
