@@ -259,6 +259,9 @@ export async function syncOnQuit(): Promise<void> {
     ]);
 }
 
+// Exported for unit tests only
+export { pullChanges as _testPullChanges, TABLE_MAP as _testTABLE_MAP };
+
 export function registerSyncHandlers(mainWin: BrowserWindow): void {
     win = mainWin;
 
