@@ -11,10 +11,13 @@ router.post('/refresh', requireAuth, (req, res) => {
     try {
         const user = req.user;
         const license_key = generateLicenseKey(user);
+        let levels: string[] = [];
+        try { levels = JSON.parse(user.levels || '[]'); } catch {}
         res.status(200).json({
             license_key,
             subscriptionStatus: user.subscriptionStatus,
             subscriptionExpiry: user.subscriptionExpiry,
+            levels,
         });
     } catch (error) {
         console.error('[licenseRoute /refresh]', error);
@@ -29,10 +32,13 @@ router.post('/refresh-by-key', requireLicenseBearer, async (req, res) => {
         const user = await UserModel.findByPk(schoolId);
         if (!user) { res.status(404).json({ message: 'École introuvable' }); return; }
         const license_key = generateLicenseKey(user);
+        let levels: string[] = [];
+        try { levels = JSON.parse(user.levels || '[]'); } catch {}
         res.status(200).json({
             license_key,
             subscriptionStatus: user.subscriptionStatus,
             subscriptionExpiry: user.subscriptionExpiry,
+            levels,
         });
     } catch (error) {
         console.error('[licenseRoute /refresh-by-key]', error);

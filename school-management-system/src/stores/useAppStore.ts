@@ -9,6 +9,7 @@ interface User {
     role:          string
     name:          string
     permissions:   string[] | null  // null = admin (tout autorisé)
+    scopeLevels:   string[]         // niveaux d'action; vide = tout voir
     isCloud?:      boolean
     isSubUser?:    boolean
     mustChangePwd?: boolean
@@ -109,10 +110,12 @@ export const useAppStore = create<AppState>()(
 
             handleLogin: (u: any) => {
                 if (!u) return
-                localStorage.setItem('user', JSON.stringify(u))
+                // Garantit la présence de scopeLevels (compat avec anciennes sessions)
+                const normalized: User = { ...u, scopeLevels: u.scopeLevels ?? [] }
+                localStorage.setItem('user', JSON.stringify(normalized))
                 const licenseStatus = u.licenseStatus ?? 'valid'
                 const daysLeft      = u.daysLeft      ?? 999
-                set({ user: u, licenseStatus, daysLeft })
+                set({ user: normalized, licenseStatus, daysLeft })
 
                 if (licenseStatus === 'expired') {
                     set({ phase: 'blocked' })

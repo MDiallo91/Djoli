@@ -13,12 +13,13 @@ const createToken = (id: string): string => {
 };
 
 export const signUp = async (req: Request, res: Response): Promise<void> => {
-    const { schoolName, email, password, country, city, level, directorName,
+    const { schoolName, email, password, country, city, levels, directorName,
             prefecture, sousPrefecture, district, rccm, logoUrl } = req.body;
     let user: UserModel | null = null;
     try {
         user = await UserModel.create({
-            schoolName, email, password, country, city, level,
+            schoolName, email, password, country, city,
+            levels: JSON.stringify(levels ?? []),
             directorName, prefecture, sousPrefecture, rccm, logoUrl,
             approvalStatus: 'pending',
         });
@@ -78,13 +79,16 @@ export const signIn = async (req: Request, res: Response): Promise<void> => {
         const license_key = generateLicenseKey(user);
         res.cookie('jwt', token, { httpOnly: true, maxAge: TOKEN_MAX_AGE_MS });
 
+        let levelsArr: string[] = [];
+        try { levelsArr = JSON.parse(user.levels || '[]'); } catch {}
+
         res.status(200).json({
             id:                   user.id,
             schoolName:           user.schoolName,
             email:                user.email,
             role:                 user.role,
             country:              user.country,
-            level:                user.level,
+            levels:               levelsArr,
             subscriptionStatus:   user.subscriptionStatus,
             subscriptionExpiry:   user.subscriptionExpiry,
             createdAt:            user.createdAt,

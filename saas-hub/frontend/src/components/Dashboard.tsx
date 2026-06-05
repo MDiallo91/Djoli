@@ -43,7 +43,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     directorName:   user.directorName   || '',
     country:        user.country        || '',
     city:           user.city           || '',
-    level:          user.level          || '',
+    levels:         (Array.isArray(user.levels) ? user.levels : []) as string[],
     prefecture:     user.prefecture     || '',
     sousPrefecture: user.sousPrefecture || '',
     rccm:           user.rccm           || '',
@@ -933,19 +933,30 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   ))}
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">Niveau scolaire</label>
-                    <select
-                      value={profile.level}
-                      onChange={e => setField('level', e.target.value)}
-                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition-all"
-                    >
-                      <option value="">— Sélectionner —</option>
-                      <option value="Maternelle">Maternelle</option>
-                      <option value="Primaire">Primaire</option>
-                      <option value="Collège">Collège</option>
-                      <option value="Lycée">Lycée</option>
-                      <option value="Supérieur">Supérieur</option>
-                    </select>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">Cycles scolaires</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(['Maternelle','Primaire','Collège','Lycée'] as const).map(lvl => {
+                        const checked = profile.levels.includes(lvl)
+                        return (
+                          <label key={lvl}
+                            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border-2 cursor-pointer transition-all select-none ${
+                              checked ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                            }`}
+                            onClick={() => {
+                              const cur = profile.levels
+                              setField('levels', checked ? cur.filter((l: string) => l !== lvl) : [...cur, lvl])
+                            }}
+                          >
+                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                              checked ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'
+                            }`}>
+                              {checked && <svg viewBox="0 0 10 10" className="w-2.5 h-2.5 text-white fill-current"><path d="M1 5l3 3 5-5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                            </div>
+                            <span className="text-xs font-semibold">{lvl}</span>
+                          </label>
+                        )
+                      })}
+                    </div>
                   </div>
                 </div>
 

@@ -24,6 +24,8 @@ export const DBconnect = async (): Promise<void> => {
     if (_ready) return;
     await sequelize.authenticate();
     await sequelize.sync();
+    // Safe migration: add levels column if it doesn't exist yet
+    await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS levels TEXT DEFAULT '[]'`).catch(() => {});
     _ready = true;
     console.log('PostgreSQL connecté et synchronisé');
 };

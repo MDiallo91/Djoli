@@ -271,7 +271,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
 
           <div className="hidden md:flex items-center gap-2">
             {release && (
-              <a href={release.downloadUrl} target="_blank" rel="noopener noreferrer"
+              <a href={release.downloadUrl} download
                 className="flex items-center gap-1.5 text-sm font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 hover:border-slate-400 px-3.5 py-2 rounded-xl transition-all">
                 <Download size={14} /> Télécharger
               </a>
@@ -296,7 +296,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
           <div className="md:hidden bg-white border-t border-slate-100 px-6 py-4 space-y-3">
             {NAV_LINKS.map(l => <a key={l} href={`#${l.toLowerCase()}`} className="block text-sm font-medium text-slate-600 py-2">{l}</a>)}
             {release && (
-              <a href={release.downloadUrl} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 mt-2 border border-slate-200 text-slate-700 py-3 rounded-xl font-semibold text-sm">
+              <a href={release.downloadUrl} download className="w-full flex items-center justify-center gap-2 mt-2 border border-slate-200 text-slate-700 py-3 rounded-xl font-semibold text-sm">
                 <Download size={15} /> Télécharger l'application
               </a>
             )}
@@ -631,7 +631,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             {release ? (
-              <a href={release.downloadUrl} target="_blank" rel="noopener noreferrer"
+              <a href={release.downloadUrl} download
                 className="flex items-center gap-3 bg-white text-slate-900 px-8 py-4 rounded-2xl font-semibold hover:bg-slate-100 transition-all shadow-xl">
                 <Download size={20} /> Windows (.exe) — v{release.version}
               </a>
@@ -756,7 +756,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
             <div className="space-y-3">
               <p className="font-semibold text-white text-xs uppercase tracking-wider">Produit</p>
               {['Fonctionnalités','Tarification'].map(l => <a key={l} href={`#${l.toLowerCase()}`} className="block text-slate-400 hover:text-white transition-colors">{l}</a>)}
-              {release && <a href={release.downloadUrl} target="_blank" rel="noopener noreferrer" className="block text-slate-400 hover:text-white transition-colors">Télécharger</a>}
+              {release && <a href={release.downloadUrl} download className="block text-slate-400 hover:text-white transition-colors">Télécharger</a>}
             </div>
             <div className="space-y-3">
               <p className="font-semibold text-white text-xs uppercase tracking-wider">Support</p>
