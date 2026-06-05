@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RefreshCw, WifiOff, Clock, AlertTriangle, CheckCircle, UploadCloud } from 'lucide-react';
+import { RefreshCw, WifiOff, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useSyncStore, SyncStatus as SyncStatusType } from '../stores/useSyncStore';
 import { dbService } from '../services/db';
 
@@ -26,7 +26,6 @@ const STATUS_CONFIG: Record<SyncStatusType, { label: string; dot: string; icon: 
 export const SyncStatus: React.FC = () => {
     const { status, pendingCount, lastSyncAt } = useSyncStore();
     const [syncing, setSyncing] = useState(false);
-    const [fullSyncing, setFullSyncing] = useState(false);
     const cfg = STATUS_CONFIG[status];
 
     const handleSyncNow = async () => {
@@ -34,20 +33,7 @@ export const SyncStatus: React.FC = () => {
         try { await dbService.syncNow(); } finally { setSyncing(false); }
     };
 
-    const handleForceFullSync = async () => {
-        if (!confirm('Envoyer toutes les données locales vers le cloud ?\n\nCette opération peut prendre quelques secondes.')) return;
-        setFullSyncing(true);
-        try {
-            const result = await dbService.forceFullSync();
-            alert(`Synchronisation complète terminée.\n${result.queued} enregistrement(s) envoyés vers le cloud.`);
-        } catch (e: any) {
-            alert('Erreur lors de la synchronisation complète : ' + (e?.message || e));
-        } finally {
-            setFullSyncing(false);
-        }
-    };
-
-    const busy = syncing || fullSyncing || status === 'syncing';
+    const busy = syncing || status === 'syncing';
 
     return (
         <div className="flex items-center gap-1.5 no-print">
@@ -69,18 +55,6 @@ export const SyncStatus: React.FC = () => {
                 )}
             </button>
 
-            <button
-                onClick={handleForceFullSync}
-                disabled={busy}
-                title="Envoyer toutes les données locales vers le cloud"
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-100 transition-all text-xs font-semibold disabled:opacity-60"
-            >
-                {fullSyncing
-                    ? <RefreshCw size={13} className="animate-spin" />
-                    : <UploadCloud size={13} />
-                }
-                <span className="hidden sm:inline">Resync</span>
-            </button>
         </div>
     );
 };
