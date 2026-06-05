@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { fetchLatestRelease, GithubRelease } from '../lib/githubRelease';
+import { fetchLatestRelease } from '../lib/githubRelease';
+import type { GithubRelease } from '../lib/githubRelease';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Shield, Zap, Globe, Download, CheckCircle, ArrowRight,
