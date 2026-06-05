@@ -2,53 +2,67 @@ import { ipcMain } from 'electron'
 import crypto from 'node:crypto'
 import db, { initDatabase } from '../db'
 import { currentUser } from '../currentSession'
+import { trackChange } from '../syncTracker'
 
 export function registerSchoolHandlers() {
 
     ipcMain.handle('get-school-years', () => {
-        return db.prepare('SELECT * FROM school_years ORDER BY start_date DESC').all()
+        return db.prepare('SELECT * FROM school_years WHERE deleted_at IS NULL ORDER BY start_date DESC').all()
     })
 
     ipcMain.handle('add-school-year', (_event, year: any) => {
         const { name, start_date, end_date, is_active } = year
         if (!name) throw new Error('Nom de l\'année requis')
+        const now = new Date().toISOString()
         if (is_active) db.prepare('UPDATE school_years SET is_active = 0').run()
         const id = crypto.randomUUID()
-        db.prepare('INSERT INTO school_years (id, name, start_date, end_date, is_active) VALUES (?, ?, ?, ?, ?)').run(id, name, start_date, end_date, is_active ? 1 : 0)
+        db.prepare('INSERT INTO school_years (id, name, start_date, end_date, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(id, name, start_date, end_date, is_active ? 1 : 0, now, now)
+        trackChange('INSERT', 'school_year', id, { id, name, start_date, end_date, is_active: is_active ? 1 : 0, created_at: now, updated_at: now })
         return { success: true, id }
     })
 
     ipcMain.handle('update-school-year', (_event, year: any) => {
         const { id, name, start_date, end_date, is_active } = year
+        const now = new Date().toISOString()
         if (is_active) db.prepare('UPDATE school_years SET is_active = 0').run()
-        db.prepare('UPDATE school_years SET name=?, start_date=?, end_date=?, is_active=? WHERE id=?').run(name, start_date, end_date, is_active ? 1 : 0, id)
+        db.prepare('UPDATE school_years SET name=?, start_date=?, end_date=?, is_active=?, updated_at=? WHERE id=?').run(name, start_date, end_date, is_active ? 1 : 0, now, id)
+        const updated = db.prepare('SELECT * FROM school_years WHERE id = ?').get(id) as any
+        if (updated) trackChange('UPDATE', 'school_year', id, updated)
         return { success: true }
     })
 
     ipcMain.handle('delete-school-year', (_event, id: string) => {
-        return db.prepare('DELETE FROM school_years WHERE id = ?').run(id)
+        const now = new Date().toISOString()
+        db.prepare('UPDATE school_years SET deleted_at = ?, updated_at = ? WHERE id = ?').run(now, now, id)
+        trackChange('DELETE', 'school_year', id, null)
+        return { success: true }
     })
 
     ipcMain.removeHandler('get-classes')
     ipcMain.handle('get-classes', () => {
         const scopeLevels = currentUser?.scope_levels ?? []
         if (scopeLevels.length === 0) {
-            return db.prepare('SELECT * FROM classes ORDER BY name ASC').all()
+            return db.prepare('SELECT * FROM classes WHERE deleted_at IS NULL ORDER BY name ASC').all()
         }
         const placeholders = scopeLevels.map(() => '?').join(',')
-        return db.prepare(`SELECT * FROM classes WHERE level IN (${placeholders}) ORDER BY name ASC`).all(...scopeLevels)
+        return db.prepare(`SELECT * FROM classes WHERE deleted_at IS NULL AND level IN (${placeholders}) ORDER BY name ASC`).all(...scopeLevels)
     })
 
     ipcMain.handle('add-class', (_event, info: any) => {
         const { name, level } = info
         if (!name) throw new Error('Nom de la classe requis')
-        const id = crypto.randomUUID()
-        db.prepare('INSERT INTO classes (id, name, level) VALUES (?, ?, ?)').run(id, name, level)
+        const id  = crypto.randomUUID()
+        const now = new Date().toISOString()
+        db.prepare('INSERT INTO classes (id, name, level, created_at, updated_at) VALUES (?, ?, ?, ?, ?)').run(id, name, level, now, now)
+        trackChange('INSERT', 'class', id, { id, name, level, created_at: now, updated_at: now })
         return { success: true, id }
     })
 
     ipcMain.handle('delete-class', (_event, id: string) => {
-        return db.prepare('DELETE FROM classes WHERE id = ?').run(id)
+        const now = new Date().toISOString()
+        db.prepare('UPDATE classes SET deleted_at = ?, updated_at = ? WHERE id = ?').run(now, now, id)
+        trackChange('DELETE', 'class', id, null)
+        return { success: true }
     })
 
     ipcMain.handle('update-class-tuition', (_event, data: { classId: string, tuitionFee: number }) => {
@@ -58,19 +72,24 @@ export function registerSchoolHandlers() {
     })
 
     ipcMain.handle('get-subjects', () => {
-        return db.prepare('SELECT * FROM subjects ORDER BY name ASC').all()
+        return db.prepare('SELECT * FROM subjects WHERE deleted_at IS NULL ORDER BY name ASC').all()
     })
 
     ipcMain.handle('add-subject', (_event, info: any) => {
         const { name, coefficient } = info
         if (!name) throw new Error('Nom de la matière requis')
-        const id = crypto.randomUUID()
-        db.prepare('INSERT INTO subjects (id, name, coefficient) VALUES (?, ?, ?)').run(id, name, coefficient || 1)
+        const id  = crypto.randomUUID()
+        const now = new Date().toISOString()
+        db.prepare('INSERT INTO subjects (id, name, coefficient, created_at, updated_at) VALUES (?, ?, ?, ?, ?)').run(id, name, coefficient || 1, now, now)
+        trackChange('INSERT', 'subject', id, { id, name, coefficient: coefficient || 1, created_at: now, updated_at: now })
         return { success: true, id }
     })
 
     ipcMain.handle('delete-subject', (_event, id: string) => {
-        return db.prepare('DELETE FROM subjects WHERE id = ?').run(id)
+        const now = new Date().toISOString()
+        db.prepare('UPDATE subjects SET deleted_at = ?, updated_at = ? WHERE id = ?').run(now, now, id)
+        trackChange('DELETE', 'subject', id, null)
+        return { success: true }
     })
 
     ipcMain.handle('get-school-info', () => {
