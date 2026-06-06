@@ -94,6 +94,24 @@ export const dbService = {
     deleteTimetableEntry: async (id: string) => {
         return await (window as any).ipcRenderer.invoke('delete-timetable-entry', id)
     },
+    getCompositionSchedules: async () => {
+        return await (window as any).ipcRenderer.invoke('get-composition-schedules')
+    },
+    addCompositionSchedule: async (data: any) => {
+        return await (window as any).ipcRenderer.invoke('add-composition-schedule', data)
+    },
+    deleteCompositionSchedule: async (id: string) => {
+        return await (window as any).ipcRenderer.invoke('delete-composition-schedule', id)
+    },
+    getCompositionScheduleEntries: async (scheduleId: string) => {
+        return await (window as any).ipcRenderer.invoke('get-composition-schedule-entries', scheduleId)
+    },
+    addCompositionScheduleEntry: async (data: any) => {
+        return await (window as any).ipcRenderer.invoke('add-composition-schedule-entry', data)
+    },
+    deleteCompositionScheduleEntry: async (id: string) => {
+        return await (window as any).ipcRenderer.invoke('delete-composition-schedule-entry', id)
+    },
     getSchoolYears: async () => {
         return await (window as any).ipcRenderer.invoke('get-school-years')
     },

@@ -130,6 +130,48 @@ export function registerSchoolHandlers() {
         return db.prepare('DELETE FROM timetables WHERE id = ?').run(id)
     })
 
+    ipcMain.handle('get-composition-schedules', () => {
+        return db.prepare('SELECT * FROM composition_schedules WHERE deleted_at IS NULL ORDER BY created_at DESC').all()
+    })
+
+    ipcMain.handle('add-composition-schedule', (_event, data: any) => {
+        const id = crypto.randomUUID()
+        const now = new Date().toISOString()
+        db.prepare('INSERT INTO composition_schedules (id, name, term, school_year_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)')
+            .run(id, data.name, data.term ?? null, data.school_year_id ?? null, now, now)
+        return { success: true, id }
+    })
+
+    ipcMain.handle('delete-composition-schedule', (_event, id: string) => {
+        const now = new Date().toISOString()
+        db.prepare('UPDATE composition_schedules SET deleted_at = ? WHERE id = ?').run(now, id)
+        db.prepare('UPDATE composition_schedule_entries SET deleted_at = ? WHERE schedule_id = ?').run(now, id)
+        return { success: true }
+    })
+
+    ipcMain.handle('get-composition-schedule-entries', (_event, scheduleId: string) => {
+        return db.prepare(`
+            SELECT e.*, s.name as subject_name
+            FROM composition_schedule_entries e
+            JOIN subjects s ON e.subject_id = s.id
+            WHERE e.schedule_id = ? AND e.deleted_at IS NULL
+            ORDER BY e.start_time, e.day_of_week
+        `).all(scheduleId)
+    })
+
+    ipcMain.handle('add-composition-schedule-entry', (_event, data: any) => {
+        const id = crypto.randomUUID()
+        const now = new Date().toISOString()
+        const classIds = JSON.stringify(Array.isArray(data.class_ids) ? data.class_ids : [])
+        db.prepare('INSERT INTO composition_schedule_entries (id, schedule_id, subject_id, day_of_week, start_time, end_time, class_ids, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+            .run(id, data.schedule_id, data.subject_id, data.day_of_week, data.start_time, data.end_time, classIds, data.notes ?? null, now, now)
+        return { success: true, id }
+    })
+
+    ipcMain.handle('delete-composition-schedule-entry', (_event, id: string) => {
+        return db.prepare('DELETE FROM composition_schedule_entries WHERE id = ?').run(id)
+    })
+
     ipcMain.handle('get-parent-by-phone', (_event, phone: string) => {
         return db.prepare('SELECT * FROM parents WHERE phone = ?').get(phone)
     })
