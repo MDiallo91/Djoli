@@ -97,15 +97,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     return () => clearInterval(t);
   }, [fetchStats, fetchDashboard]);
 
+  const fetchStudents = useCallback(() => {
+    setLoadingStudents(true);
+    apiClient.get('/school/students')
+      .then(r => { setStudents(r.data.students ?? []); setStudentsYear(r.data.year ?? null); setStudentsCurrentMonth(r.data.currentMonth ?? ''); })
+      .catch(() => {})
+      .finally(() => setLoadingStudents(false));
+  }, []);
+
   useEffect(() => {
-    if (activeNav === 'students') {
-      setLoadingStudents(true);
-      apiClient.get('/school/students')
-        .then(r => { setStudents(r.data.students ?? []); setStudentsYear(r.data.year ?? null); setStudentsCurrentMonth(r.data.currentMonth ?? ''); })
-        .catch(() => {})
-        .finally(() => setLoadingStudents(false));
-    }
-  }, [activeNav]);
+    if (activeNav === 'students') fetchStudents();
+  }, [activeNav, fetchStudents]);
 
   useEffect(() => {
     if (activeNav === 'downloads' && !release) {
@@ -310,8 +312,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </div>
               )}
 
-              {/* KPI cards — 3 cols (sans Élèves) */}
-              <div className="grid grid-cols-3 gap-3 lg:gap-5">
+              {/* KPI cards — 4 cols */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
+                {/* Élèves */}
+                <div className="bg-white rounded-2xl border border-slate-100 p-4 lg:p-5 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-violet-600 bg-violet-50 text-lg"><RiUserLine /></div>
+                    {loadingStats && <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-200 border-t-violet-500 animate-spin" />}
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Élèves</p>
+                  <p className="text-xl lg:text-2xl font-bold text-slate-900 mt-0.5" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                    {dashStats ? String(dashStats.totalStudents) : '—'}
+                  </p>
+                  <p className="text-[10px] text-violet-500 font-medium mt-1 flex items-center gap-0.5"><RiUserLine /> Inscrits</p>
+                </div>
+
                 {/* Total encaissé */}
                 <div className="bg-white rounded-2xl border border-slate-100 p-4 lg:p-5 shadow-sm">
                   <div className="flex items-center justify-between mb-3">
@@ -547,7 +562,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   </p>
                 </div>
                 <button
-                  onClick={() => { setLoadingStudents(true); apiClient.get('/school/students').then(r => { setStudents(r.data.students ?? []); setStudentsYear(r.data.year ?? null); }).catch(() => {}).finally(() => setLoadingStudents(false)); }}
+                  onClick={() => fetchStudents(true)}
                   disabled={loadingStudents}
                   className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 text-xs font-medium border border-slate-200 px-3 py-1.5 rounded-xl hover:bg-slate-50 transition-all disabled:opacity-50 flex-shrink-0"
                 >

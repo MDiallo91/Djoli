@@ -11,11 +11,21 @@ export function registerStudentHandlers() {
     ipcMain.handle('get-stats', (_event, yearId?: string) => {
         const resolvedYearId = yearId || (db.prepare('SELECT id FROM school_years WHERE is_active = 1 LIMIT 1').get() as any)?.id
         const studentCount = resolvedYearId
-            ? (db.prepare('SELECT COUNT(DISTINCT student_id) as count FROM enrollments WHERE school_year_id = ?').get(resolvedYearId) as any)?.count || 0
+            ? (db.prepare(`
+                SELECT COUNT(DISTINCT e.student_id) as count
+                FROM enrollments e
+                JOIN students s ON e.student_id = s.id
+                WHERE e.school_year_id = ?
+              `).get(resolvedYearId) as any)?.count || 0
             : (db.prepare('SELECT COUNT(*) as count FROM students').get() as any)?.count || 0
         const staffCount = (db.prepare('SELECT COUNT(*) as count FROM staff').get() as any)?.count || 0
         const classCount = resolvedYearId
-            ? (db.prepare('SELECT COUNT(DISTINCT class_id) as count FROM enrollments WHERE school_year_id = ?').get(resolvedYearId) as any)?.count || 0
+            ? (db.prepare(`
+                SELECT COUNT(DISTINCT e.class_id) as count
+                FROM enrollments e
+                JOIN students s ON e.student_id = s.id
+                WHERE e.school_year_id = ?
+              `).get(resolvedYearId) as any)?.count || 0
             : (db.prepare('SELECT COUNT(*) as count FROM classes').get() as any)?.count || 0
         return { studentCount, staffCount, classCount }
     })
@@ -102,7 +112,7 @@ export function registerStudentHandlers() {
             finalStudentId = crypto.randomUUID()
             db.prepare(`INSERT INTO students (id, matricule, first_name, last_name, gender, birth_date, address, pere, mere, phone, parent_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
                 .run(finalStudentId, student.matricule || null, student.first_name, student.last_name, student.gender || 'M', student.birth_date || null, student.address || null, student.pere || null, student.mere || null, student.phone || null, parentId, now, now)
-            trackChange('INSERT', 'student', finalStudentId, { id: finalStudentId, ...student, parent_id: parentId, created_at: now, updated_at: now })
+            trackChange('INSERT', 'student', finalStudentId, { ...student, id: finalStudentId, parent_id: parentId, created_at: now, updated_at: now })
             logAction({ action: 'add_student', entityType: 'student', entityId: finalStudentId, entityLabel: fullName, newValue: { ...student, parent_id: parentId } })
         }
 
