@@ -59,7 +59,7 @@ function TimetablePrint({ timetable, className, schoolInfo, year }: {
 }) {
     const th: React.CSSProperties = {
         border: `1px solid ${HDR}`, padding: '4pt 5pt', textAlign: 'center',
-        fontWeight: 700, fontSize: '9pt', backgroundColor: HDR, color: '#fff',
+        fontWeight: 700, fontSize: '9pt', backgroundColor: HDR, color: '#000',
     }
     const td: React.CSSProperties = {
         border: '1px solid #ccc', padding: '4pt 5pt', fontSize: '8pt', verticalAlign: 'top', minHeight: 32,
@@ -86,7 +86,7 @@ function TimetablePrint({ timetable, className, schoolInfo, year }: {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '8.5pt' }}>
                 <thead>
                     <tr>
-                        <th style={{ ...th, width: '12%' }}>Horaire</th>
+                        <th style={{  width: '12%' }}>Horaire</th>
                         {DAYS.map(d => <th key={d} style={{ ...th, width: `${88 / DAYS.length}%` }}>{d}</th>)}
                     </tr>
                 </thead>
@@ -156,12 +156,26 @@ function CompositionPrint({ entries, scheduleName, term, schoolInfo, year, class
                 <div style={{ textAlign: 'center', color: '#666', fontSize: '10pt' }}>Aucun créneau défini</div>
             ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '8.5pt' }}>
-                    <thead>
-                        <tr>
-                            <th style={{ ...th, width: '12%' }}>Horaire</th>
-                            {DAYS.map(d => <th key={d} style={{ ...th, width: `${88 / DAYS.length}%` }}>{d}</th>)}
-                        </tr>
-                    </thead>
+                        <thead>
+                            <tr>
+                                <th style={{ ...th, color: 'black', width: '12%' }}>
+                                    Horaire
+                                </th>
+
+                                {DAYS.map(d => (
+                                    <th
+                                        key={d}
+                                        style={{
+                                            ...th,
+                                            color: 'black',
+                                            width: `${88 / DAYS.length}%`
+                                        }}
+                                    >
+                                        {d}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
                     <tbody>
                         {slots.map(({ start, end }, ri) => (
                             <tr key={start} style={{ backgroundColor: ri % 2 === 0 ? '#fff' : '#f5f5f5' }}>
