@@ -2,6 +2,8 @@ import express, { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import UserModel from './models/userModel';
+import SchoolRecord from './models/schoolRecordModel';
 
 dotenv.config();
 
@@ -41,6 +43,18 @@ app.use(checkUser);
 
 app.get('/', (_req, res) => {
     res.json({ status: 'ok', message: 'Djoli API is running' });
+});
+
+app.get('/api/public/stats', async (_req: Request, res: Response) => {
+    try {
+        const [schoolCount, studentCount] = await Promise.all([
+            UserModel.count({ where: { role: 'user', approvalStatus: 'approved' } }),
+            SchoolRecord.count({ where: { entity_type: 'student', deleted_at: null } }),
+        ]);
+        res.json({ schoolCount, studentCount });
+    } catch {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
 });
 
 app.get('/jwtid', requireAuth, (req, res) => {
