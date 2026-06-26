@@ -1,10 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  LogOut, Wallet, Download, Clock, CheckCircle, AlertCircle,
-  Zap, BarChart3, Settings, Bell, BookOpen, Users, Award,
-  ArrowUpRight, RefreshCw, Shield, Globe, Save, Lock,
-  Building2, Key, Calendar, Package, Menu, X,
+  LogOut, Wallet, Download, CheckCircle, AlertCircle,
+  Zap, Settings, Bell, BookOpen, Users, Award,
+  RefreshCw, Shield, Globe, Save, Lock,
+  Building2, Key, Package, Menu, X, Briefcase, GraduationCap, DollarSign,
 } from 'lucide-react';
+import StructureSection from './school/StructureSection';
+import StaffSection from './school/StaffSection';
+import GradesSection from './school/GradesSection';
+import FinanceSection from './school/FinanceSection';
+import StudentsSection from './school/StudentsSection';
+import BulletinSection from './school/BulletinSection';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -26,17 +32,25 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-const NAV = [
-  { icon: Zap,      label: "Vue d'ensemble", id: 'overview'  },
-  { icon: Users,    label: 'Élèves',         id: 'students'  },
-  { icon: Wallet,   label: 'Facturation',    id: 'billing'   },
-  { icon: Download, label: 'Téléchargements',id: 'downloads' },
-  { icon: Settings, label: 'Paramètres',     id: 'settings'  },
+const NAV_SCHOOL = [
+  { icon: Zap,           label: "Vue d'ensemble", id: 'overview'   },
+  { icon: Users,         label: 'Élèves',          id: 'students'   },
+  { icon: GraduationCap, label: 'Notes',            id: 'grades'     },
+  { icon: DollarSign,    label: 'Finance',          id: 'finance'    },
+  { icon: Briefcase,     label: 'Personnel',        id: 'staff'      },
+  { icon: BookOpen,      label: 'Structure',        id: 'structure'  },
 ];
+const NAV_ACCOUNT = [
+  { icon: Wallet,        label: 'Facturation',      id: 'billing'    },
+  { icon: Download,      label: 'Téléchargements',  id: 'downloads'  },
+  { icon: Settings,      label: 'Paramètres',       id: 'settings'   },
+];
+const NAV = [...NAV_SCHOOL, ...NAV_ACCOUNT];
 
 export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [activeNav, setActiveNav] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [bulletinStudent, setBulletinStudent] = useState<any>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState(user.subscriptionStatus);
   const [subscriptionExpiry, setSubscriptionExpiry] = useState(user.subscriptionExpiry);
   const [profile, setProfile] = useState({
@@ -58,13 +72,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [syncStats, setSyncStats] = useState<{ counts: Record<string, number>; lastSyncAt: string | null } | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  type Student = { id: string; first_name: string; last_name: string; gender: string | null; matricule: string | null; phone: string | null; class_name: string | null; has_paid: boolean };
-  const [students, setStudents]       = useState<Student[]>([]);
-  const [studentsYear, setStudentsYear] = useState<{ id: string; name: string } | null>(null);
-  const [studentsCurrentMonth, setStudentsCurrentMonth] = useState<string>('');
-  const [loadingStudents, setLoadingStudents] = useState(false);
-  const [studentSearch, setStudentSearch]     = useState('');
-  const [studentFilter, setStudentFilter]     = useState<'all' | 'paid' | 'unpaid'>('all');
 
   type LatePayer = { first_name: string; last_name: string; parent_phone: string | null };
   type DashStats = {
@@ -97,18 +104,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     return () => clearInterval(t);
   }, [fetchStats, fetchDashboard]);
 
-  const fetchStudents = useCallback(() => {
-    setLoadingStudents(true);
-    apiClient.get('/school/students')
-      .then(r => { setStudents(r.data.students ?? []); setStudentsYear(r.data.year ?? null); setStudentsCurrentMonth(r.data.currentMonth ?? ''); })
-      .catch(() => {})
-      .finally(() => setLoadingStudents(false));
-  }, []);
-
-  useEffect(() => {
-    if (activeNav === 'students') fetchStudents();
-  }, [activeNav, fetchStudents]);
-
   useEffect(() => {
     if (activeNav === 'downloads' && !release) {
       fetch(`${API}/settings/application`)
@@ -125,6 +120,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const navigate = (id: string) => {
     setActiveNav(id);
     setSidebarOpen(false);
+    setBulletinStudent(null);
   };
 
   const saveProfile = async () => {
@@ -188,61 +184,96 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const initials = (user.schoolName || 'U').slice(0, 2).toUpperCase();
   const setField = (f: string, v: string) => setProfile(p => ({ ...p, [f]: v }));
 
+  const NavItem = ({ item }: { item: typeof NAV[0] }) => {
+    const active = activeNav === item.id;
+    return (
+      <button
+        key={item.id}
+        onClick={() => navigate(item.id)}
+        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-150 text-left ${
+          active
+            ? 'bg-white/15 text-white shadow-sm'
+            : 'text-slate-400 hover:text-white hover:bg-white/8'
+        }`}
+      >
+        <item.icon size={16} className={active ? 'text-white' : 'text-slate-500'} strokeWidth={active ? 2.5 : 2} />
+        <span className={active ? 'text-white' : ''}>{item.label}</span>
+        {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400" />}
+      </button>
+    );
+  };
+
   const SidebarContent = () => (
-    <>
-      <div className="px-6 py-5 border-b border-slate-100">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/30">
-            <BookOpen size={16} className="text-white" />
+    <div className="flex flex-col h-full" style={{ background: 'linear-gradient(180deg, #0f172a 0%, #0f1f3d 100%)' }}>
+      {/* Brand */}
+      <div className="px-5 pt-6 pb-5">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)', boxShadow: '0 4px 12px rgba(37,99,235,0.4)' }}>
+            <BookOpen size={17} className="text-white" />
           </div>
           <div>
-            <span className="font-bold text-slate-900 text-base block leading-none" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>DJOLI</span>
-            <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Cloud Portal</span>
+            <p className="font-black text-white text-[17px] leading-none tracking-tight" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>DJOLI</p>
+            <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest mt-0.5">Cloud Portal</p>
+          </div>
+        </div>
+        {/* School chip */}
+        <div className="mt-4 px-3 py-2.5 rounded-xl bg-white/6 border border-white/8 flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 text-blue-200"
+            style={{ background: 'rgba(37,99,235,0.3)' }}>
+            {initials}
+          </div>
+          <div className="min-w-0">
+            <p className="text-[12px] font-bold text-white truncate leading-tight">{user.schoolName}</p>
+            <p className="text-[10px] text-slate-500 truncate">{user.email}</p>
           </div>
         </div>
       </div>
-      <nav className="flex-1 px-3 py-5 space-y-1">
-        {NAV.map(item => (
-          <button
-            key={item.id}
-            onClick={() => navigate(item.id)}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${activeNav === item.id ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
-          >
-            <item.icon size={17} className={activeNav === item.id ? 'text-indigo-600' : ''} />
-            {item.label}
-          </button>
-        ))}
+
+      {/* Nav */}
+      <nav className="flex-1 px-3 pb-3 overflow-y-auto space-y-0.5">
+        <p className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-600 px-3 pt-1 pb-2">Gestion scolaire</p>
+        {NAV_SCHOOL.map(item => <NavItem key={item.id} item={item} />)}
+
+        <div className="mx-3 my-3 border-t border-white/8" />
+        <p className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-600 px-3 pb-2">Mon compte</p>
+        {NAV_ACCOUNT.map(item => <NavItem key={item.id} item={item} />)}
       </nav>
-      <div className="p-4 border-t border-slate-100">
-        <div className="flex items-center gap-3 p-3 rounded-xl">
-          <div className="w-9 h-9 bg-indigo-100 rounded-full flex items-center justify-center font-bold text-indigo-600 text-sm flex-shrink-0">{initials}</div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-slate-900 truncate">{user.schoolName}</p>
-            <p className="text-xs text-slate-400 truncate">{user.email}</p>
-          </div>
+
+      {/* Footer */}
+      <div className="p-3 border-t border-white/8">
+        {/* Subscription status */}
+        <div className={`flex items-center gap-2 px-3 py-2 rounded-xl mb-2 ${isActive ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
+          <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isActive ? 'bg-emerald-400' : 'bg-red-400'} animate-pulse-soft`} />
+          <p className={`text-[11px] font-semibold ${isActive ? 'text-emerald-400' : 'text-red-400'}`}>
+            {isActive ? `Actif · ${daysLeft > 0 ? `${daysLeft}j restants` : 'À renouveler'}` : 'Abonnement expiré'}
+          </p>
         </div>
-        <button onClick={onLogout} className="w-full flex items-center gap-3 px-3 py-2.5 mt-1 rounded-xl text-sm font-medium text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all">
-          <LogOut size={16} />
+        <button onClick={onLogout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-150">
+          <LogOut size={15} />
           Déconnexion
         </button>
       </div>
-    </>
+    </div>
   );
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
 
       {/* ─── SIDEBAR DESKTOP (lg+) ─── */}
-      <aside className="hidden lg:flex w-64 bg-white border-r border-slate-100 flex-col fixed inset-y-0 left-0 z-30">
+      <aside className="hidden lg:flex w-64 flex-col fixed inset-y-0 left-0 z-30 overflow-hidden"
+        style={{ boxShadow: '4px 0 24px rgba(0,0,0,0.15)' }}>
         <SidebarContent />
       </aside>
 
       {/* ─── SIDEBAR MOBILE OVERLAY ─── */}
       {sidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-40 flex">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-          <aside className="relative w-72 bg-white flex flex-col shadow-2xl">
-            <button onClick={() => setSidebarOpen(false)} className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-slate-100 text-slate-400">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+          <aside className="relative w-72 flex flex-col shadow-2xl overflow-hidden" style={{ boxShadow: '8px 0 32px rgba(0,0,0,0.3)' }}>
+            <button onClick={() => setSidebarOpen(false)}
+              className="absolute top-5 right-4 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all z-10">
               <X size={18} />
             </button>
             <SidebarContent />
@@ -254,24 +285,38 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       <main className="flex-1 lg:ml-64 pb-20 lg:pb-0">
 
         {/* Header */}
-        <header className="sticky top-0 z-20 bg-white/90 backdrop-blur-xl border-b border-slate-100 px-4 lg:px-8 h-14 lg:h-16 flex items-center justify-between">
+        <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-xl border-b border-slate-100 px-4 lg:px-8 h-14 lg:h-16 flex items-center justify-between"
+          style={{ boxShadow: '0 1px 0 rgba(0,0,0,0.06)' }}>
           <div className="flex items-center gap-3">
-            {/* Hamburger mobile */}
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-all">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all">
               <Menu size={20} />
             </button>
-            <h1 className="text-sm lg:text-base font-semibold text-slate-900 truncate">
-              {NAV.find(n => n.id === activeNav)?.label}
-            </h1>
+            <div>
+              <h1 className="text-[15px] font-bold text-slate-900 leading-tight" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                {activeNav === 'students' && bulletinStudent ? 'Bulletin scolaire' : NAV.find(n => n.id === activeNav)?.label}
+              </h1>
+              {activeNav === 'students' && bulletinStudent && (
+                <button onClick={() => setBulletinStudent(null)} className="text-[11px] text-blue-500 font-semibold hover:text-blue-700 transition-colors">
+                  ← Retour aux élèves
+                </button>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-2 lg:gap-3">
-            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all relative">
-              <Bell size={17} />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-rose-500 rounded-full" />
+          <div className="flex items-center gap-1.5 lg:gap-2">
+            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all relative">
+              <Bell size={16} />
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-rose-500 rounded-full ring-2 ring-white" />
             </button>
-            <div className="flex items-center gap-2 pl-2 lg:pl-3 border-l border-slate-100">
-              <div className="w-7 h-7 lg:w-8 lg:h-8 bg-indigo-100 rounded-full flex items-center justify-center font-bold text-indigo-600 text-xs">{initials}</div>
-              <span className="hidden sm:block text-sm font-medium text-slate-700 max-w-[120px] truncate">{user.schoolName}</span>
+            <div className="h-5 w-px bg-slate-100 mx-1" />
+            <div className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-slate-50 transition-all cursor-default">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[11px] text-white flex-shrink-0"
+                style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)' }}>
+                {initials}
+              </div>
+              <div className="hidden sm:block min-w-0">
+                <p className="text-[12px] font-semibold text-slate-800 truncate max-w-[110px]">{user.schoolName}</p>
+                <p className="text-[10px] text-slate-400 truncate max-w-[110px]">{user.email}</p>
+              </div>
             </div>
           </div>
         </header>
@@ -313,61 +358,52 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
               )}
 
               {/* KPI cards — 4 cols */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
-                {/* Élèves */}
-                <div className="bg-white rounded-2xl border border-slate-100 p-4 lg:p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-violet-600 bg-violet-50 text-lg"><RiUserLine /></div>
-                    {loadingStats && <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-200 border-t-violet-500 animate-spin" />}
-                  </div>
-                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Élèves</p>
-                  <p className="text-xl lg:text-2xl font-bold text-slate-900 mt-0.5" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                    {dashStats ? String(dashStats.totalStudents) : '—'}
-                  </p>
-                  <p className="text-[10px] text-violet-500 font-medium mt-1 flex items-center gap-0.5"><RiUserLine /> Inscrits</p>
-                </div>
-
-                {/* Total encaissé */}
-                <div className="bg-white rounded-2xl border border-slate-100 p-4 lg:p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-emerald-600 bg-emerald-50 text-lg"><RiMoneyDollarCircleLine /></div>
-                    {loadingStats && <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-200 border-t-emerald-500 animate-spin" />}
-                  </div>
-                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Encaissé</p>
-                  <p className="text-xl lg:text-2xl font-bold text-slate-900 mt-0.5" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                    {dashStats ? `${formatAmt(dashStats.totalIn)} GNF` : '—'}
-                  </p>
-                  <p className="text-[10px] text-emerald-500 font-medium mt-1 flex items-center gap-0.5"><RiArrowUpLine /> Total entrées</p>
-                </div>
-
-                {/* Personnel */}
-                <div className="bg-white rounded-2xl border border-slate-100 p-4 lg:p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-indigo-600 bg-indigo-50 text-lg"><RiTeamLine /></div>
-                  </div>
-                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Personnel</p>
-                  <p className="text-xl lg:text-2xl font-bold text-slate-900 mt-0.5" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                    {syncStats ? String(syncStats.counts['staff'] ?? 0) : '—'}
-                  </p>
-                  <p className="text-[10px] text-indigo-500 font-medium mt-1 flex items-center gap-0.5"><RiTeamLine /> Membres</p>
-                </div>
-
-                {/* Solde caisse */}
-                <div className={`rounded-2xl border p-4 lg:p-5 shadow-sm ${dashStats && dashStats.balance < 0 ? 'bg-red-50 border-red-100' : 'bg-white border-slate-100'}`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg ${dashStats && dashStats.balance < 0 ? 'text-red-600 bg-red-100' : 'text-violet-600 bg-violet-50'}`}>
-                      <RiBankLine />
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+                {[
+                  {
+                    label: 'Élèves inscrits', sub: 'Inscrits',
+                    value: dashStats ? String(dashStats.totalStudents) : '—',
+                    icon: <RiUserLine />, iconColor: '#7c3aed', iconBg: 'linear-gradient(135deg,#7c3aed,#a78bfa)',
+                    subColor: 'text-violet-500', trend: null,
+                  },
+                  {
+                    label: 'Total encaissé', sub: 'Entrées cumulées',
+                    value: dashStats ? `${formatAmt(dashStats.totalIn)} GNF` : '—',
+                    icon: <RiMoneyDollarCircleLine />, iconColor: '#059669', iconBg: 'linear-gradient(135deg,#059669,#34d399)',
+                    subColor: 'text-emerald-500', trend: <RiArrowUpLine />,
+                  },
+                  {
+                    label: 'Personnel', sub: 'Membres actifs',
+                    value: syncStats ? String(syncStats.counts['staff'] ?? 0) : '—',
+                    icon: <RiTeamLine />, iconColor: '#2563eb', iconBg: 'linear-gradient(135deg,#2563eb,#60a5fa)',
+                    subColor: 'text-blue-500', trend: null,
+                  },
+                  {
+                    label: 'Solde caisse', sub: dashStats && dashStats.balance < 0 ? 'Déficit' : 'Positif',
+                    value: dashStats ? `${formatAmt(dashStats.balance)} GNF` : '—',
+                    icon: <RiBankLine />, iconColor: dashStats && dashStats.balance < 0 ? '#dc2626' : '#7c3aed',
+                    iconBg: dashStats && dashStats.balance < 0 ? 'linear-gradient(135deg,#dc2626,#f87171)' : 'linear-gradient(135deg,#7c3aed,#a78bfa)',
+                    subColor: dashStats && dashStats.balance < 0 ? 'text-red-500' : 'text-emerald-500',
+                    trend: dashStats && dashStats.balance < 0 ? <RiArrowDownLine /> : <RiArrowUpLine />,
+                  },
+                ].map((card, i) => (
+                  <div key={i} className="bg-white rounded-2xl border border-slate-100 p-4 lg:p-5 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-lg flex-shrink-0"
+                        style={{ background: card.iconBg, boxShadow: `0 4px 12px ${card.iconColor}40` }}>
+                        {card.icon}
+                      </div>
+                      {loadingStats && <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-100 border-t-slate-400 animate-spin mt-1" />}
                     </div>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{card.label}</p>
+                    <p className="text-xl lg:text-2xl font-black text-slate-900 mt-0.5 leading-tight" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                      {card.value}
+                    </p>
+                    <p className={`text-[10px] font-semibold mt-1.5 flex items-center gap-0.5 ${card.subColor}`}>
+                      {card.trend}{card.sub}
+                    </p>
                   </div>
-                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Solde</p>
-                  <p className={`text-xl lg:text-2xl font-bold mt-0.5 ${dashStats && dashStats.balance < 0 ? 'text-red-700' : 'text-slate-900'}`} style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                    {dashStats ? `${formatAmt(dashStats.balance)} GNF` : '—'}
-                  </p>
-                  <p className={`text-[10px] font-medium mt-1 flex items-center gap-0.5 ${dashStats && dashStats.balance >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                    {dashStats && dashStats.balance < 0 ? <RiArrowDownLine /> : <RiArrowUpLine />}
-                    {dashStats ? (dashStats.balance >= 0 ? 'Positif' : 'Déficit') : '—'}
-                  </p>
-                </div>
+                ))}
               </div>
 
               {/* Graphiques — bar chart + donut recouvrement */}
@@ -551,176 +587,36 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           {/* ══════════════════════════════════════════
               ÉLÈVES
           ══════════════════════════════════════════ */}
-          {activeNav === 'students' && (
-            <>
-              {/* Header */}
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-lg lg:text-2xl font-bold text-slate-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Liste des élèves</h2>
-                  <p className="text-slate-500 text-xs lg:text-sm mt-0.5">
-                    {studentsYear ? `Année scolaire : ${studentsYear.name}` : 'Données synchronisées depuis le desktop'}
-                  </p>
-                </div>
-                <button
-                  onClick={() => fetchStudents(true)}
-                  disabled={loadingStudents}
-                  className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 text-xs font-medium border border-slate-200 px-3 py-1.5 rounded-xl hover:bg-slate-50 transition-all disabled:opacity-50 flex-shrink-0"
-                >
-                  <RefreshCw size={13} className={loadingStudents ? 'animate-spin' : ''} />
-                  <span className="hidden sm:inline">Actualiser</span>
-                </button>
-              </div>
-
-              {/* KPI mois en cours */}
-              <div className="space-y-2">
-                {(studentsCurrentMonth || currentMonthName) && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-violet-600 bg-violet-50 border border-violet-100 px-2.5 py-1 rounded-full">
-                      {studentsCurrentMonth || currentMonthName}
-                    </span>
-                    <p className="text-xs text-slate-400">Paiements du mois en cours</p>
-                  </div>
-                )}
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { label: 'Total élèves', value: students.length,                              color: 'text-indigo-600 bg-indigo-50' },
-                    { label: 'Payé ce mois', value: students.filter(s => s.has_paid).length,      color: 'text-emerald-600 bg-emerald-50' },
-                    { label: 'Non payé',     value: students.filter(s => !s.has_paid).length,     color: 'text-red-500 bg-red-50' },
-                  ].map(k => (
-                    <div key={k.label} className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm text-center">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center mx-auto mb-2 ${k.color}`}>
-                        <Users size={15} />
-                      </div>
-                      <p className="text-xl font-bold text-slate-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{k.value}</p>
-                      <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">{k.label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Barre recherche + filtre */}
-              <div className="flex flex-wrap gap-3">
-                <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 flex-1 min-w-[180px]">
-                  <BarChart3 size={14} className="text-slate-400 flex-shrink-0" />
-                  <input
-                    type="text"
-                    placeholder="Rechercher par nom, prénom, classe…"
-                    value={studentSearch}
-                    onChange={e => setStudentSearch(e.target.value)}
-                    className="bg-transparent text-sm text-slate-900 outline-none flex-1 placeholder:text-slate-400"
-                  />
-                  {studentSearch && (
-                    <button onClick={() => setStudentSearch('')} className="text-slate-400 hover:text-slate-600">
-                      <X size={13} />
-                    </button>
-                  )}
-                </div>
-                <div className="flex items-center gap-0.5 bg-white border border-slate-200 rounded-xl p-1">
-                  {([['all','Tous'],['paid','Payé ce mois'],['unpaid','Non payé']] as const).map(([k, l]) => (
-                    <button key={k} onClick={() => setStudentFilter(k)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${studentFilter === k ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-900'}`}>
-                      {l}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Tableau / liste */}
-              {loadingStudents ? (
-                <div className="bg-white rounded-2xl border border-slate-100 py-16 flex items-center justify-center">
-                  <div className="w-6 h-6 border-2 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin" />
-                </div>
-              ) : students.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-slate-100 py-16 text-center">
-                  <Users size={32} className="text-slate-300 mx-auto mb-3" />
-                  <p className="text-sm font-semibold text-slate-500">Aucun élève synchronisé</p>
-                  <p className="text-xs text-slate-400 mt-1">Lancez la synchronisation depuis le desktop pour voir les élèves ici.</p>
-                </div>
-              ) : (() => {
-                const q = studentSearch.toLowerCase();
-                const filtered = students.filter(s => {
-                  const matchSearch = !q || s.first_name.toLowerCase().includes(q) || s.last_name.toLowerCase().includes(q) || (s.class_name || '').toLowerCase().includes(q) || (s.matricule || '').toLowerCase().includes(q);
-                  const matchFilter = studentFilter === 'all' || (studentFilter === 'paid' && s.has_paid) || (studentFilter === 'unpaid' && !s.has_paid);
-                  return matchSearch && matchFilter;
-                });
-                return (
-                  <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                    <div className="px-4 lg:px-6 py-3 border-b border-slate-50 flex items-center justify-between">
-                      <p className="text-xs font-semibold text-slate-400">{filtered.length} élève{filtered.length !== 1 ? 's' : ''}</p>
-                    </div>
-                    {/* Desktop : tableau */}
-                    <div className="hidden sm:block overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-slate-50 bg-slate-50/60">
-                            {['Élève','Matricule','Classe','Paiement','Contact'].map(h => (
-                              <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{h}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                          {filtered.length === 0 && (
-                            <tr><td colSpan={5} className="px-5 py-10 text-center text-sm text-slate-400">Aucun résultat</td></tr>
-                          )}
-                          {filtered.map(s => (
-                            <tr key={s.id} className="hover:bg-slate-50 transition-colors">
-                              <td className="px-5 py-3">
-                                <div className="flex items-center gap-3">
-                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${s.gender === 'F' ? 'bg-pink-100 text-pink-700' : 'bg-indigo-100 text-indigo-700'}`}>
-                                    {s.first_name.charAt(0)}{s.last_name.charAt(0)}
-                                  </div>
-                                  <p className="text-sm font-medium text-slate-900">{s.last_name} {s.first_name}</p>
-                                </div>
-                              </td>
-                              <td className="px-5 py-3 text-xs text-slate-500 font-mono">{s.matricule || '—'}</td>
-                              <td className="px-5 py-3">
-                                {s.class_name
-                                  ? <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">{s.class_name}</span>
-                                  : <span className="text-xs text-slate-400">—</span>}
-                              </td>
-                              <td className="px-5 py-3">
-                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${s.has_paid ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>
-                                  {s.has_paid ? <CheckCircle size={10} /> : <AlertCircle size={10} />}
-                                  {s.has_paid ? 'Payé' : 'Impayé'}
-                                </span>
-                              </td>
-                              <td className="px-5 py-3">
-                                {s.phone
-                                  ? <a href={`tel:${s.phone}`} className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors">
-                                      <Bell size={11} />{s.phone}
-                                    </a>
-                                  : <span className="text-xs text-slate-400">—</span>}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    {/* Mobile : cards */}
-                    <div className="sm:hidden divide-y divide-slate-50">
-                      {filtered.length === 0 && (
-                        <p className="px-4 py-10 text-center text-sm text-slate-400">Aucun résultat</p>
-                      )}
-                      {filtered.map(s => (
-                        <div key={s.id} className="flex items-center gap-3 px-4 py-3">
-                          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${s.gender === 'F' ? 'bg-pink-100 text-pink-700' : 'bg-indigo-100 text-indigo-700'}`}>
-                            {s.first_name.charAt(0)}{s.last_name.charAt(0)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-slate-900 truncate">{s.last_name} {s.first_name}</p>
-                            <p className="text-xs text-slate-400">{s.class_name || 'Aucune classe'}</p>
-                          </div>
-                          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${s.has_paid ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                            {s.has_paid ? 'Payé' : 'Impayé'}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
-            </>
+          {activeNav === 'students' && !bulletinStudent && (
+            <StudentsSection onOpenBulletin={(s) => setBulletinStudent(s)} />
           )}
+
+          {/* ══════════════════════════════════════════
+              BULLETIN
+          ══════════════════════════════════════════ */}
+          {activeNav === 'students' && bulletinStudent && (
+            <BulletinSection student={bulletinStudent} onBack={() => setBulletinStudent(null)} />
+          )}
+
+          {/* ══════════════════════════════════════════
+              NOTES
+          ══════════════════════════════════════════ */}
+          {activeNav === 'grades' && <GradesSection />}
+
+          {/* ══════════════════════════════════════════
+              FINANCE
+          ══════════════════════════════════════════ */}
+          {activeNav === 'finance' && <FinanceSection />}
+
+          {/* ══════════════════════════════════════════
+              PERSONNEL
+          ══════════════════════════════════════════ */}
+          {activeNav === 'staff' && <StaffSection />}
+
+          {/* ══════════════════════════════════════════
+              STRUCTURE
+          ══════════════════════════════════════════ */}
+          {activeNav === 'structure' && <StructureSection />}
 
           {/* ══════════════════════════════════════════
               BILLING
@@ -973,18 +869,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       </main>
 
       {/* ─── BOTTOM NAV MOBILE (< lg) ─── */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-xl border-t border-slate-100 safe-area-pb">
-        <div className="flex items-center justify-around px-2 py-1">
-          {NAV.map(item => (
-            <button
-              key={item.id}
-              onClick={() => navigate(item.id)}
-              className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all min-w-0 flex-1 ${activeNav === item.id ? 'text-indigo-600' : 'text-slate-400'}`}
-            >
-              <item.icon size={20} strokeWidth={activeNav === item.id ? 2.5 : 1.8} />
-              <span className="text-[9px] font-semibold truncate w-full text-center">{item.label}</span>
-            </button>
-          ))}
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white/96 backdrop-blur-xl border-t border-slate-100 safe-area-pb"
+        style={{ boxShadow: '0 -1px 0 rgba(0,0,0,0.05), 0 -4px 16px rgba(0,0,0,0.06)' }}>
+        <div className="flex items-center justify-around px-1 py-1.5">
+          {NAV_SCHOOL.slice(0, 5).map(item => {
+            const active = activeNav === item.id;
+            return (
+              <button key={item.id} onClick={() => navigate(item.id)}
+                className={`flex flex-col items-center gap-1 px-2 py-1.5 rounded-xl transition-all min-w-0 flex-1 ${active ? 'text-blue-600' : 'text-slate-400'}`}>
+                <div className={`w-8 h-8 flex items-center justify-center rounded-xl transition-all ${active ? 'bg-blue-50' : ''}`}>
+                  <item.icon size={18} strokeWidth={active ? 2.5 : 1.8} />
+                </div>
+                <span className={`text-[9px] font-bold truncate w-full text-center ${active ? 'text-blue-600' : 'text-slate-400'}`}>{item.label}</span>
+              </button>
+            );
+          })}
+          <button onClick={() => setSidebarOpen(true)}
+            className="flex flex-col items-center gap-1 px-2 py-1.5 rounded-xl min-w-0 flex-1 text-slate-400">
+            <div className="w-8 h-8 flex items-center justify-center rounded-xl">
+              <Menu size={18} strokeWidth={1.8} />
+            </div>
+            <span className="text-[9px] font-bold">Plus</span>
+          </button>
         </div>
       </nav>
 
