@@ -55,11 +55,11 @@ export const GradeSheetPrint: React.FC<GradeSheetPrintProps> = ({ className, sub
                             </td>
 
                             <td className="border px-2 py-1 gap-1 leading-tight flex">
-                                <div className=" text-md">
-                                    {s.last_name}  
-                                </div>
                                 <div className="text-md">
                                     {s.first_name}
+                                </div>
+                                <div className="text-md">
+                                    {s.last_name}
                                 </div>
                             </td>
 

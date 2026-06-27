@@ -212,8 +212,8 @@ export const dbService = {
     getClassGrades: async (classId: string, subjectId: string, term: string, yearId?: string) => {
         return await (window as any).ipcRenderer.invoke('get-class-grades', { classId, subjectId, term, yearId })
     },
-    saveClassGradesBulk: async (grades: any[], subjectId: string, term: string, yearId?: string) => {
-        return await (window as any).ipcRenderer.invoke('save-class-grades-bulk', { grades, subjectId, term, yearId })
+    saveClassGradesBulk: async (grades: any[], subjectId: string, term: string, yearId?: string, classId?: string) => {
+        return await (window as any).ipcRenderer.invoke('save-class-grades-bulk', { grades, subjectId, term, yearId, classId })
     },
     // SaaS / Auth
     login: async (credentials: { username: string, password: string }) => {

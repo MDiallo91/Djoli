@@ -26,7 +26,7 @@ export function registerGradeHandlers() {
         db.prepare('INSERT INTO grades (id, student_id, subject_id, score, exam_type, term, school_year_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(id, student_id, subject_id, score, exam_type, term, yearId, now, now)
         trackChange('INSERT', 'grade', id, { id, student_id, subject_id, score, exam_type, term, created_at: now, updated_at: now })
         const subjectRow = db.prepare('SELECT name FROM subjects WHERE id = ?').get(subject_id) as any
-        logAction({ action: 'add_grade', entityType: 'grade', entityId: id, entityLabel: `${subjectRow?.name ?? subject_id} — ${score}/20 (${term})`, newValue: { student_id, subject_id, score, exam_type, term } })
+        logAction({ action: 'add_grade', entityType: 'grade', entityId: id, entityLabel: `${subjectRow?.name ?? subject_id} — ${score}/${maxScore} (${term})`, newValue: { student_id, subject_id, score, exam_type, term } })
         return { success: true, id }
     })
 
@@ -77,8 +77,15 @@ export function registerGradeHandlers() {
         `).all(subjectId, term, classId)
     })
 
-    ipcMain.handle('save-class-grades-bulk', (_event, data: { grades: any[], subjectId: string, term: string, yearId?: string }) => {
-        const { grades, subjectId, term, yearId } = data
+    ipcMain.handle('save-class-grades-bulk', (_event, data: { grades: any[], subjectId: string, term: string, yearId?: string, classId?: string }) => {
+        const { grades, subjectId, term, yearId, classId } = data
+
+        // Determine max score from class level
+        let maxScore = 20
+        if (classId) {
+            const cls = db.prepare('SELECT level FROM classes WHERE id = ?').get(classId) as any
+            if (cls && ['Maternelle', 'Primaire'].includes(cls.level ?? '')) maxScore = 10
+        }
 
         const now = new Date().toISOString()
         const resolvedYearId = yearId || (db.prepare('SELECT id FROM school_years WHERE is_active = 1 LIMIT 1').get() as any)?.id || null
@@ -91,7 +98,7 @@ export function registerGradeHandlers() {
             for (const g of gradeList) {
                 if (g.moyenne !== null && g.moyenne !== undefined && g.moyenne !== '') {
                     const score = parseFloat(g.moyenne)
-                    if (score < 0 || score > 20) continue
+                    if (score < 0 || score > maxScore) continue
                     if (yearId) {
                         deleteStmt.run(g.student_id, subjectId, term, 'Moyenne', yearId)
                     } else {
@@ -133,7 +140,7 @@ export function registerGradeHandlers() {
                     COALESCE(SUM(g.score * act.coefficient), 0) / (SELECT total_coeff FROM ActiveTotalCoeff) as average
                 FROM enrollments e
                 CROSS JOIN ActiveSubjects act
-                LEFT JOIN grades g ON g.student_id = e.student_id AND g.subject_id = act.id AND g.term = ? AND g.exam_type = 'Moyenne'
+                LEFT JOIN grades g ON g.student_id = e.student_id AND g.subject_id = act.id AND g.term = ? AND g.exam_type = 'Moyenne' AND g.school_year_id = e.school_year_id
                 WHERE e.class_id = ? AND e.school_year_id = (SELECT id FROM school_years WHERE is_active = 1 LIMIT 1)
                 GROUP BY e.student_id
             )

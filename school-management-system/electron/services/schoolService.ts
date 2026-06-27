@@ -76,12 +76,12 @@ export function registerSchoolHandlers() {
     })
 
     ipcMain.handle('add-subject', (_event, info: any) => {
-        const { name, coefficient } = info
+        const { name, coefficient, level } = info
         if (!name) throw new Error('Nom de la matière requis')
         const id  = crypto.randomUUID()
         const now = new Date().toISOString()
-        db.prepare('INSERT INTO subjects (id, name, coefficient, created_at, updated_at) VALUES (?, ?, ?, ?, ?)').run(id, name, coefficient || 1, now, now)
-        trackChange('INSERT', 'subject', id, { id, name, coefficient: coefficient || 1, created_at: now, updated_at: now })
+        db.prepare('INSERT INTO subjects (id, name, coefficient, level, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)').run(id, name, coefficient || 1, level ?? null, now, now)
+        trackChange('INSERT', 'subject', id, { id, name, coefficient: coefficient || 1, level: level ?? null, created_at: now, updated_at: now })
         return { success: true, id }
     })
 

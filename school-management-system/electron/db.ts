@@ -303,6 +303,7 @@ export async function switchSchoolDatabase(userId: string) {
     try { schoolSqlDb?.exec("ALTER TABLE school_info ADD COLUMN color_sidebar TEXT DEFAULT '#1a2f6e'"); } catch {}
     try { schoolSqlDb?.exec("ALTER TABLE school_info ADD COLUMN color_accent  TEXT DEFAULT '#2563eb'"); } catch {}
     try { schoolSqlDb?.exec("ALTER TABLE school_info ADD COLUMN levels TEXT DEFAULT '[]'"); } catch {}
+    try { schoolSqlDb?.exec("ALTER TABLE subjects ADD COLUMN level TEXT DEFAULT NULL"); } catch {}
 
     // Facturation : barème des frais par classe/année
     runExec(`CREATE TABLE IF NOT EXISTS fee_schedules (
