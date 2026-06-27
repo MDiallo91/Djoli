@@ -6,6 +6,7 @@ import {
   Building2, Key, Package, Menu, X, Briefcase, GraduationCap, DollarSign,
 } from 'lucide-react';
 import StructureSection from './school/StructureSection';
+import ImageUpload from './ui/ImageUpload';
 import StaffSection from './school/StaffSection';
 import GradesSection from './school/GradesSection';
 import FinanceSection from './school/FinanceSection';
@@ -754,6 +755,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   </div>
                 </div>
 
+                {/* Logo */}
+                <div className="flex items-center gap-5 p-4 bg-slate-50 rounded-2xl border border-slate-100 mb-2">
+                  <ImageUpload
+                    value={profile.logoUrl}
+                    onChange={url => setField('logoUrl', url)}
+                    folder="djoli/logos"
+                    shape="square"
+                    size="lg"
+                    placeholder="Logo"
+                  />
+                  <div>
+                    <p className="text-sm font-bold text-slate-800 mb-0.5">Logo de l'école</p>
+                    <p className="text-xs text-slate-400">Cliquez pour uploader · JPG, PNG, WebP · max 5 Mo</p>
+                    {profile.logoUrl && (
+                      <button type="button" onClick={() => setField('logoUrl', '')}
+                        className="mt-2 text-xs text-red-500 hover:text-red-700 font-medium transition-colors">
+                        Supprimer le logo
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {([
                     { label: "Nom de l'école",      field: 'schoolName',     placeholder: 'Ex: École Primaire Lumière' },
@@ -763,7 +786,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                     { label: 'Préfecture',           field: 'prefecture',     placeholder: 'Ex: Coyah' },
                     { label: 'Sous-préfecture',      field: 'sousPrefecture', placeholder: 'Ex: Manéah' },
                     { label: 'RCCM / Numéro légal',  field: 'rccm',           placeholder: 'Ex: GN-CNK-...' },
-                    { label: 'URL du logo',          field: 'logoUrl',        placeholder: 'https://...' },
                   ] as const).map(({ label, field, placeholder }) => (
                     <div key={field}>
                       <label className="block text-xs font-semibold text-slate-600 mb-1.5">{label}</label>

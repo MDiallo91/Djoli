@@ -18,6 +18,7 @@ import auditRoute from './routes/auditRoute';
 import settingsRoute from './routes/settingsRoute';
 import schoolRoute from './routes/schoolRoute';
 import seedRoute from './routes/seedRoute';
+import uploadRoute from './routes/uploadRoute';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -70,6 +71,7 @@ app.use('/api/audit',    auditRoute);
 app.use('/api/settings', settingsRoute);
 app.use('/api/school',   schoolRoute);
 app.use('/api/seed',     seedRoute);
+app.use('/api/upload',   uploadRoute);
 
 // Export pour Vercel (serverless)
 export default app;

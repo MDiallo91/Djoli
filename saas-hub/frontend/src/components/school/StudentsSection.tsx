@@ -206,10 +206,14 @@ export default function StudentsSection({ onOpenBulletin }: Props) {
                         </td>
                         <td className="px-4 py-3 min-w-[180px]">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-xl flex items-center justify-center text-[11px] font-black flex-shrink-0"
-                              style={{ backgroundColor: bg, color: fg }}>
-                              {initials}
-                            </div>
+                            {s.photo_url ? (
+                              <img src={s.photo_url} alt={fullName} className="w-8 h-8 rounded-xl object-cover flex-shrink-0" />
+                            ) : (
+                              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-[11px] font-black flex-shrink-0"
+                                style={{ backgroundColor: bg, color: fg }}>
+                                {initials}
+                              </div>
+                            )}
                             <div>
                               <p className="font-bold text-gray-900 text-sm leading-tight">{fullName}</p>
                               {s.phone && <p className="text-[10px] text-gray-400">{s.phone}</p>}
@@ -330,10 +334,14 @@ export default function StudentsSection({ onOpenBulletin }: Props) {
                 const [bg, fg] = avatarColor(name);
                 return (
                   <div className="flex items-center gap-4 pb-5 border-b border-gray-100">
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black flex-shrink-0"
-                      style={{ backgroundColor: bg, color: fg }}>
-                      {ini}
-                    </div>
+                    {viewStudent.photo_url ? (
+                      <img src={viewStudent.photo_url} alt={name} className="w-16 h-16 rounded-2xl object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black flex-shrink-0"
+                        style={{ backgroundColor: bg, color: fg }}>
+                        {ini}
+                      </div>
+                    )}
                     <div>
                       <p className="section-label mb-1">{viewStudent.matricule || 'Sans matricule'}</p>
                       <h3 className="text-xl font-black text-gray-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>

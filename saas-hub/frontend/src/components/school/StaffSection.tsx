@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Users, Plus, Pencil, Trash2, Mail, Phone, MapPin, Search, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import * as api from '../../services/schoolApi';
+import ImageUpload from '../ui/ImageUpload';
 
 const ROLES = ['Enseignant', 'Directeur', 'Directeur Adjoint', 'Secrétaire', 'Comptable', 'Surveillant', 'Agent de service'];
 
@@ -9,6 +10,7 @@ const EMPTY_FORM = {
   first_name: '', last_name: '', role: 'Enseignant',
   phone: '', email: '', address: '',
   salary_base: 0, hire_date: new Date().toISOString().split('T')[0],
+  photo_url: '',
 };
 
 export default function StaffSection() {
@@ -44,7 +46,7 @@ export default function StaffSection() {
 
   const handleEdit = (p: any) => {
     setEditingStaff(p);
-    setFormData({ first_name: p.first_name, last_name: p.last_name, role: p.role, phone: p.phone || '', email: p.email || '', address: p.address || '', salary_base: p.salary_base || 0, hire_date: p.hire_date || new Date().toISOString().split('T')[0] });
+    setFormData({ first_name: p.first_name, last_name: p.last_name, role: p.role, phone: p.phone || '', email: p.email || '', address: p.address || '', salary_base: p.salary_base || 0, hire_date: p.hire_date || new Date().toISOString().split('T')[0], photo_url: p.photo_url || '' });
     setIsFormOpen(true);
   };
 
@@ -85,9 +87,13 @@ export default function StaffSection() {
           <div key={person.id} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 font-bold text-lg border-2 border-white shadow-sm flex-shrink-0">
-                  {person.first_name[0]}{person.last_name[0]}
-                </div>
+                {person.photo_url ? (
+                  <img src={person.photo_url} alt={person.first_name} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm flex-shrink-0" />
+                ) : (
+                  <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 font-bold text-lg border-2 border-white shadow-sm flex-shrink-0">
+                    {person.first_name[0]}{person.last_name[0]}
+                  </div>
+                )}
                 <div>
                   <h3 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
                     {person.first_name} {person.last_name}
@@ -155,6 +161,17 @@ export default function StaffSection() {
               <button onClick={() => { setIsFormOpen(false); setEditingStaff(null); }} className="text-gray-400 hover:text-gray-600 font-bold text-2xl leading-none">×</button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              {/* Photo */}
+              <div className="flex justify-center pb-2">
+                <ImageUpload
+                  value={formData.photo_url}
+                  onChange={url => setFormData((p: any) => ({ ...p, photo_url: url }))}
+                  folder="djoli/staff"
+                  shape="circle"
+                  size="lg"
+                  placeholder="Photo"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 {([['first_name', 'Prénom'], ['last_name', 'Nom']] as const).map(([field, label]) => (
                   <div key={field}>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import * as api from '../../services/schoolApi';
+import ImageUpload from '../ui/ImageUpload';
 
 interface Props {
   student?: any;
@@ -18,6 +19,7 @@ export default function StudentModal({ student, classes, years, activeYearId, on
     pere: '', mere: '',
     parent_first_name: '', parent_last_name: '', parent_phone: '', parent_email: '', parent_profession: '',
     class_id: '', year_id: activeYearId,
+    photo_url: '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -40,6 +42,7 @@ export default function StudentModal({ student, classes, years, activeYearId, on
         parent_profession: student.parent_profession || '',
         class_id: student.class_id?.toString() || '',
         year_id: activeYearId,
+        photo_url: student.photo_url || '',
       });
     }
   }, [student, activeYearId]);
@@ -83,6 +86,18 @@ export default function StudentModal({ student, classes, years, activeYearId, on
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
+          {/* Photo */}
+          <div className="flex justify-center pt-2">
+            <ImageUpload
+              value={form.photo_url}
+              onChange={url => set('photo_url', url)}
+              folder="djoli/students"
+              shape="circle"
+              size="lg"
+              placeholder="Photo"
+            />
+          </div>
+
           {/* Identité */}
           <section>
             <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 pb-1 border-b border-gray-100">Identité</h3>
