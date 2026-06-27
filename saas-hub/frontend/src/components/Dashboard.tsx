@@ -3,7 +3,7 @@ import {
   LogOut, Wallet, Download, CheckCircle, AlertCircle,
   Zap, Settings, Bell, BookOpen, Users, Award,
   RefreshCw, Shield, Globe, Save, Lock,
-  Building2, Key, Package, Menu, X, Briefcase, GraduationCap, DollarSign,
+  Building2, Key, Package, Menu, X, Briefcase, GraduationCap, DollarSign, CreditCard,
 } from 'lucide-react';
 import StructureSection from './school/StructureSection';
 import ImageUpload from './ui/ImageUpload';
@@ -12,6 +12,7 @@ import GradesSection from './school/GradesSection';
 import FinanceSection from './school/FinanceSection';
 import StudentsSection from './school/StudentsSection';
 import BulletinSection from './school/BulletinSection';
+import SchoolCardsPage from './school/SchoolCardsPage';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -36,6 +37,7 @@ interface DashboardProps {
 const NAV_SCHOOL = [
   { icon: Zap,           label: "Vue d'ensemble", id: 'overview'   },
   { icon: Users,         label: 'Élèves',          id: 'students'   },
+  { icon: CreditCard,    label: 'Cartes scolaires', id: 'cards'     },
   { icon: GraduationCap, label: 'Notes',            id: 'grades'     },
   { icon: DollarSign,    label: 'Finance',          id: 'finance'    },
   { icon: Briefcase,     label: 'Personnel',        id: 'staff'      },
@@ -602,6 +604,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           {/* ══════════════════════════════════════════
               NOTES
           ══════════════════════════════════════════ */}
+          {/* ══════════════════════════════════════════
+              CARTES SCOLAIRES
+          ══════════════════════════════════════════ */}
+          {activeNav === 'cards' && <SchoolCardsPage user={user} />}
+
           {activeNav === 'grades' && <GradesSection />}
 
           {/* ══════════════════════════════════════════
