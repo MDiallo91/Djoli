@@ -183,7 +183,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const isActive = subscriptionStatus === 'active' || (subscriptionStatus === 'trial' && !isExpired);
   const daysLeft = Math.ceil((new Date(subscriptionExpiry).getTime() - Date.now()) / 86400000);
   const initials = (user.schoolName || 'U').slice(0, 2).toUpperCase();
-  const setField = (f: string, v: string) => setProfile(p => ({ ...p, [f]: v }));
+  const setField = (f: string, v: string | string[]) => setProfile(p => ({ ...p, [f]: v }));
 
   const NavItem = ({ item }: { item: typeof NAV[0] }) => {
     const active = activeNav === item.id;
