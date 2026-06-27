@@ -119,10 +119,8 @@ const FEATURES = [
   },
 ];
 
-const STATS = [
-  { value: '500+', label: 'Établissements' },
-  { value: '50 000+', label: 'Élèves gérés' },
-  { value: '98%', label: 'Satisfaction client' },
+const STATIC_STATS = [
+  { value: '98%',   label: 'Satisfaction client' },
   { value: '4.9/5', label: 'Note moyenne' },
 ];
 
@@ -172,8 +170,16 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
   const [contactSent, setContactSent] = useState(false);
   const cfg = useSiteConfig();
   const [release, setRelease] = useState<GithubRelease | null>(null);
+  const [publicStats, setPublicStats] = useState<{ schoolCount: number; studentCount: number } | null>(null);
   const navigate = useNavigate();
   const onGetStarted = () => navigate('/login');
+
+  useEffect(() => {
+    fetch('/api/public/stats')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setPublicStats(d); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (cfg.githubRepo) fetchLatestRelease(cfg.githubRepo).then(setRelease);
@@ -350,7 +356,21 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
         {/* Stats bar */}
         <div className="max-w-3xl mx-auto mt-20">
           <div className="bg-white rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-slate-100">
-            {STATS.map((s, i) => (
+            {[
+              {
+                value: publicStats
+                  ? `${publicStats.schoolCount.toLocaleString('fr-FR')}+`
+                  : '—',
+                label: 'Établissements',
+              },
+              {
+                value: publicStats
+                  ? `${publicStats.studentCount.toLocaleString('fr-FR')}+`
+                  : '—',
+                label: 'Élèves gérés',
+              },
+              ...STATIC_STATS,
+            ].map((s, i) => (
               <div key={i} className="p-6 text-center">
                 <p className="text-2xl font-bold text-slate-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{s.value}</p>
                 <p className="text-xs text-slate-400 font-medium mt-1 uppercase tracking-wider">{s.label}</p>

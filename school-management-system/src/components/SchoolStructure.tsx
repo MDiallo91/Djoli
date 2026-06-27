@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { dbService } from '../services/db';
 import { useSchoolStore } from '../stores/useSchoolStore';
-import { Layout, BookOpen, Plus, Trash2, Hash, GraduationCap, Layers, Calendar, Wallet, Settings, CheckSquare } from 'lucide-react';
+import { Layout, BookOpen, Plus, Trash2, Hash, GraduationCap, Layers, Calendar, Wallet, Settings, CheckSquare, Check } from 'lucide-react';
 
 const ALL_CLASS_LEVELS = ['Maternelle', 'Primaire', 'Collège', 'Lycée'] as const;
 
@@ -19,13 +19,13 @@ export function SchoolStructure() {
     const [isYearEditMode, setIsYearEditMode] = useState(false);
 
     const [newClass, setNewClass] = useState({ name: '', level: availableClassLevels[0] ?? 'Primaire' });
-    const [newSubject, setNewSubject] = useState({ name: '', coefficient: 1 });
+    const [newSubject, setNewSubject] = useState({ name: '', coefficient: 1, levels: [] as string[] });
     const [newYear, setNewYear] = useState({ id: null as string | null, name: '', start_date: '', end_date: '', is_active: false });
     const [selectedClass, setSelectedClass] = useState<any>(null);
     const [classSubjects, setClassSubjects] = useState<any[]>([]);
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
     const [showSubjectAdd, setShowSubjectAdd] = useState(false);
-    const [selectedSubjectToAdd, setSelectedSubjectToAdd] = useState({ id: '', coefficient: 1 });
+    const [checkedSubjectIds, setCheckedSubjectIds] = useState<Set<string>>(new Set());
     const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
     const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
@@ -67,9 +67,10 @@ export function SchoolStructure() {
     const handleAddSubject = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await dbService.addSubject(newSubject);
+            const level = newSubject.levels.length > 0 ? JSON.stringify(newSubject.levels) : null;
+            await dbService.addSubject({ name: newSubject.name, coefficient: newSubject.coefficient, level });
             setIsSubjectModalOpen(false);
-            setNewSubject({ name: '', coefficient: 1 });
+            setNewSubject({ name: '', coefficient: 1, levels: [] });
             fetchData();
         } catch (error) {
             console.error(error);
@@ -157,8 +158,10 @@ export function SchoolStructure() {
 
     const handleConfigureClass = async (cls: any) => {
         setSelectedClass(cls);
-        const subjects = await dbService.getClassSubjects(cls.id);
-        setClassSubjects(subjects);
+        const subs = await dbService.getClassSubjects(cls.id);
+        setClassSubjects(subs);
+        setCheckedSubjectIds(new Set());
+        setShowSubjectAdd(false);
         setIsConfigModalOpen(true);
     };
 
@@ -174,18 +177,21 @@ export function SchoolStructure() {
         }
     };
 
-    const handleAddSubjectToClass = async () => {
-        if (!selectedSubjectToAdd.id) return;
+    const handleBatchAddSubjectsToClass = async () => {
+        if (checkedSubjectIds.size === 0) return;
+        const count = checkedSubjectIds.size;
         try {
-            await dbService.addClassSubject(selectedClass.id, selectedSubjectToAdd.id, selectedSubjectToAdd.coefficient);
+            for (const subjectId of checkedSubjectIds) {
+                const subject = subjects.find(s => s.id === subjectId);
+                await dbService.addClassSubject(selectedClass.id, subjectId, subject?.coefficient || 1);
+            }
             const updated = await dbService.getClassSubjects(selectedClass.id);
             setClassSubjects(updated);
-            setShowSubjectAdd(false);
-            setSelectedSubjectToAdd({ id: '', coefficient: 1 });
-            showNotification('Matière ajoutée à la classe !');
+            setCheckedSubjectIds(new Set());
+            showNotification(`${count} matière(s) ajoutée(s) à la classe !`);
         } catch (error) {
             console.error(error);
-            showNotification('Erreur lors de l\'ajout de la matière.', 'error');
+            showNotification('Erreur lors de l\'ajout des matières.', 'error');
         }
     };
 
@@ -275,23 +281,33 @@ export function SchoolStructure() {
                     </div>
                 ))}
 
-                {activeSubTab === 'subjects' && subjects.map(s => (
-                    <div key={s.id} className="group bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:translate-y-[-2px] transition-all relative overflow-hidden flex items-center gap-3">
-                        <div className="p-2 bg-blue-50 rounded-lg text-blue-500 flex-shrink-0">
-                            <BookOpen size={16} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-gray-900 truncate leading-tight">{s.name}</p>
-                            <div className="flex items-center gap-1 mt-0.5">
-                                <Hash size={10} className="text-gray-300" />
-                                <span className="text-xs font-semibold text-gray-400">Coeff. {s.coefficient}</span>
+                {activeSubTab === 'subjects' && subjects.map(s => {
+                    let levelNames: string[] = [];
+                    if (s.level) {
+                        try { levelNames = JSON.parse(s.level); } catch { levelNames = [s.level]; }
+                    }
+                    return (
+                        <div key={s.id} className="group bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:translate-y-[-2px] transition-all relative overflow-hidden flex items-center gap-3">
+                            <div className="p-2 bg-blue-50 rounded-lg text-blue-500 flex-shrink-0">
+                                <BookOpen size={16} />
                             </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-bold text-gray-900 truncate leading-tight">{s.name}</p>
+                                <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                                    <Hash size={10} className="text-gray-300" />
+                                    <span className="text-xs font-semibold text-gray-400">Coeff. {s.coefficient}</span>
+                                    {levelNames.length > 0
+                                        ? levelNames.map(l => <span key={l} className="px-1.5 py-0.5 bg-primary/8 text-primary/70 rounded text-[9px] font-black uppercase tracking-wider">{l}</span>)
+                                        : <span className="text-[10px] font-semibold text-gray-300">Tous niveaux</span>
+                                    }
+                                </div>
+                            </div>
+                            <button onClick={() => handleDeleteSubject(s.id)} className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 flex-shrink-0">
+                                <Trash2 size={13} />
+                            </button>
                         </div>
-                        <button onClick={() => handleDeleteSubject(s.id)} className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 flex-shrink-0">
-                            <Trash2 size={13} />
-                        </button>
-                    </div>
-                ))}
+                    );
+                })}
 
                 {activeSubTab === 'years' && schoolYears.map(y => (
                     <div key={y.id} className={`group p-6 rounded-3xl border transition-all relative overflow-hidden ${y.is_active ? 'bg-primary border-primary shadow-xl shadow-primary/20 text-white' : 'bg-white border-gray-100 shadow-sm hover:shadow-xl hover:translate-y-[-8px]'}`}>
@@ -413,6 +429,29 @@ export function SchoolStructure() {
                                     onChange={e => setNewSubject({ ...newSubject, coefficient: parseInt(e.target.value) })}
                                 />
                             </div>
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-primary/60 mb-2 px-1">Niveaux concernés</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {availableClassLevels.map(lvl => {
+                                        const selected = newSubject.levels.includes(lvl);
+                                        return (
+                                            <button key={lvl} type="button"
+                                                onClick={() => setNewSubject(prev => ({
+                                                    ...prev,
+                                                    levels: selected ? prev.levels.filter(l => l !== lvl) : [...prev.levels, lvl]
+                                                }))}
+                                                className={`flex items-center gap-3 px-4 py-3 rounded-2xl border-2 text-left font-bold text-sm transition-all ${selected ? 'border-primary bg-primary/5 text-primary' : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'}`}
+                                            >
+                                                <span className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${selected ? 'bg-primary border-primary' : 'border-gray-300'}`}>
+                                                    {selected && <Check size={10} className="text-white" />}
+                                                </span>
+                                                {lvl}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <p className="text-[10px] text-gray-400 mt-2 px-1">Laisser vide = disponible pour tous les niveaux</p>
+                            </div>
                         </div>
                         <button type="submit" className="w-full mt-10 bg-primary text-white py-5 rounded-3xl font-black text-sm hover:translate-y-[-4px] active:translate-y-0 transition-all shadow-xl shadow-primary/30">
                             Enregistrer la Matière
@@ -492,7 +531,7 @@ export function SchoolStructure() {
                                 <h3 className="text-sm font-semibold text-gray-900 leading-none mb-1">Configuration : {selectedClass.name}</h3>
                                 <p className="text-xs text-gray-400 uppercase tracking-widest">Gérer les frais et les matières</p>
                             </div>
-                            <button onClick={() => setIsConfigModalOpen(false)} className="text-2xl font-medium text-gray-300 hover:text-gray-900 transition-colors">×</button>
+                            <button onClick={() => { setIsConfigModalOpen(false); setShowSubjectAdd(false); setCheckedSubjectIds(new Set()); }} className="text-2xl font-medium text-gray-300 hover:text-gray-900 transition-colors">×</button>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-10 space-y-10">
@@ -537,37 +576,77 @@ export function SchoolStructure() {
                                     </button>
                                 </div>
 
-                                {showSubjectAdd && (
-                                    <div className="bg-gray-50 p-6 rounded-[2rem] border-2 border-dashed border-gray-200 mb-6 flex gap-4 animate-in slide-in-from-top-2">
-                                        <div className="flex-1">
-                                            <select
-                                                className="w-full bg-white border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-900 outline-none focus:border-primary transition-all"
-                                                value={selectedSubjectToAdd.id}
-                                                onChange={e => setSelectedSubjectToAdd({ ...selectedSubjectToAdd, id: e.target.value })}
-                                            >
-                                                <option value="">Sélectionner une matière...</option>
-                                                {subjects.map(s => (
-                                                    <option key={s.id} value={s.id}>{s.name}</option>
-                                                ))}
-                                            </select>
+                                {showSubjectAdd && (() => {
+                                    const alreadyAddedIds = new Set(classSubjects.map((cs: any) => cs.subject_id));
+                                    const classLevel = selectedClass?.level;
+                                    const availableSubjects = subjects.filter(s => {
+                                        if (alreadyAddedIds.has(s.id)) return false;
+                                        if (!s.level) return true;
+                                        try {
+                                            const lvls: string[] = JSON.parse(s.level);
+                                            return lvls.length === 0 || lvls.includes(classLevel);
+                                        } catch {
+                                            return s.level === classLevel;
+                                        }
+                                    });
+                                    const allChecked = availableSubjects.length > 0 && availableSubjects.every(s => checkedSubjectIds.has(s.id));
+                                    return (
+                                        <div className="bg-gray-50 p-6 rounded-[2rem] border-2 border-dashed border-gray-200 mb-6 animate-in slide-in-from-top-2">
+                                            <div className="flex justify-between items-center mb-4">
+                                                <p className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                                                    {availableSubjects.length} matière(s) disponible(s) — {classLevel}
+                                                </p>
+                                                {availableSubjects.length > 0 && (
+                                                    <button type="button"
+                                                        onClick={() => setCheckedSubjectIds(allChecked ? new Set() : new Set(availableSubjects.map(s => s.id)))}
+                                                        className="text-xs font-black text-primary hover:underline"
+                                                    >
+                                                        {allChecked ? 'Tout désélectionner' : 'Tout sélectionner'}
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {availableSubjects.length === 0 ? (
+                                                <p className="text-sm text-gray-400 italic text-center py-4">Toutes les matières du niveau <span className="font-bold">{classLevel}</span> ont déjà été ajoutées.</p>
+                                            ) : (
+                                                <>
+                                                    <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+                                                        {availableSubjects.map(s => {
+                                                            const checked = checkedSubjectIds.has(s.id);
+                                                            return (
+                                                                <button key={s.id} type="button"
+                                                                    onClick={() => {
+                                                                        const next = new Set(checkedSubjectIds);
+                                                                        checked ? next.delete(s.id) : next.add(s.id);
+                                                                        setCheckedSubjectIds(next);
+                                                                    }}
+                                                                    className={`flex items-center gap-3 p-3 rounded-2xl border-2 text-left transition-all ${checked ? 'border-primary/40 bg-primary/5 text-primary' : 'border-gray-100 bg-white text-gray-700 hover:border-gray-200'}`}
+                                                                >
+                                                                    <span className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${checked ? 'bg-primary border-primary' : 'border-gray-300'}`}>
+                                                                        {checked && <Check size={12} className="text-white" />}
+                                                                    </span>
+                                                                    <span>
+                                                                        <p className="text-sm font-bold leading-tight">{s.name}</p>
+                                                                        <p className="text-[10px] font-semibold text-gray-400">Coeff. {s.coefficient}</p>
+                                                                    </span>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    {checkedSubjectIds.size > 0 && (
+                                                        <div className="mt-4 flex justify-end">
+                                                            <button type="button"
+                                                                onClick={handleBatchAddSubjectsToClass}
+                                                                className="px-6 py-3 bg-gray-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:translate-y-[-2px] transition-all"
+                                                            >
+                                                                Ajouter {checkedSubjectIds.size} matière(s)
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
                                         </div>
-                                        <div className="w-32">
-                                            <input
-                                                type="number"
-                                                className="w-full bg-white border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-900 outline-none focus:border-primary transition-all"
-                                                placeholder="Coeff"
-                                                value={selectedSubjectToAdd.coefficient}
-                                                onChange={e => setSelectedSubjectToAdd({ ...selectedSubjectToAdd, coefficient: e.target.value ? parseFloat(e.target.value) : 1 })}
-                                            />
-                                        </div>
-                                        <button
-                                            onClick={handleAddSubjectToClass}
-                                            className="px-6 bg-gray-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:translate-y-[-2px] transition-all"
-                                        >
-                                            Ajouter
-                                        </button>
-                                    </div>
-                                )}
+                                    );
+                                })()}
 
                                 <div className="grid grid-cols-2 gap-4">
                                     {classSubjects.map(cs => (

@@ -117,10 +117,18 @@ export const GradeManagement: React.FC = () => {
         }
     }, [viewMode, selectedClassId, selectedBulkSubject, selectedTerm, activeStudent, selectedYear])
 
+    useEffect(() => {
+        if (viewMode === 'class' && selectedClassId) {
+            const classLevel = (classes.find((c: any) => c.id?.toString() === selectedClassId) as any)?.level
+            const configKey = levelToConfigKey(classLevel)
+            setActiveLevelConfig(gradingConfigs[configKey] ?? DEFAULT_CONFIGS['Collège'])
+        }
+    }, [viewMode, selectedClassId, classes, gradingConfigs])
+
     const handleSaveBulk = async () => {
         if (!selectedBulkSubject || !selectedTerm) return
         try {
-            await dbService.saveClassGradesBulk(classGrades, selectedBulkSubject, selectedTerm, selectedYear || undefined)
+            await dbService.saveClassGradesBulk(classGrades, selectedBulkSubject, selectedTerm, selectedYear || undefined, selectedClassId || undefined)
 
             // Refresh arrays
             if (activeStudent) {
@@ -348,7 +356,7 @@ export const GradeManagement: React.FC = () => {
                     </div>
                     <div>
                         <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Moyenne</p>
-                        <p className="text-xl font-black text-gray-900">{activeStudent ? calculateAverage() : '—'} <span className="text-sm font-normal text-gray-400">/ 20</span></p>
+                        <p className="text-xl font-black text-gray-900">{activeStudent ? calculateAverage() : '—'} <span className="text-sm font-normal text-gray-400">/ {activeLevelConfig.scale}</span></p>
                     </div>
                 </div>
                 <div className="w-px h-10 bg-gray-200" />
@@ -586,7 +594,14 @@ export const GradeManagement: React.FC = () => {
                             {/* Header */}
                             <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                                 <div>
-                                    <h3 className="font-bold text-gray-900">Saisie par Classe</h3>
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-bold text-gray-900">Saisie par Classe</h3>
+                                        {selectedClassId && (
+                                            <span className="px-2 py-0.5 bg-primary/10 text-primary rounded-md text-[10px] font-black uppercase tracking-widest">
+                                                / {activeLevelConfig.scale}
+                                            </span>
+                                        )}
+                                    </div>
                                     <p className="text-gray-400 text-xs">
                                         {classes.find(c => c.id.toString() === selectedClassId)?.name || 'Sélectionnez une classe'}
                                         {selectedBulkSubject ? ` · ${subjects.find(s => s.id.toString() === selectedBulkSubject)?.name}` : ''}
@@ -628,7 +643,9 @@ export const GradeManagement: React.FC = () => {
                                     <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 sticky top-0 z-10">
                                         <tr>
                                             <th className="px-6 py-3">Élève</th>
-                                            <th className="px-6 py-3 text-center">Note</th>
+                                            <th className="px-6 py-3 text-center">
+                                                Note <span className="text-primary/60">/ {activeLevelConfig.scale}</span>
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
@@ -641,7 +658,7 @@ export const GradeManagement: React.FC = () => {
                                         ) : classGrades.map((cg, idx) => (
                                             <tr key={cg.student_id} className="hover:bg-gray-50 transition-colors">
                                                 <td className="px-6 py-3 font-semibold text-sm text-gray-900">
-                                                    {cg.last_name} {cg.first_name}
+                                                    {cg.first_name} {cg.last_name}
                                                     <span className="ml-2 text-[10px] text-gray-400 font-normal">{cg.matricule}</span>
                                                 </td>
                                                 <td className="px-6 py-3">
@@ -649,7 +666,7 @@ export const GradeManagement: React.FC = () => {
                                                         type="number"
                                                         step="0.25"
                                                         min="0"
-                                                        max="20"
+                                                        max={activeLevelConfig.scale}
                                                         placeholder="—"
                                                         className="w-20 mx-auto block px-3 py-1.5 border border-gray-200 rounded-lg text-center font-bold text-sm focus:ring-2 focus:ring-primary/20 outline-none"
                                                         value={cg.moyenne || ''}

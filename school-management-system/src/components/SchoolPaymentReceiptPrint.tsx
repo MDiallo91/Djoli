@@ -20,7 +20,7 @@ export const SchoolPaymentReceiptPrint: React.FC<ReceiptProps> = ({
 
     const qrData = [
         `Réf: ${reference}`,
-        `Élève: ${student.last_name} ${student.first_name}`,
+        `Élève: ${student.first_name} ${student.last_name}`,
         `Classe: ${student.class_name || '—'}`,
         `Montant: ${fmt(payment.amount)}`,
         `Mode: ${payment.method}`,
@@ -55,8 +55,8 @@ export const SchoolPaymentReceiptPrint: React.FC<ReceiptProps> = ({
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3mm', fontSize: '9pt' }}>
                     <div>
-                        <span style={{ color: '#6b7280' }}>Nom & Prénoms : </span>
-                        <strong>{student.last_name} {student.first_name}</strong>
+                        <span style={{ color: '#6b7280' }}>Prénom & Nom : </span>
+                        <strong>{student.first_name} {student.last_name}</strong>
                     </div>
                     <div>
                         <span style={{ color: '#6b7280' }}>Classe : </span>

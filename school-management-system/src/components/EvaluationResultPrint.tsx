@@ -53,7 +53,7 @@ export const EvaluationResultPrint: React.FC<EvaluationResultPrintProps> = ({ cl
                             <td className="border-2 border-black px-4 py-2 text-center font-bold">{index + 1}</td>
                             <td className="border-2 border-black px-4 py-2 font-bold text-[10px]">{s.matricule || '---'}</td>
                             <td className="border-2 border-black px-4 py-2 font-black uppercase text-sm">
-                                {s.last_name} {s.first_name}
+                                {s.first_name} {s.last_name}
                             </td>
                             <td className="border-2 border-black px-4 py-2 text-center font-bold">{s.gender || '—'}</td>
                             <td className="border-2 border-black px-4 py-2 text-center font-black text-base">

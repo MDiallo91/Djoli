@@ -59,7 +59,7 @@ export const PaySlipPrint: React.FC<PaySlipPrintProps> = ({ person, salary, mont
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3mm', fontSize: '9pt' }}>
                     <div>
                         <span style={{ color: '#6b7280' }}>Nom & Prénoms : </span>
-                        <strong>{person.last_name} {person.first_name}</strong>
+                        <strong>{person.first_name} {person.last_name}</strong>
                     </div>
                     <div>
                         <span style={{ color: '#6b7280' }}>Fonction : </span>

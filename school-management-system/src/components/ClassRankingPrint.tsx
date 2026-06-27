@@ -51,7 +51,7 @@ export const ClassRankingPrint: React.FC<ClassRankingPrintProps> = ({
                             <tr key={student.student_id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                                 <td className="border border-black px-2 py-1.5 text-center font-black">{index + 1}</td>
                                 <td className="border border-black px-4 py-1.5 font-bold uppercase text-black">
-                                    {student.last_name} {student.first_name}
+                                    {student.first_name} {student.last_name}
                                 </td>
                                 <td className="border border-black px-2 py-1.5 text-center font-medium">{student.gender ?? '—'}</td>
                                 <td className="border border-black px-4 py-1.5 text-center font-black">

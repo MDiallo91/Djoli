@@ -11,7 +11,7 @@ import {
 // ─── Types ───────────────────────────────────────────────────
 interface School {
   id: string; schoolName: string; email: string; role: string;
-  country: string; city: string; level: string;
+  country: string; city: string; level: string; levels?: string[];
   directorName: string; prefecture: string; sousPrefecture: string;
   rccm: string; logoUrl: string;
   approvalStatus: 'pending' | 'approved' | 'rejected';
@@ -140,6 +140,12 @@ const APV_CLS: Record<string, string> = {
   approved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   pending:  'bg-amber-50 text-amber-700 border-amber-200',
   rejected: 'bg-red-50 text-red-700 border-red-200',
+};
+const LEVEL_CLS: Record<string, string> = {
+  'Maternelle': 'bg-pink-50 text-pink-700 border-pink-200',
+  'Primaire':   'bg-green-50 text-green-700 border-green-200',
+  'Collège':    'bg-blue-50 text-blue-700 border-blue-200',
+  'Lycée':      'bg-purple-50 text-purple-700 border-purple-200',
 };
 
 function Badge({ label, cls }: { label: string; cls: string }) {
@@ -388,7 +394,10 @@ function SchoolDetailPage({ school, onBack, onEdit, onRefresh }: {
             <div className="flex items-center gap-2 mt-2 flex-wrap">
               <Badge label={SUB_LABEL[school.subscriptionStatus] ?? school.subscriptionStatus} cls={SUB_CLS[school.subscriptionStatus] ?? SUB_CLS.suspended} />
               <Badge label={school.approvalStatus === 'approved' ? 'Approuvé' : school.approvalStatus === 'pending' ? 'En attente' : 'Refusé'} cls={APV_CLS[school.approvalStatus]} />
-              {school.level && <Badge label={school.level} cls="bg-slate-100 text-slate-600 border-slate-200" />}
+              {(school.levels && school.levels.length > 0)
+                ? school.levels.map(lvl => <Badge key={lvl} label={lvl} cls={LEVEL_CLS[lvl] ?? 'bg-slate-100 text-slate-600 border-slate-200'} />)
+                : school.level && <Badge label={school.level} cls="bg-slate-100 text-slate-600 border-slate-200" />
+              }
             </div>
           </div>
         </div>
@@ -409,6 +418,20 @@ function SchoolDetailPage({ school, onBack, onEdit, onRefresh }: {
             </div>
           ))}
         </div>
+
+        {/* Niveaux actifs */}
+        {school.levels && school.levels.length > 0 && (
+          <div className="bg-white border border-slate-200 rounded-2xl p-5">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Niveaux actifs</p>
+            <div className="flex flex-wrap gap-2">
+              {school.levels.map(lvl => (
+                <span key={lvl} className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold border ${LEVEL_CLS[lvl] ?? 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                  {lvl}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="bg-white border border-slate-200 rounded-2xl p-5">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Localisation</p>
@@ -739,7 +762,10 @@ function PendingTab({ schools, onRefresh }: { schools: School[]; onRefresh: () =
                 <div className="flex flex-wrap gap-3 mt-2 text-xs text-slate-500">
                   {s.country && <span>🌍 {s.country}</span>}
                   {s.city && <span>📍 {s.city}</span>}
-                  {s.level && <span>🎓 {s.level}</span>}
+                  {(s.levels && s.levels.length > 0)
+                    ? s.levels.map(lvl => <Badge key={lvl} label={lvl} cls={LEVEL_CLS[lvl] ?? 'bg-slate-100 text-slate-600 border-slate-200'} />)
+                    : s.level && <span>🎓 {s.level}</span>
+                  }
                   {s.directorName && <span>👤 {s.directorName}</span>}
                   {s.rccm && <span className="font-semibold text-indigo-600">RCCM: {s.rccm}</span>}
                 </div>
@@ -1395,8 +1421,15 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
   const siteCfg = useSiteConfigLive();
 
   const fetchSchools = useCallback(async () => {
-    try { const r = await fetch(`${API}/schools`); const d = await r.json(); setSchools(Array.isArray(d) ? d : []); }
-    catch { } finally { setLoading(false); }
+    try {
+      const r = await fetch(`${API}/schools`);
+      const d = await r.json();
+      const parsed = Array.isArray(d) ? d.map((s: any) => ({
+        ...s,
+        levels: (() => { try { return Array.isArray(s.levels) ? s.levels : JSON.parse(s.levels || '[]'); } catch { return []; } })(),
+      })) : [];
+      setSchools(parsed);
+    } catch { } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchSchools(); }, [fetchSchools]);
