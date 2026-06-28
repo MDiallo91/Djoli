@@ -112,6 +112,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       fetch(`${API}/settings/application`)
         .then(r => r.ok ? r.json() : null)
         .then(d => {
+          const directUrl = d?.data?.downloadUrl;
+          if (directUrl) {
+            setRelease({ version: d?.data?.appVersion || '?', downloadUrl: directUrl });
+            return;
+          }
           const repo = d?.data?.githubRepo;
           if (repo) fetchLatestRelease(repo).then(r => { if (r) setRelease(r); });
         })
