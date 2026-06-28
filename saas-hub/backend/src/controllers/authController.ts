@@ -15,15 +15,19 @@ const createToken = (id: string): string => {
 
 export const signUp = async (req: Request, res: Response): Promise<void> => {
     const { schoolName, email, password, country, city, levels, directorName,
-            prefecture, sousPrefecture, district, rccm, logoUrl } = req.body;
+            prefecture, sousPrefecture, district, rccm, rccmUrl, logoUrl } = req.body;
     let user: UserModel | null = null;
     try {
+        const code    = String(Math.floor(100000 + Math.random() * 900000));
+        const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
         user = await UserModel.create({
             schoolName, email, password, country, city,
             levels: JSON.stringify(levels ?? []),
-            directorName, prefecture, sousPrefecture, rccm, logoUrl,
-            approvalStatus: 'pending',
+            directorName, prefecture, sousPrefecture, rccm, rccmUrl, logoUrl,
+            approvalStatus: 'email_verification',
+            otp_code: code, otp_expires_at: expires,
         });
+        sendOTPEmail(email, code, schoolName).catch(console.error);
     } catch (error: any) {
         if (error.name === 'SequelizeUniqueConstraintError') {
             res.status(409).json({ message: 'Cet email est déjà enregistré' });
@@ -34,19 +38,10 @@ export const signUp = async (req: Request, res: Response): Promise<void> => {
         return;
     }
 
-    try {
-        const token = createToken(user.id);
-        const license_key = generateLicenseKey(user);
-        res.cookie('jwt', token, { httpOnly: true, maxAge: TOKEN_MAX_AGE_MS });
-        res.status(201).json({
-            id: user.id, schoolName: user.schoolName, email: user.email,
-            role: user.role, approvalStatus: user.approvalStatus,
-            message: 'Compte créé. En attente d\'approbation par l\'administrateur.',
-        });
-    } catch (error: any) {
-        console.error('[signUp] Token Error:', error.message);
-        res.status(500).json({ message: error.message });
-    }
+    res.status(201).json({
+        step: 'otp', email: user.email, schoolName: user.schoolName,
+        message: 'Un code de confirmation a été envoyé sur votre email.',
+    });
 };
 
 function buildUserResponse(user: UserModel, token: string) {
@@ -63,13 +58,14 @@ function buildUserResponse(user: UserModel, token: string) {
 
 function checkAccountStatus(user: UserModel): string | null {
     if (user.role === 'super_admin') return null;
-    if (user.approvalStatus === 'pending')  return 'Votre compte est en attente d\'approbation par l\'administrateur.';
-    if (user.approvalStatus === 'rejected') return 'Votre demande d\'inscription a été refusée. Contactez le support.';
-    if (user.subscriptionStatus === 'suspended') return 'Votre accès a été suspendu. Contactez le support.';
+    if (user.approvalStatus === 'email_verification') return 'Veuillez confirmer votre email avant de vous connecter.';
+    if (user.approvalStatus === 'pending')            return 'Votre compte est en attente d\'approbation par l\'administrateur.';
+    if (user.approvalStatus === 'rejected')           return 'Votre demande d\'inscription a été refusée. Contactez le support.';
+    if (user.subscriptionStatus === 'suspended')      return 'Votre accès a été suspendu. Contactez le support.';
     return null;
 }
 
-// Étape 1 : vérifier email+mdp → envoyer OTP
+// Connexion simple email + mot de passe
 export const signIn = async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
     try {
@@ -81,27 +77,15 @@ export const signIn = async (req: Request, res: Response): Promise<void> => {
         const statusError = checkAccountStatus(user);
         if (statusError) { res.status(403).json({ message: statusError }); return; }
 
-        // super_admin : connexion directe sans OTP
-        if (user.role === 'super_admin') {
-            const token = createToken(user.id);
-            res.cookie('jwt', token, { httpOnly: true, maxAge: TOKEN_MAX_AGE_MS });
-            res.status(200).json(buildUserResponse(user, token));
-            return;
-        }
-
-        // Générer OTP 6 chiffres
-        const code = String(Math.floor(100000 + Math.random() * 900000));
-        const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-        await user.update({ otp_code: code, otp_expires_at: expires });
-        sendOTPEmail(user.email, code, user.schoolName).catch(console.error);
-
-        res.status(200).json({ step: 'otp', email: user.email });
+        const token = createToken(user.id);
+        res.cookie('jwt', token, { httpOnly: true, maxAge: TOKEN_MAX_AGE_MS });
+        res.status(200).json(buildUserResponse(user, token));
     } catch {
         res.status(500).json({ message: 'Erreur interne du serveur' });
     }
 };
 
-// Étape 2 : vérifier OTP → émettre JWT
+// Vérification OTP d'inscription → passe le compte en "pending"
 export const verifyOTP = async (req: Request, res: Response): Promise<void> => {
     const { email, code } = req.body;
     try {
@@ -115,13 +99,27 @@ export const verifyOTP = async (req: Request, res: Response): Promise<void> => {
             return;
         }
         if (new Date(user.otp_expires_at) < new Date()) {
-            res.status(400).json({ message: 'Code expiré. Reconnectez-vous pour en recevoir un nouveau.' });
+            res.status(400).json({ message: 'Code expiré. Cliquez sur "Renvoyer" pour obtenir un nouveau code.' });
             return;
         }
-        await user.update({ otp_code: null, otp_expires_at: null });
-        const token = createToken(user.id);
-        res.cookie('jwt', token, { httpOnly: true, maxAge: TOKEN_MAX_AGE_MS });
-        res.status(200).json(buildUserResponse(user, token));
+        await user.update({ otp_code: null, otp_expires_at: null, approvalStatus: 'pending' });
+        res.status(200).json({ message: 'Email confirmé. Votre dossier est en attente d\'approbation.' });
+    } catch {
+        res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+};
+
+// Renvoi OTP (si code expiré)
+export const resendOTP = async (req: Request, res: Response): Promise<void> => {
+    const { email } = req.body;
+    try {
+        const user = await UserModel.findOne({ where: { email, approvalStatus: 'email_verification' } });
+        if (!user) { res.status(404).json({ message: 'Compte introuvable ou déjà vérifié.' }); return; }
+        const code    = String(Math.floor(100000 + Math.random() * 900000));
+        const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+        await user.update({ otp_code: code, otp_expires_at: expires });
+        sendOTPEmail(email, code, user.schoolName).catch(console.error);
+        res.status(200).json({ message: 'Nouveau code envoyé.' });
     } catch {
         res.status(500).json({ message: 'Erreur interne du serveur' });
     }
