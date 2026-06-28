@@ -6,7 +6,7 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export function generateUploadSignature(folder: string, publicId?: string) {
+export function generateUploadSignature(folder: string, publicId?: string, resourceType: string = 'image') {
     const timestamp = Math.round(Date.now() / 1000);
     const params: Record<string, any> = { timestamp, folder };
     if (publicId) params.public_id = publicId;
@@ -16,9 +16,10 @@ export function generateUploadSignature(folder: string, publicId?: string) {
     return {
         signature,
         timestamp,
-        cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-        apiKey: process.env.CLOUDINARY_API_KEY,
+        cloudName:    process.env.CLOUDINARY_CLOUD_NAME,
+        apiKey:       process.env.CLOUDINARY_API_KEY,
         folder,
+        resourceType,
         ...(publicId && { publicId }),
     };
 }

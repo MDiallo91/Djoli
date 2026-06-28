@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import UserModel from '../models/userModel';
 import bcrypt from 'bcrypt';
 import { v4 as uuid } from 'uuid';
+import { sendApprovalEmail, sendRejectionEmail } from '../services/emailService';
 
 const safe = (u: UserModel) => {
     const p = u.get({ plain: true }) as any;
@@ -69,6 +70,7 @@ export const approveSchool = async (req: Request, res: Response) => {
         if (!school) return res.status(404).json({ error: 'École non trouvée' });
         const expiry = new Date(); expiry.setDate(expiry.getDate() + 14);
         await school.update({ approvalStatus: 'approved', subscriptionStatus: 'trial', subscriptionExpiry: expiry.toISOString() });
+        sendApprovalEmail({ email: school.email, schoolName: school.schoolName }).catch(console.error);
         res.json(safe(school));
     } catch { res.status(500).json({ error: 'Erreur serveur' }); }
 };
@@ -78,6 +80,7 @@ export const rejectSchool = async (req: Request, res: Response) => {
         const school = await UserModel.findByPk(req.params.id);
         if (!school) return res.status(404).json({ error: 'École non trouvée' });
         await school.update({ approvalStatus: 'rejected' });
+        sendRejectionEmail({ email: school.email, schoolName: school.schoolName }).catch(console.error);
         res.json(safe(school));
     } catch { res.status(500).json({ error: 'Erreur serveur' }); }
 };

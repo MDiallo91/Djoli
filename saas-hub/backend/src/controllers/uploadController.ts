@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { generateUploadSignature } from '../services/cloudinaryService';
 
-const ALLOWED_FOLDERS = ['djoli/logos', 'djoli/students', 'djoli/staff'];
+const ALLOWED_FOLDERS = ['djoli/logos', 'djoli/students', 'djoli/staff', 'djoli/documents'];
+const RAW_FOLDERS     = ['djoli/documents'];
 
 export async function getUploadSignature(req: Request, res: Response) {
     const folder = (req.query.folder as string) || 'djoli/misc';
@@ -9,7 +10,8 @@ export async function getUploadSignature(req: Request, res: Response) {
         return res.status(400).json({ error: 'Dossier non autorisé' });
     }
     try {
-        const data = generateUploadSignature(folder);
+        const resourceType = RAW_FOLDERS.includes(folder) ? 'raw' : 'image';
+        const data = generateUploadSignature(folder, undefined, resourceType);
         res.json(data);
     } catch (err) {
         console.error('[Upload] signature error:', err);
