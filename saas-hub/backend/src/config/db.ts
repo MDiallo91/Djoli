@@ -22,9 +22,24 @@ let _ready = false;
 
 export const DBconnect = async (): Promise<void> => {
     if (_ready) return;
-    await sequelize.authenticate();
+
+    const MAX_ATTEMPTS = 8;
+    const DELAY_MS     = 3_000;
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        try {
+            await sequelize.authenticate();
+            break;
+        } catch (err: any) {
+            const isLastAttempt = attempt === MAX_ATTEMPTS;
+            if (isLastAttempt) throw err;
+            // Neon se réveille en ~2-5 s — on patiente
+            console.log(`DB non disponible (tentative ${attempt}/${MAX_ATTEMPTS}), réessai dans ${DELAY_MS / 1000}s…`);
+            await new Promise(r => setTimeout(r, DELAY_MS));
+        }
+    }
+
     await sequelize.sync();
-    // Safe migration: add levels column if it doesn't exist yet
     await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS levels TEXT DEFAULT '[]'`).catch(() => {});
     _ready = true;
     console.log('PostgreSQL connecté et synchronisé');
