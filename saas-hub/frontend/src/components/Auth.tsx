@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import {
   Mail, Lock, Eye, EyeOff, BookOpen, ArrowLeft, ArrowRight,
   Upload, FileText, CheckCircle, User, Phone,
-  MapPin, Building2, X
+  MapPin, Building2, X, ShieldCheck
 } from 'lucide-react';
 import apiClient from '../lib/apiClient';
+import DocumentUpload from './ui/DocumentUpload';
 
 interface AuthProps {
   onBack: () => void;
@@ -64,49 +65,127 @@ function FileUpload({ label, value, onChange, accept, hint }: {
   );
 }
 
-// ─── Login form ───────────────────────────────────────────────
+// ─── Login form (2 étapes : identifiants → OTP) ───────────────
 function LoginForm({ onBack, onSuccess }: AuthProps) {
-  const [form, setForm]   = useState({ email: '', password: '' });
-  const [show, setShow]   = useState(false);
+  const [form, setForm]       = useState({ email: '', password: '' });
+  const [show, setShow]       = useState(false);
   const [loading, setLoading] = useState(false);
+  const [otpStep, setOtpStep] = useState(false);
+  const [otp, setOtp]         = useState(['', '', '', '', '', '']);
+  const inputsRef             = useRef<(HTMLInputElement | null)[]>([]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => { if (otpStep) inputsRef.current[0]?.focus(); }, [otpStep]);
+
+  const handleOtpChange = (i: number, v: string) => {
+    if (!/^\d?$/.test(v)) return;
+    const next = [...otp]; next[i] = v;
+    setOtp(next);
+    if (v && i < 5) inputsRef.current[i + 1]?.focus();
+  };
+  const handleOtpKey = (i: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !otp[i] && i > 0) inputsRef.current[i - 1]?.focus();
+  };
+
+  const handleCredentials = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true);
     try {
       const res = await apiClient.post('/user/login', form);
-      onSuccess(res.data);
+      if (res.data.step === 'otp') { setOtpStep(true); toast.success('Code envoyé sur votre email !'); }
+      else onSuccess(res.data);
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Identifiants incorrects');
     } finally { setLoading(false); }
   };
 
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = otp.join('');
+    if (code.length < 6) { toast.error('Entrez les 6 chiffres'); return; }
+    setLoading(true);
+    try {
+      const res = await apiClient.post('/user/verify-otp', { email: form.email, code });
+      onSuccess(res.data);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Code incorrect');
+      setOtp(['', '', '', '', '', '']);
+      inputsRef.current[0]?.focus();
+    } finally { setLoading(false); }
+  };
+
+  const leftPanel = (
+    <div className="hidden lg:flex lg:w-2/5 flex-col justify-between p-12" style={{ backgroundColor: '#0f172a' }}>
+      <button onClick={onBack} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm font-medium transition-colors w-fit">
+        <ArrowLeft size={16} /> Retour au site
+      </button>
+      <div>
+        <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center mb-8">
+          <BookOpen size={22} className="text-white" />
+        </div>
+        <h2 className="text-3xl font-bold text-white mb-4 leading-tight">Content de vous revoir !</h2>
+        <p className="text-slate-400 text-base leading-relaxed">
+          Accédez à votre espace école pour gérer vos données et votre abonnement DJOLI.
+        </p>
+        <div className="mt-10 space-y-3">
+          {['Synchronisation cloud illimitée', 'Mode hors-ligne complet', 'Support technique inclus'].map(f => (
+            <div key={f} className="flex items-center gap-3 text-slate-300">
+              <CheckCircle size={16} className="text-indigo-400 flex-shrink-0" /> <span className="text-sm">{f}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <p className="text-slate-600 text-xs">© 2026 DJOLI</p>
+    </div>
+  );
+
+  if (otpStep) return (
+    <div className="min-h-screen flex" style={{ backgroundColor: '#f8fafc' }}>
+      {leftPanel}
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="w-full max-w-md">
+          <button onClick={() => { setOtpStep(false); setOtp(['','','','','','']); }}
+            className="lg:hidden flex items-center gap-2 text-slate-400 hover:text-slate-700 text-sm font-medium mb-8 transition-colors">
+            <ArrowLeft size={16} /> Retour
+          </button>
+          <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center mb-6">
+            <ShieldCheck size={22} className="text-indigo-600" />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">Vérification</h1>
+          <p className="text-slate-500 text-sm mb-2">
+            Un code à 6 chiffres a été envoyé à
+          </p>
+          <p className="font-semibold text-slate-800 text-sm mb-8">{form.email}</p>
+          <form onSubmit={handleOtpSubmit} className="space-y-6">
+            <div className="flex gap-2 justify-center">
+              {otp.map((d, i) => (
+                <input key={i}
+                  ref={el => { inputsRef.current[i] = el; }}
+                  type="text" inputMode="numeric" maxLength={1} value={d}
+                  onChange={e => handleOtpChange(i, e.target.value)}
+                  onKeyDown={e => handleOtpKey(i, e)}
+                  className="w-12 h-14 text-center text-2xl font-bold border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all bg-white"
+                />
+              ))}
+            </div>
+            <button type="submit" disabled={loading || otp.join('').length < 6}
+              className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+              {loading ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Vérification…</> : 'Confirmer'}
+            </button>
+          </form>
+          <p className="text-center text-xs text-slate-400 mt-4">
+            Code valable 10 minutes.{' '}
+            <button className="text-indigo-600 hover:underline font-medium"
+              onClick={() => { setOtpStep(false); setOtp(['','','','','','']); }}>
+              Renvoyer
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: '#f8fafc' }}>
-      {/* Left panel */}
-      <div className="hidden lg:flex lg:w-2/5 flex-col justify-between p-12" style={{ backgroundColor: '#0f172a' }}>
-        <button onClick={onBack} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm font-medium transition-colors w-fit">
-          <ArrowLeft size={16} /> Retour au site
-        </button>
-        <div>
-          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center mb-8">
-            <BookOpen size={22} className="text-white" />
-          </div>
-          <h2 className="text-3xl font-bold text-white mb-4 leading-tight">Content de vous revoir !</h2>
-          <p className="text-slate-400 text-base leading-relaxed">
-            Accédez à votre espace école pour gérer vos données et votre abonnement DJOLI.
-          </p>
-          <div className="mt-10 space-y-3">
-            {['Synchronisation cloud illimitée', 'Mode hors-ligne complet', 'Support technique inclus'].map(f => (
-              <div key={f} className="flex items-center gap-3 text-slate-300">
-                <CheckCircle size={16} className="text-indigo-400 flex-shrink-0" /> <span className="text-sm">{f}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <p className="text-slate-600 text-xs">© 2026 DJOLI</p>
-      </div>
-
-      {/* Right panel */}
+      {leftPanel}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <button onClick={onBack} className="lg:hidden flex items-center gap-2 text-slate-400 hover:text-slate-700 text-sm font-medium mb-8 transition-colors">
@@ -114,21 +193,21 @@ function LoginForm({ onBack, onSuccess }: AuthProps) {
           </button>
           <h1 className="text-2xl font-bold text-slate-900 mb-1">Connexion</h1>
           <p className="text-slate-500 text-sm mb-8">Connectez-vous à votre espace école.</p>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleCredentials} className="space-y-4">
             <div>
               <label className={labelCls}>Email</label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input required type="email" placeholder="contact@ecole.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
-                  className={inputCls + ' pl-10'} />
+                <input required type="email" autoComplete="email" placeholder="contact@ecole.com" value={form.email}
+                  onChange={e => setForm({ ...form, email: e.target.value })} className={inputCls + ' pl-10'} />
               </div>
             </div>
             <div>
               <label className={labelCls}>Mot de passe</label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input required type={show ? 'text' : 'password'} placeholder="••••••••" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })}
+                <input required type={show ? 'text' : 'password'} autoComplete="current-password" placeholder="••••••••"
+                  value={form.password} onChange={e => setForm({ ...form, password: e.target.value })}
                   className={inputCls + ' pl-10 pr-10'} />
                 <button type="button" onClick={() => setShow(!show)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                   {show ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -372,12 +451,12 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
                 hint="PNG, JPG, SVG — max 5 Mo"
               />
 
-              <FileUpload
-                label="Document RCCM *"
-                value={data.rccm || ''}
-                onChange={v => setData({ ...data, rccm: v })}
-                accept="image/*,application/pdf"
-                hint="Image ou PDF du registre de commerce"
+              <DocumentUpload
+                label="Document RCCM"
+                value={data.rccmUrl || ''}
+                onChange={v => setData({ ...data, rccmUrl: v })}
+                hint="PDF ou image — max 10 Mo"
+                optional
               />
             </div>
           </div>
@@ -474,7 +553,7 @@ export const Auth: React.FC<AuthProps> = ({ onBack, onSuccess }) => {
   const [regData, setRegData] = useState({
     email: '', password: '', confirmPassword: '', terms: false,
     schoolName: '', country: '', city: '', prefecture: '', sousPrefecture: '',
-    district: '', levels: [] as string[], logoUrl: '', rccm: '',
+    district: '', levels: [] as string[], logoUrl: '', rccm: '', rccmUrl: '',
     directorName: '', directorTitle: '', directorPhone: '', directorEmail: '',
   });
 
@@ -492,6 +571,7 @@ export const Auth: React.FC<AuthProps> = ({ onBack, onSuccess }) => {
         sousPrefecture: regData.sousPrefecture,
         directorName:   regData.directorName,
         rccm:           regData.rccm,
+        rccmUrl:        regData.rccmUrl,
         logoUrl:        regData.logoUrl,
       });
       setView('success');

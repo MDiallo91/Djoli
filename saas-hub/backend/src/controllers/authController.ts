@@ -3,6 +3,7 @@ import UserModel from '../models/userModel';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { generateLicenseKey } from '../services/licenseService';
+import { sendOTPEmail } from '../services/emailService';
 
 const TOKEN_MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
 
@@ -48,54 +49,80 @@ export const signUp = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
+function buildUserResponse(user: UserModel, token: string) {
+    let levelsArr: string[] = [];
+    try { levelsArr = JSON.parse(user.levels || '[]'); } catch {}
+    const license_key = generateLicenseKey(user);
+    return {
+        id: user.id, schoolName: user.schoolName, email: user.email,
+        role: user.role, country: user.country, levels: levelsArr,
+        subscriptionStatus: user.subscriptionStatus, subscriptionExpiry: user.subscriptionExpiry,
+        createdAt: user.createdAt, license_key, access_token: token,
+    };
+}
+
+function checkAccountStatus(user: UserModel): string | null {
+    if (user.role === 'super_admin') return null;
+    if (user.approvalStatus === 'pending')  return 'Votre compte est en attente d\'approbation par l\'administrateur.';
+    if (user.approvalStatus === 'rejected') return 'Votre demande d\'inscription a été refusée. Contactez le support.';
+    if (user.subscriptionStatus === 'suspended') return 'Votre accès a été suspendu. Contactez le support.';
+    return null;
+}
+
+// Étape 1 : vérifier email+mdp → envoyer OTP
 export const signIn = async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
     try {
         const user = await UserModel.findOne({ where: { email } });
-        if (!user) {
+        if (!user || !(await bcrypt.compare(password, user.password))) {
             res.status(401).json({ message: 'Email ou mot de passe incorrect' });
             return;
         }
+        const statusError = checkAccountStatus(user);
+        if (statusError) { res.status(403).json({ message: statusError }); return; }
 
-        const isValid = await bcrypt.compare(password, user.password);
-        if (!isValid) {
-            res.status(401).json({ message: 'Email ou mot de passe incorrect' });
-            return;
-        }
-        if (user.role !== 'super_admin' && user.approvalStatus === 'pending') {
-            res.status(403).json({ message: 'Votre compte est en attente d\'approbation par l\'administrateur.' });
-            return;
-        }
-        if (user.role !== 'super_admin' && user.approvalStatus === 'rejected') {
-            res.status(403).json({ message: 'Votre demande d\'inscription a été refusée. Contactez le support.' });
-            return;
-        }
-        if (user.role !== 'super_admin' && user.subscriptionStatus === 'suspended') {
-            res.status(403).json({ message: 'Votre accès a été suspendu par l\'administrateur. Contactez le support.' });
+        // super_admin : connexion directe sans OTP
+        if (user.role === 'super_admin') {
+            const token = createToken(user.id);
+            res.cookie('jwt', token, { httpOnly: true, maxAge: TOKEN_MAX_AGE_MS });
+            res.status(200).json(buildUserResponse(user, token));
             return;
         }
 
+        // Générer OTP 6 chiffres
+        const code = String(Math.floor(100000 + Math.random() * 900000));
+        const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+        await user.update({ otp_code: code, otp_expires_at: expires });
+        sendOTPEmail(user.email, code, user.schoolName).catch(console.error);
+
+        res.status(200).json({ step: 'otp', email: user.email });
+    } catch {
+        res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+};
+
+// Étape 2 : vérifier OTP → émettre JWT
+export const verifyOTP = async (req: Request, res: Response): Promise<void> => {
+    const { email, code } = req.body;
+    try {
+        const user = await UserModel.findOne({ where: { email } });
+        if (!user || !user.otp_code || !user.otp_expires_at) {
+            res.status(400).json({ message: 'Code invalide ou expiré.' });
+            return;
+        }
+        if (user.otp_code !== String(code).trim()) {
+            res.status(400).json({ message: 'Code incorrect.' });
+            return;
+        }
+        if (new Date(user.otp_expires_at) < new Date()) {
+            res.status(400).json({ message: 'Code expiré. Reconnectez-vous pour en recevoir un nouveau.' });
+            return;
+        }
+        await user.update({ otp_code: null, otp_expires_at: null });
         const token = createToken(user.id);
-        const license_key = generateLicenseKey(user);
         res.cookie('jwt', token, { httpOnly: true, maxAge: TOKEN_MAX_AGE_MS });
-
-        let levelsArr: string[] = [];
-        try { levelsArr = JSON.parse(user.levels || '[]'); } catch {}
-
-        res.status(200).json({
-            id:                   user.id,
-            schoolName:           user.schoolName,
-            email:                user.email,
-            role:                 user.role,
-            country:              user.country,
-            levels:               levelsArr,
-            subscriptionStatus:   user.subscriptionStatus,
-            subscriptionExpiry:   user.subscriptionExpiry,
-            createdAt:            user.createdAt,
-            license_key,
-            access_token:         token,
-        });
-    } catch (error: any) {
+        res.status(200).json(buildUserResponse(user, token));
+    } catch {
         res.status(500).json({ message: 'Erreur interne du serveur' });
     }
 };

@@ -16,7 +16,10 @@ class UserModel extends Model {
     declare prefecture: string;
     declare sousPrefecture: string;
     declare rccm: string;
+    declare rccmUrl: string;
     declare logoUrl: string;
+    declare otp_code: string | null;
+    declare otp_expires_at: string | null;
     declare approvalStatus: string; // pending | approved | rejected
     declare subscriptionStatus: string;
     declare subscriptionExpiry: string;
@@ -37,8 +40,11 @@ UserModel.init({
     directorName: { type: DataTypes.STRING, allowNull: true },
     prefecture:   { type: DataTypes.STRING, allowNull: true },
     sousPrefecture: { type: DataTypes.STRING, allowNull: true },
-    rccm:         { type: DataTypes.STRING, allowNull: true },
-    logoUrl:      { type: DataTypes.TEXT,   allowNull: true },
+    rccm:           { type: DataTypes.STRING, allowNull: true },
+    rccmUrl:        { type: DataTypes.TEXT,   allowNull: true },
+    logoUrl:        { type: DataTypes.TEXT,   allowNull: true },
+    otp_code:       { type: DataTypes.STRING(8), allowNull: true },
+    otp_expires_at: { type: DataTypes.STRING,    allowNull: true },
     approvalStatus: { type: DataTypes.STRING, defaultValue: 'pending' },
     subscriptionStatus: { type: DataTypes.STRING, defaultValue: 'trial' },
     subscriptionExpiry: {

@@ -41,6 +41,9 @@ export const DBconnect = async (): Promise<void> => {
 
     await sequelize.sync();
     await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS levels TEXT DEFAULT '[]'`).catch(() => {});
+    await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS rccmUrl TEXT`).catch(() => {});
+    await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_code VARCHAR(8)`).catch(() => {});
+    await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_expires_at TEXT`).catch(() => {});
     _ready = true;
     console.log('PostgreSQL connecté et synchronisé');
 };
