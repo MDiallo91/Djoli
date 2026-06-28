@@ -15,7 +15,7 @@ const DEFAULT_CFG = {
   siteName: 'DJOLI', logoUrl: '', email: '', youtubeUrl: '', whatsappPhone: '',
   primaryColor: '#4f46e5', secondaryColor: '#10b981',
   currency: 'EUR', price30: '29', price90: '79', price365: '249',
-  appVersion: '2.0', githubRepo: '',
+  appVersion: '2.0', githubRepo: '', downloadUrl: '',
   clientSchoolIds: [] as string[], clientSchools: [] as any[],
   featureImages: ['', '', ''] as string[],
 };
@@ -182,8 +182,12 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
   }, []);
 
   useEffect(() => {
-    if (cfg.githubRepo) fetchLatestRelease(cfg.githubRepo).then(setRelease);
-  }, [cfg.githubRepo]);
+    if (cfg.downloadUrl) {
+      setRelease({ version: cfg.appVersion || '?', downloadUrl: cfg.downloadUrl });
+    } else if (cfg.githubRepo) {
+      fetchLatestRelease(cfg.githubRepo).then(r => { if (r) setRelease(r); });
+    }
+  }, [cfg.downloadUrl, cfg.githubRepo, cfg.appVersion]);
 
   const whatsappHref = cfg.whatsappPhone
     ? `https://wa.me/${cfg.whatsappPhone.replace(/\D/g, '')}`

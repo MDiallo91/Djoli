@@ -879,8 +879,9 @@ export const DEFAULT_SITE_CONFIG = {
   price30:        '29',
   price90:        '79',
   price365:       '249',
-  appVersion:  '2.0',
-  githubRepo:  '',
+  appVersion:   '2.0',
+  githubRepo:   '',
+  downloadUrl:  '',
   clientSchoolIds: [] as string[],
   featureImages:  ['', '', ''] as string[],
 }
@@ -1017,7 +1018,7 @@ function SettingsTab({ schools }: { schools: School[] }) {
       ['site',         { siteName: cfg.siteName, logoUrl: cfg.logoUrl, primaryColor: cfg.primaryColor, secondaryColor: cfg.secondaryColor }],
       ['contact',      { email: cfg.email, whatsappPhone: cfg.whatsappPhone, youtubeUrl: cfg.youtubeUrl }],
       ['tarification', { currency: cfg.currency, price30: cfg.price30, price90: cfg.price90, price365: cfg.price365 }],
-      ['application',  { appVersion: cfg.appVersion, githubRepo: cfg.githubRepo }],
+      ['application',  { appVersion: cfg.appVersion, githubRepo: cfg.githubRepo, downloadUrl: cfg.downloadUrl }],
       ['accueil',      { featureImages: cfg.featureImages, clientSchoolIds: cfg.clientSchoolIds }],
     ]
     try {
@@ -1199,24 +1200,47 @@ function SettingsTab({ schools }: { schools: School[] }) {
         <div className="space-y-4">
           <StatutToggle value={statuts.application ?? 1} onChange={v => setStatutFor('application', v)} />
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+            {/* Lien direct (prioritaire) */}
             <div>
-              <label className={labelCls}>Dépôt GitHub (owner/repo)</label>
+              <label className={labelCls}>URL de téléchargement direct (.exe)</label>
+              <input className={inputCls} value={cfg.downloadUrl}
+                onChange={e => set('downloadUrl', e.target.value)}
+                placeholder="https://exemple.com/djoli-setup.exe" />
+              <p className="text-[11px] text-slate-400 mt-1">
+                Colle ici le lien direct vers le fichier .exe (Google Drive, GitHub, serveur…). Ce lien est prioritaire sur le dépôt GitHub ci-dessous.
+              </p>
+            </div>
+            {cfg.downloadUrl && (
+              <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                <CheckCircle size={15} className="text-emerald-600 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-emerald-800">Lien direct configuré</p>
+                  <p className="text-[11px] text-emerald-600 truncate">{cfg.downloadUrl}</p>
+                </div>
+                <a href={cfg.downloadUrl} target="_blank" rel="noopener noreferrer"
+                  className="text-xs font-semibold text-emerald-700 hover:underline whitespace-nowrap">Tester →</a>
+              </div>
+            )}
+
+            {/* GitHub (fallback) */}
+            <div>
+              <label className={labelCls}>Dépôt GitHub (owner/repo) — optionnel</label>
               <input className={inputCls} value={cfg.githubRepo}
                 onChange={e => set('githubRepo', e.target.value)}
                 placeholder="ex : mdoudev/djoli" />
               <p className="text-[11px] text-slate-400 mt-1">
-                Le bouton « Télécharger » pointera automatiquement vers le dernier release GitHub contenant un fichier .exe.
+                Utilisé en secours si l'URL directe n'est pas renseignée. Pointe vers le dernier release GitHub contenant un .exe.
               </p>
             </div>
             {cfg.githubRepo && (
-              <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-                <CheckCircle size={15} className="text-emerald-600 flex-shrink-0" />
+              <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                <CheckCircle size={15} className="text-slate-400 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-emerald-800">Dépôt configuré</p>
-                  <p className="text-[11px] text-emerald-600 truncate">github.com/{cfg.githubRepo}</p>
+                  <p className="text-xs font-semibold text-slate-600">Dépôt GitHub</p>
+                  <p className="text-[11px] text-slate-400 truncate">github.com/{cfg.githubRepo}</p>
                 </div>
                 <a href={`https://github.com/${cfg.githubRepo}/releases/latest`} target="_blank" rel="noopener noreferrer"
-                  className="text-xs font-semibold text-emerald-700 hover:underline whitespace-nowrap">Voir →</a>
+                  className="text-xs font-semibold text-slate-500 hover:underline whitespace-nowrap">Voir →</a>
               </div>
             )}
           </div>
