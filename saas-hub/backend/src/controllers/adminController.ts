@@ -43,7 +43,7 @@ export const createSchool = async (req: Request, res: Response) => {
 
 export const updateSchool = async (req: Request, res: Response) => {
     try {
-        const school = await UserModel.findByPk(req.params.id);
+        const school = await UserModel.findByPk(req.params.id as string);
         if (!school) return res.status(404).json({ error: 'École non trouvée' });
         const { schoolName, email, country, city, level, directorName, prefecture, sousPrefecture, rccm, logoUrl } = req.body;
         await school.update({ schoolName, email, country, city, level, directorName, prefecture, sousPrefecture, rccm, logoUrl });
@@ -53,7 +53,7 @@ export const updateSchool = async (req: Request, res: Response) => {
 
 export const updateSubscription = async (req: Request, res: Response) => {
     try {
-        const school = await UserModel.findByPk(req.params.id);
+        const school = await UserModel.findByPk(req.params.id as string);
         if (!school) return res.status(404).json({ error: 'École non trouvée' });
         const { status, expiry } = req.body;
         await school.update({
@@ -66,7 +66,7 @@ export const updateSubscription = async (req: Request, res: Response) => {
 
 export const approveSchool = async (req: Request, res: Response) => {
     try {
-        const school = await UserModel.findByPk(req.params.id);
+        const school = await UserModel.findByPk(req.params.id as string);
         if (!school) return res.status(404).json({ error: 'École non trouvée' });
         const expiry = new Date(); expiry.setDate(expiry.getDate() + 14);
         await school.update({ approvalStatus: 'approved', subscriptionStatus: 'trial', subscriptionExpiry: expiry.toISOString() });
@@ -77,7 +77,7 @@ export const approveSchool = async (req: Request, res: Response) => {
 
 export const rejectSchool = async (req: Request, res: Response) => {
     try {
-        const school = await UserModel.findByPk(req.params.id);
+        const school = await UserModel.findByPk(req.params.id as string);
         if (!school) return res.status(404).json({ error: 'École non trouvée' });
         await school.update({ approvalStatus: 'rejected' });
         sendRejectionEmail({ email: school.email, schoolName: school.schoolName }).catch(console.error);
