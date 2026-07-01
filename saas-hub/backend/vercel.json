@@ -5,7 +5,7 @@
       "src": "src/index.ts",
       "use": "@vercel/node",
       "config": {
-        "externalNodeModules": ["pg", "pg-hstore", "pg-pool", "pg-protocol", "pg-types", "pgpass", "sequelize", "bcrypt"]
+        "externalNodeModules": ["pg", "pg-hstore", "pg-pool", "pg-protocol", "pg-types", "pgpass", "sequelize", "bcrypt", "cloudinary", "resend"]
       }
     }
   ],
