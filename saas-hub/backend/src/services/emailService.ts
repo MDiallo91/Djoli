@@ -1,7 +1,11 @@
 import { Resend } from 'resend';
 import Setting from '../models/settingModel';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend(): Resend {
+    const key = process.env.RESEND_API_KEY;
+    if (!key) throw new Error('RESEND_API_KEY non configuré');
+    return new Resend(key);
+}
 
 async function getFromEmail(): Promise<string> {
   try {
@@ -128,7 +132,7 @@ export async function sendApprovalEmail(school: { email: string; schoolName: str
     </table>
   `;
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from,
     to:      school.email,
     subject: `Votre compte DJOLI est approuvé — Bienvenue, ${school.schoolName}`,
@@ -170,7 +174,7 @@ export async function sendRejectionEmail(school: { email: string; schoolName: st
     </p>
   `;
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from,
     to:      school.email,
     subject: `Information concernant votre demande DJOLI — ${school.schoolName}`,
@@ -217,7 +221,7 @@ export async function sendOTPEmail(email: string, code: string, schoolName: stri
     </p>
   `;
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from,
     to:      email,
     subject: `[DJOLI] Votre code de vérification : ${code}`,
