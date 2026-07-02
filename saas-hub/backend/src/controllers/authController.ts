@@ -27,7 +27,6 @@ export const signUp = async (req: Request, res: Response): Promise<void> => {
             approvalStatus: 'email_verification',
             otp_code: code, otp_expires_at: expires,
         });
-        sendOTPEmail(email, code, schoolName).catch(console.error);
     } catch (error: any) {
         if (error.name === 'SequelizeUniqueConstraintError') {
             res.status(409).json({ message: 'Cet email est déjà enregistré' });
@@ -38,8 +37,20 @@ export const signUp = async (req: Request, res: Response): Promise<void> => {
         return;
     }
 
+    // Envoi OTP — séparé du bloc DB pour ne pas annuler la création si l'email échoue
+    try {
+        await sendOTPEmail(email, user!.otp_code!, user!.schoolName);
+    } catch (emailErr) {
+        console.error('[signUp] Échec envoi OTP:', emailErr);
+        res.status(201).json({
+            step: 'otp', email: user!.email, schoolName: user!.schoolName,
+            warning: 'Compte créé mais email OTP non envoyé. Vérifiez la config RESEND_API_KEY ou cliquez "Renvoyer le code".',
+        });
+        return;
+    }
+
     res.status(201).json({
-        step: 'otp', email: user.email, schoolName: user.schoolName,
+        step: 'otp', email: user!.email, schoolName: user!.schoolName,
         message: 'Un code de confirmation a été envoyé sur votre email.',
     });
 };
