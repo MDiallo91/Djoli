@@ -18,6 +18,7 @@ const DEFAULT_CFG = {
   appVersion: '2.0', githubRepo: '', downloadUrl: '',
   clientSchoolIds: [] as string[], clientSchools: [] as any[],
   featureImages: ['', '', ''] as string[],
+  heroBgUrl: '',
 };
 
 const SETTINGS_API = '/api/settings';
@@ -317,21 +318,41 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
       </nav>
 
       {/* ─── HERO ─────────────────────────────────────────────── */}
-      <section className="relative pt-32 pb-24 px-6 hero-gradient dot-grid">
-        <div className="max-w-5xl mx-auto text-center space-y-8">
+      <section
+        className={`relative pt-32 pb-24 px-6 overflow-hidden ${cfg.heroBgUrl ? '' : 'hero-gradient dot-grid'}`}
+        style={cfg.heroBgUrl ? {
+          backgroundImage: `url(${cfg.heroBgUrl})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        } : undefined}
+      >
+        {/* Overlay sombre quand image de fond */}
+        {cfg.heroBgUrl && (
+          <div className="absolute inset-0 bg-black/55" />
+        )}
 
-          <div className="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-full text-xs font-semibold">
+        <div className="relative z-10 max-w-5xl mx-auto text-center space-y-8">
+
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold ${
+            cfg.heroBgUrl
+              ? 'bg-white/15 border border-white/30 text-white backdrop-blur-sm'
+              : 'bg-indigo-50 border border-indigo-200 text-indigo-700'
+          }`}>
             <span className="site-active-dot w-2 h-2 rounded-full animate-pulse" />
             Version 2.0 — Nouveau design & synchronisation cloud
             <ChevronRight size={13} />
           </div>
 
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-slate-900 leading-[1.05] tracking-tight" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+          <h1
+            className={`text-5xl sm:text-6xl md:text-7xl font-bold leading-[1.05] tracking-tight ${cfg.heroBgUrl ? 'text-white' : 'text-slate-900'}`}
+            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+          >
             La gestion scolaire <br />
             <span className="site-grad">réinventée pour l'Afrique.</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed font-normal">
+          <p className={`text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-normal ${cfg.heroBgUrl ? 'text-white/80' : 'text-slate-500'}`}>
             Inscriptions, notes, finances, emplois du temps — tout en un.
             Fonctionne sans internet, synchronise dans le cloud dès que la connexion revient.
           </p>
@@ -345,8 +366,12 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
               <ArrowRight size={18} />
             </button>
             {embedUrl ? (
-              <button onClick={() => setDemoOpen(true)} className="flex items-center gap-3 bg-white text-slate-700 border border-slate-200 px-8 py-4 rounded-2xl font-semibold text-base hover:border-slate-300 hover:bg-slate-50 transition-all shadow-sm">
-                <div className="w-8 h-8 bg-slate-900 rounded-full flex items-center justify-center">
+              <button onClick={() => setDemoOpen(true)} className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold text-base transition-all shadow-sm ${
+                cfg.heroBgUrl
+                  ? 'bg-white/15 text-white border border-white/30 hover:bg-white/25 backdrop-blur-sm'
+                  : 'bg-white text-slate-700 border border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+              }`}>
+                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                   <Play size={12} className="text-white ml-0.5" fill="white" />
                 </div>
                 Voir la démo (2 min)
@@ -354,11 +379,13 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
             ) : null}
           </div>
 
-          <p className="text-xs text-slate-400 font-medium">Aucune carte bancaire requise • Annulation à tout moment</p>
+          <p className={`text-xs font-medium ${cfg.heroBgUrl ? 'text-white/50' : 'text-slate-400'}`}>
+            Aucune carte bancaire requise • Annulation à tout moment
+          </p>
         </div>
 
         {/* Stats bar */}
-        <div className="max-w-3xl mx-auto mt-20">
+        <div className="relative z-10 max-w-3xl mx-auto mt-20">
           <div className="bg-white rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-slate-100">
             {[
               {
