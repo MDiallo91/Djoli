@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import { requireAuth } from '../middleware/authMiddleware';
 import { getUploadSignature } from '../controllers/uploadController';
 
 const router = Router();
 
-router.get('/signature', requireAuth, getUploadSignature);
+// Pas de requireAuth : la signature est utilisée dès l'inscription (utilisateur non connecté).
+// Protection : dossiers autorisés verrouillés côté backend + timestamp Cloudinary limité.
+router.get('/signature', getUploadSignature);
 
 export default router;
