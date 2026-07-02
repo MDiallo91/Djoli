@@ -567,7 +567,11 @@ export const Auth: React.FC<AuthProps> = ({ onBack, onSuccess }) => {
       });
       if (res.data?.step === 'otp') {
         setOtpEmail(res.data.email || regData.email);
-        toast.success('Un code de confirmation a été envoyé sur votre email.');
+        if (res.data.warning) {
+          toast.warning(res.data.warning);
+        } else {
+          toast.success('Un code de confirmation a été envoyé sur votre email.');
+        }
         setView('otp');
       } else {
         setView('success');
