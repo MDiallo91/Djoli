@@ -884,6 +884,7 @@ export const DEFAULT_SITE_CONFIG = {
   downloadUrl:  '',
   clientSchoolIds: [] as string[],
   featureImages:  ['', '', ''] as string[],
+  heroBgUrl: '',
 }
 
 // ─── Color picker widget ──────────────────────────────────────
@@ -1019,7 +1020,7 @@ function SettingsTab({ schools }: { schools: School[] }) {
       ['contact',      { email: cfg.email, whatsappPhone: cfg.whatsappPhone, youtubeUrl: cfg.youtubeUrl }],
       ['tarification', { currency: cfg.currency, price30: cfg.price30, price90: cfg.price90, price365: cfg.price365 }],
       ['application',  { appVersion: cfg.appVersion, githubRepo: cfg.githubRepo, downloadUrl: cfg.downloadUrl }],
-      ['accueil',      { featureImages: cfg.featureImages, clientSchoolIds: cfg.clientSchoolIds }],
+      ['accueil',      { featureImages: cfg.featureImages, clientSchoolIds: cfg.clientSchoolIds, heroBgUrl: cfg.heroBgUrl }],
     ]
     try {
       const responses = await Promise.all([
@@ -1251,6 +1252,45 @@ function SettingsTab({ schools }: { schools: School[] }) {
       {section === 'accueil' && (
         <div className="space-y-4">
           <StatutToggle value={statuts.accueil ?? 1} onChange={v => setStatutFor('accueil', v)} />
+
+          {/* Image de fond hero */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Image de fond (Hero)</p>
+              <p className="text-xs text-slate-500">Image affichée en arrière-plan de la section d'accueil. Un overlay sombre est appliqué automatiquement pour garder le texte lisible.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="url"
+                placeholder="URL de l'image (ex : Cloudinary, Unsplash…)"
+                value={cfg.heroBgUrl || ''}
+                onChange={e => set('heroBgUrl', e.target.value)}
+                className={inputCls + ' text-xs'}
+              />
+              <label title="Uploader un fichier" className="flex-shrink-0 cursor-pointer w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-500 hover:bg-indigo-50 hover:border-indigo-400 hover:text-indigo-600 transition-all">
+                <Upload size={15} />
+                <input type="file" accept="image/*" className="hidden" onChange={e => {
+                  const f = e.target.files?.[0]; if (!f) return;
+                  const r = new FileReader(); r.onloadend = () => set('heroBgUrl', r.result as string); r.readAsDataURL(f);
+                }} />
+              </label>
+              {cfg.heroBgUrl && (
+                <button type="button" onClick={() => set('heroBgUrl', '')} title="Supprimer"
+                  className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-red-200 rounded-xl text-red-400 hover:bg-red-50 hover:text-red-600 transition-all">
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+            {cfg.heroBgUrl && (
+              <div className="relative rounded-xl overflow-hidden border border-slate-200 h-36">
+                <img src={cfg.heroBgUrl} alt="Hero bg" className="w-full h-full object-cover"
+                  onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                  <span className="text-white text-xs font-semibold opacity-70">Aperçu avec overlay</span>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Aperçus fonctionnalités */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
