@@ -1122,7 +1122,7 @@ function SettingsTab({ schools }: { schools: School[] }) {
   )
 
   return (
-    <div className="space-y-0 max-w-2xl">
+    <div className="space-y-0 w-full">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-base font-semibold text-slate-900">Paramètres Hub</h1>
         <button type="button" onClick={handleSave} disabled={saving}
