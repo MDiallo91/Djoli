@@ -1269,27 +1269,28 @@ function SettingsTab({ schools }: { schools: School[] }) {
       )}
 
       {section === 'accueil' && (
-        <div className="space-y-4">
-          <StatutToggle value={statuts.accueil ?? 1} onChange={v => setStatutFor('accueil', v)} />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="col-span-2">
+            <StatutToggle value={statuts.accueil ?? 1} onChange={v => setStatutFor('accueil', v)} />
+          </div>
+
+          {/* Hero */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-            <div>
-              <p className="text-xs text-black mb-1">Image de fond (Hero)</p>
-              <p className="text-xs text-black">Image affichée en arrière-plan de la section d'accueil. Un overlay sombre est appliqué automatiquement.</p>
-            </div>
+            <p className="text-xs text-black">Image de fond (Hero)</p>
             <div className="flex items-center gap-2">
-              <input type="url" placeholder="URL de l'image (ex : Cloudinary, Unsplash…)" value={cfg.heroBgUrl || ''} onChange={e => set('heroBgUrl', e.target.value)} className={inputCls + ' text-xs'} />
-              <label title="Uploader un fichier" className="flex-shrink-0 cursor-pointer w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-500 hover:bg-indigo-50 hover:border-indigo-400 hover:text-indigo-600 transition-all">
+              <input type="url" placeholder="URL de l'image…" value={cfg.heroBgUrl || ''} onChange={e => set('heroBgUrl', e.target.value)} className={inputCls + ' text-xs'} />
+              <label title="Uploader" className="flex-shrink-0 cursor-pointer w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-500 hover:bg-indigo-50 hover:border-indigo-400 hover:text-indigo-600 transition-all">
                 <Upload size={15} />
                 <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onloadend = () => set('heroBgUrl', r.result as string); r.readAsDataURL(f); }} />
               </label>
               {cfg.heroBgUrl && (
-                <button type="button" onClick={() => set('heroBgUrl', '')} title="Supprimer" className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-red-200 rounded-xl text-red-400 hover:bg-red-50 hover:text-red-600 transition-all">
+                <button type="button" onClick={() => set('heroBgUrl', '')} className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-red-200 rounded-xl text-red-400 hover:bg-red-50 transition-all">
                   <X size={14} />
                 </button>
               )}
             </div>
             {cfg.heroBgUrl && (
-              <div className="relative rounded-xl overflow-hidden border border-slate-200 h-36">
+              <div className="relative rounded-xl overflow-hidden border border-slate-200 h-40">
                 <img src={cfg.heroBgUrl} alt="Hero bg" className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                   <span className="text-white text-xs opacity-70">Aperçu avec overlay</span>
@@ -1297,35 +1298,34 @@ function SettingsTab({ schools }: { schools: School[] }) {
               </div>
             )}
           </div>
+
+          {/* Fonctionnalités */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-            <div>
-              <p className="text-xs text-black mb-1">Aperçus des fonctionnalités</p>
-              <p className="text-xs text-black">Ces images apparaissent dans la section fonctionnalités de la page d'accueil.</p>
-            </div>
+            <p className="text-xs text-black">Aperçus des fonctionnalités</p>
             {[['Inscriptions & Élèves', 0],['Finance & Caisse', 1],['Notes & Bulletins', 2]].map(([label, idx]) => {
               const i = idx as number;
               const imgs = Array.isArray(cfg.featureImages) ? cfg.featureImages : ['','',''];
               const setImg = (val: string) => { const next = Array.isArray(cfg.featureImages) ? [...cfg.featureImages] : ['','','']; next[i] = val; set('featureImages', next); };
               return (
-                <div key={i} className="space-y-2">
-                  <label className="block text-xs text-black mb-1.5">{label as string}</label>
+                <div key={i} className="space-y-1.5">
+                  <label className="block text-xs text-black">{label as string}</label>
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">
-                      <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Pinterest-logo.png" alt="pinterest" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none" />
-                      <input type="url" placeholder="Coller un lien image (Pinterest, etc.)" value={imgs[i] && !imgs[i].startsWith('data:') ? imgs[i] : ''} onChange={e => setImg(e.target.value)} className={inputCls + ' pl-9 text-xs'} />
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Pinterest-logo.png" alt="" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none" />
+                      <input type="url" placeholder="Lien image…" value={imgs[i] && !imgs[i].startsWith('data:') ? imgs[i] : ''} onChange={e => setImg(e.target.value)} className={inputCls + ' pl-9 text-xs'} />
                     </div>
-                    <label title="Uploader un fichier" className="flex-shrink-0 cursor-pointer w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-500 hover:bg-indigo-50 hover:border-indigo-400 hover:text-indigo-600 transition-all">
+                    <label title="Uploader" className="flex-shrink-0 cursor-pointer w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-500 hover:bg-indigo-50 hover:border-indigo-400 hover:text-indigo-600 transition-all">
                       <Upload size={15} />
                       <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onloadend = () => setImg(r.result as string); r.readAsDataURL(f); }} />
                     </label>
                     {imgs[i] && (
-                      <button type="button" onClick={() => setImg('')} title="Supprimer" className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-red-200 rounded-xl text-red-400 hover:bg-red-50 hover:text-red-600 transition-all">
+                      <button type="button" onClick={() => setImg('')} className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-red-200 rounded-xl text-red-400 hover:bg-red-50 transition-all">
                         <X size={14} />
                       </button>
                     )}
                   </div>
                   {imgs[i] && (
-                    <div className="relative rounded-xl overflow-hidden border border-slate-200 h-36">
+                    <div className="rounded-xl overflow-hidden border border-slate-200 h-28">
                       <img src={imgs[i]} alt="" className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                     </div>
                   )}
@@ -1333,15 +1333,14 @@ function SettingsTab({ schools }: { schools: School[] }) {
               );
             })}
           </div>
-          <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-            <div>
-              <p className="text-xs text-black mb-1">Section « Ils nous font confiance »</p>
-              <p className="text-xs text-black">Cochez les écoles à afficher sur la page d'accueil.</p>
-            </div>
+
+          {/* Écoles de confiance */}
+          <div className="col-span-2 bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+            <p className="text-xs text-black">Section « Ils nous font confiance »</p>
             {approvedSchools.length === 0 ? (
               <p className="text-sm text-black text-center py-6">Aucun établissement approuvé pour l'instant</p>
             ) : (
-              <div className="space-y-1 max-h-80 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-1 max-h-80 overflow-y-auto">
                 {approvedSchools.map(s => {
                   const selected = cfg.clientSchoolIds.includes(s.id)
                   return (
