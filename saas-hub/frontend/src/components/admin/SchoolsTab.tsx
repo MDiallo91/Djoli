@@ -68,7 +68,7 @@ export function SchoolsTab() {
         <div className="flex items-center gap-0.5 bg-white border border-slate-200 rounded-lg p-1">
           {(['all','active','trial','expired','suspended'] as const).map(s => (
             <button key={s} onClick={() => setFilter(s)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filter === s ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-900'}`}>
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filter === s ? 'bg-primary-600 text-white' : 'text-slate-500 hover:text-slate-900'}`}>
               {s === 'all' ? 'Tous' : SUB_LABEL[s]}
             </button>
           ))}

@@ -29,7 +29,7 @@ export function Textarea({ label, error, helper, optional, ...props }: TextareaP
           'transition-all bg-white resize-y min-h-[90px] placeholder:text-slate-400',
           error
             ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/10'
-            : 'border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
+            : 'border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20',
         ].join(' ')}
       />
       {error  && <p className="text-[11px] text-red-500 font-medium mt-1">{error}</p>}

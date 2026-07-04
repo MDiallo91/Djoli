@@ -24,12 +24,12 @@ export async function fetchSetting<T>(key: string): Promise<{ statut: number; da
   }
 }
 
-/** Sauvegarde une section avec son statut. */
+/** Sauvegarde une section avec son statut (upsert backend via PUT). */
 export async function saveSetting(key: string, payload: { statut?: number; data: any }): Promise<void> {
-  await apiClient.post(`${API_SETTINGS}/${key}`, payload);
+  await apiClient.put(`${API_SETTINGS}/${key}`, payload);
 }
 
 /** Sauvegarde le statut seul d'une section (actif/inactif). */
 export async function saveSettingStatus(key: string, statut: 0 | 1): Promise<void> {
-  await apiClient.post(`${API_SETTINGS}/${key}/status`, { statut });
+  await apiClient.put(`${API_SETTINGS}/${key}`, { statut });
 }

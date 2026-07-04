@@ -13,7 +13,7 @@ interface AuthProps {
   onSuccess: (data: any) => void;
 }
 
-const inputCls = 'w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all bg-white placeholder:text-slate-400';
+const inputCls = 'w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all bg-white placeholder:text-slate-400';
 const labelCls = 'block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide';
 
 // ─── File uploader helper ─────────────────────────────────────
@@ -50,7 +50,7 @@ function FileUpload({ label, value, onChange, accept, hint }: {
       ) : (
         <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl p-5 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 transition-all group">
           <Upload size={20} className="text-slate-400 group-hover:text-indigo-500 mb-2 transition-colors" />
-          <p className="text-sm font-medium text-slate-500 group-hover:text-indigo-600 transition-colors">Cliquez pour uploader</p>
+          <p className="text-sm font-medium text-slate-500 group-hover:text-primary-600 transition-colors">Cliquez pour uploader</p>
           {hint && <p className="text-xs text-slate-400 mt-1">{hint}</p>}
           <input type="file" accept={accept} className="hidden" onChange={e => {
             const f = e.target.files?.[0]; if (!f) return;
@@ -109,8 +109,8 @@ function OTPStep({ email, onSuccess, onResend, onBack }: {
         <button onClick={onBack} className="flex items-center gap-2 text-slate-400 hover:text-slate-700 text-sm font-medium mb-8 transition-colors">
           <ArrowLeft size={16} /> Retour
         </button>
-        <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center mb-6">
-          <ShieldCheck size={22} className="text-indigo-600" />
+        <div className="w-12 h-12 bg-primary-100 rounded-2xl flex items-center justify-center mb-6">
+          <ShieldCheck size={22} className="text-primary-600" />
         </div>
         <h1 className="text-2xl font-bold text-slate-900 mb-1">Confirmez votre email</h1>
         <p className="text-slate-500 text-sm mb-1">Un code à 6 chiffres a été envoyé à</p>
@@ -122,17 +122,17 @@ function OTPStep({ email, onSuccess, onResend, onBack }: {
                 type="text" inputMode="numeric" maxLength={1} value={d}
                 onChange={e => handleChange(i, e.target.value)}
                 onKeyDown={e => handleKey(i, e)}
-                className="w-12 h-14 text-center text-2xl font-bold border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all bg-white" />
+                className="w-12 h-14 text-center text-2xl font-bold border-2 border-slate-200 rounded-xl focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all bg-white" />
             ))}
           </div>
           <button type="submit" disabled={loading || otp.join('').length < 6}
-            className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+            className="w-full py-3.5 bg-primary-600 text-white rounded-xl font-semibold text-sm hover:bg-primary-700 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
             {loading ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Vérification…</> : 'Confirmer mon email'}
           </button>
         </form>
         <p className="text-center text-xs text-slate-400 mt-4">
           Code valable 10 minutes.{' '}
-          <button onClick={handleResend} className="text-indigo-600 hover:underline font-medium">Renvoyer le code</button>
+          <button onClick={handleResend} className="text-primary-600 hover:underline font-medium">Renvoyer le code</button>
         </p>
       </div>
     </div>
@@ -206,7 +206,7 @@ function LoginForm({ onBack, onSuccess }: AuthProps) {
               </div>
             </div>
             <button type="submit" disabled={loading}
-              className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+              className="w-full py-3.5 bg-primary-600 text-white rounded-xl font-semibold text-sm hover:bg-primary-700 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
               {loading ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Connexion…</> : 'Se connecter'}
             </button>
           </form>
@@ -267,7 +267,7 @@ function RegisterStep1({ onBack, onNext, data, setData }: {
           </button>
 
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">Étape 1 / 2</span>
+            <span className="text-xs font-bold text-primary-600 bg-indigo-50 px-2.5 py-1 rounded-full">Étape 1 / 2</span>
           </div>
           <h1 className="text-2xl font-bold text-slate-900 mb-1">Informations de connexion</h1>
           <p className="text-slate-500 text-sm mb-8">Ces identifiants vous serviront à vous connecter.</p>
@@ -305,20 +305,20 @@ function RegisterStep1({ onBack, onNext, data, setData }: {
             </div>
 
             <label className="flex items-start gap-3 cursor-pointer group">
-              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${data.terms ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300 group-hover:border-indigo-400'}`}
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${data.terms ? 'bg-primary-600 border-primary-600' : 'border-slate-300 group-hover:border-indigo-400'}`}
                 onClick={() => setData({ ...data, terms: !data.terms })}>
                 {data.terms && <CheckCircle size={12} className="text-white" />}
               </div>
               <span className="text-sm text-slate-600 leading-relaxed">
                 J'accepte les{' '}
-                <a href="#" className="text-indigo-600 hover:underline font-medium">Conditions d'utilisation</a>{' '}
+                <a href="#" className="text-primary-600 hover:underline font-medium">Conditions d'utilisation</a>{' '}
                 et la{' '}
-                <a href="#" className="text-indigo-600 hover:underline font-medium">Politique de confidentialité</a>
+                <a href="#" className="text-primary-600 hover:underline font-medium">Politique de confidentialité</a>
               </span>
             </label>
 
             <button type="submit"
-              className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all flex items-center justify-center gap-2">
+              className="w-full py-3.5 bg-primary-600 text-white rounded-xl font-semibold text-sm hover:bg-primary-700 transition-all flex items-center justify-center gap-2">
               Continuer <ArrowRight size={16} />
             </button>
           </form>
@@ -356,7 +356,7 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
         </button>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">Étape 2 / 2</span>
+            <span className="text-xs font-bold text-primary-600 bg-indigo-50 px-2.5 py-1 rounded-full">Étape 2 / 2</span>
             <span className="text-sm text-slate-500">Informations de l'établissement & responsable</span>
           </div>
         </div>
@@ -414,7 +414,7 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
                       return (
                         <label key={lvl}
                           className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all select-none ${
-                            checked ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 hover:border-slate-300 text-slate-700'
+                            checked ? 'border-indigo-500 bg-primary-50 text-primary-700' : 'border-slate-200 hover:border-slate-300 text-slate-700'
                           }`}
                           onClick={() => {
                             const cur = data.levels || []
@@ -422,7 +422,7 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
                           }}
                         >
                           <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                            checked ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'
+                            checked ? 'bg-primary-600 border-primary-600' : 'border-slate-300'
                           }`}>
                             {checked && <CheckCircle size={10} className="text-white" />}
                           </div>
@@ -496,7 +496,7 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
           </div>
 
           <button type="submit" disabled={loading}
-            className="w-full py-4 bg-indigo-600 text-white rounded-xl font-semibold text-base hover:bg-indigo-700 transition-all disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
+            className="w-full py-4 bg-primary-600 text-white rounded-xl font-semibold text-base hover:bg-primary-700 transition-all disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
             {loading
               ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Envoi en cours…</>
               : <><CheckCircle size={18} /> Soumettre ma demande d'inscription</>
@@ -527,7 +527,7 @@ function RegisterSuccess({ schoolName, onBack }: { schoolName: string; onBack: (
         <p className="text-slate-400 text-sm mb-8">
           Notre équipe va examiner votre demande et vous contactera par email sous <strong>24–48h</strong> pour activation.
         </p>
-        <button onClick={onBack} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all">
+        <button onClick={onBack} className="px-8 py-3 bg-primary-600 text-white rounded-xl font-semibold text-sm hover:bg-primary-700 transition-all">
           Retour à l'accueil
         </button>
       </div>
@@ -614,7 +614,7 @@ export const Auth: React.FC<AuthProps> = ({ onBack, onSuccess }) => {
 
         <div className="space-y-3">
           <button onClick={() => setView('login')}
-            className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all flex items-center justify-center gap-2">
+            className="w-full py-3.5 bg-primary-600 text-white rounded-xl font-semibold text-sm hover:bg-primary-700 transition-all flex items-center justify-center gap-2">
             Se connecter
           </button>
           <button onClick={() => setView('register-1')}

@@ -55,7 +55,7 @@ function calcPrice(
   return { baseMonthly, subtotal, durationDiscount, multiDiscount, total };
 }
 
-const inputCls = 'w-full border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all bg-white';
+const inputCls = 'w-full border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all bg-white';
 
 // ─── Composant ────────────────────────────────────────────────
 
@@ -181,7 +181,7 @@ export function TarificationSection() {
                   <td className="py-3 pr-4">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
                       d.id === 'mensuel' ? 'bg-slate-100 text-slate-600 border-slate-200'
-                      : d.id === 'trimestriel' ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                      : d.id === 'trimestriel' ? 'bg-primary-50 text-primary-700 border-primary-200'
                       : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                     }`}>{d.label}</span>
                   </td>
@@ -236,12 +236,12 @@ export function TarificationSection() {
       </div>
 
       {/* ── Simulateur ── */}
-      <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-5 space-y-4">
-        <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wider">Simulateur de prix</p>
+      <div className="bg-primary-50 border border-primary-100 rounded-xl p-5 space-y-4">
+        <p className="text-xs font-semibold text-primary-700 uppercase tracking-wider">Simulateur de prix</p>
 
         {/* Sélection niveaux */}
         <div>
-          <p className="text-[11px] text-indigo-600 mb-2">Niveaux de l'école (cliquez pour sélectionner) :</p>
+          <p className="text-[11px] text-primary-600 mb-2">Niveaux de l'école (cliquez pour sélectionner) :</p>
           <div className="flex flex-wrap gap-2">
             {LEVELS.map(l => (
               <button key={l} type="button" onClick={() => toggleSimLevel(l)}
@@ -258,12 +258,12 @@ export function TarificationSection() {
 
         {/* Sélection durée */}
         <div>
-          <p className="text-[11px] text-indigo-600 mb-2">Durée :</p>
+          <p className="text-[11px] text-primary-600 mb-2">Durée :</p>
           <div className="flex gap-2 flex-wrap">
             {data.durations.map(d => (
               <button key={d.id} type="button" onClick={() => setSimDuration(d.id)}
                 className={`px-4 py-2 rounded-lg text-xs font-semibold border transition-all ${
-                  simDuration === d.id ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'
+                  simDuration === d.id ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-slate-600 border-slate-200 hover:border-primary-300'
                 }`}>
                 {d.label} {d.discountPct > 0 && <span className="ml-1 opacity-70">−{d.discountPct}%</span>}
               </button>
@@ -273,8 +273,8 @@ export function TarificationSection() {
 
         {/* Résultat */}
         {sim && (
-          <div className="bg-white rounded-xl border border-indigo-100 overflow-hidden">
-            <div className="px-4 py-3 bg-indigo-600 text-white">
+          <div className="bg-white rounded-xl border border-primary-100 overflow-hidden">
+            <div className="px-4 py-3 bg-primary-600 text-white">
               <p className="text-xs opacity-80">Prix pour : <span className="font-semibold">{simLevels.join(' + ')}</span> — <span className="font-semibold">{data.durations.find(d => d.id === simDuration)?.label}</span></p>
             </div>
             <div className="p-4 space-y-2 text-sm">
@@ -300,7 +300,7 @@ export function TarificationSection() {
               )}
               <div className="flex justify-between font-bold text-slate-900 text-base pt-2 border-t border-slate-100">
                 <span>Total à payer</span>
-                <span className="text-indigo-600">{fA(sim.total)}</span>
+                <span className="text-primary-600">{fA(sim.total)}</span>
               </div>
               {sim.durationDiscount + sim.multiDiscount > 0 && (
                 <p className="text-[11px] text-emerald-600 text-right">

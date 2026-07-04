@@ -46,7 +46,7 @@ export function useSettings<T>(key: string, defaultValue: T): UseSettingsResult<
     setSaving(true);
     setError(null);
     try {
-      await apiClient.post(`${API_SETTINGS}/${key}`, { data });
+      await apiClient.put(`${API_SETTINGS}/${key}`, { data });
       return true;
     } catch (e: any) {
       setError(e?.message ?? 'Erreur sauvegarde');

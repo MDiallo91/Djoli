@@ -23,7 +23,7 @@ export async function fetchPushSettings(): Promise<PushSettings | null> {
 
 /** Sauvegarde la configuration push complète. */
 export async function savePushSettings(settings: PushSettings): Promise<void> {
-  await apiClient.post(BASE, { data: settings });
+  await apiClient.put(BASE, { data: settings });
 }
 
 /** Envoie une notification push de test. */

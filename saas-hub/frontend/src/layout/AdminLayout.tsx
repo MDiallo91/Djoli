@@ -24,12 +24,14 @@ import {
   LogOut, Settings, TrendingUp, CreditCard,
   School as SchoolIcon, Clock, ShieldCheck,
   RefreshCw, Menu, ChevronLeft, ChevronRight,
+  Sun, Moon,
 } from 'lucide-react';
 import { useAdminContext } from '../context/AdminContext';
 import { pathToTab }       from '../constants/routes';
 import { ADMIN_ROUTES }    from '../constants/routes';
 import type { MainView }   from '../types/admin';
 import { Spinner }         from '../ui/design_system/Spinner';
+import { useTheme }        from '../context/ThemeContext';
 
 interface AdminLayoutProps {
   onLogout: () => void;
@@ -49,6 +51,7 @@ export function AdminLayout({ onLogout }: AdminLayoutProps) {
   const activeTab = pathToTab(location.pathname);
 
   const { schools, loading, fetchSchools, pendingCount, siteCfg } = useAdminContext();
+  const { dark, toggleDark } = useTheme();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed,   setCollapsed]   = useState(false);
@@ -61,7 +64,7 @@ export function AdminLayout({ onLogout }: AdminLayoutProps) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Spinner size="lg" className="text-indigo-600" />
+        <Spinner size="lg" className="text-primary-600" />
       </div>
     );
   }
@@ -92,7 +95,7 @@ export function AdminLayout({ onLogout }: AdminLayoutProps) {
           className={`flex items-center ${collapsed ? 'flex-col gap-2 px-2 py-3' : 'px-4 gap-2.5 py-4'}`}
           style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', minHeight: 56 }}
         >
-          <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+          <div className="w-7 h-7 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
             {siteCfg.logoUrl
               ? <img src={siteCfg.logoUrl} alt="Logo" className="w-full h-full object-contain" />
               : <ShieldCheck size={14} className="text-white" />}
@@ -103,7 +106,7 @@ export function AdminLayout({ onLogout }: AdminLayoutProps) {
               <p className="text-sm font-bold text-white leading-none truncate">
                 {siteCfg.siteName || 'SaaS Admin'}
               </p>
-              <p className="text-[10px] text-indigo-400 font-medium mt-0.5">Master Panel</p>
+              <p className="text-[10px] text-primary-400 font-medium mt-0.5">Master Panel</p>
             </div>
           )}
 
@@ -129,7 +132,7 @@ export function AdminLayout({ onLogout }: AdminLayoutProps) {
                   'relative w-full flex items-center py-2.5 rounded-xl text-sm transition-all',
                   collapsed ? 'justify-center px-0' : 'gap-2.5 px-3',
                   activeTab === id
-                    ? 'bg-indigo-600/20 text-indigo-300'
+                    ? 'bg-primary-600/20 text-primary-300'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-white/5',
                 ].join(' ')}
               >
@@ -167,6 +170,18 @@ export function AdminLayout({ onLogout }: AdminLayoutProps) {
               </button>
             </div>
           )}
+          <button
+            onClick={toggleDark}
+            title={dark ? 'Mode clair' : 'Mode sombre'}
+            className={[
+              'w-full flex items-center py-2 rounded-xl text-sm text-slate-500',
+              'hover:text-white hover:bg-white/10 transition-all mb-0.5',
+              collapsed ? 'justify-center' : 'gap-2.5 px-3',
+            ].join(' ')}
+          >
+            {dark ? <Sun size={14} /> : <Moon size={14} />}
+            {!collapsed && (dark ? 'Mode clair' : 'Mode sombre')}
+          </button>
           <button
             onClick={onLogout}
             title={collapsed ? 'Déconnexion' : undefined}

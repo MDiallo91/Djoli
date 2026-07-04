@@ -28,7 +28,7 @@ export async function fetchPaymentSettings(): Promise<PaymentSettings | null> {
 
 /** Sauvegarde la configuration complète des gateways. */
 export async function savePaymentSettings(settings: PaymentSettings): Promise<void> {
-  await apiClient.post(BASE, { data: settings });
+  await apiClient.put(BASE, { data: settings });
 }
 
 /** Teste la connexion à un gateway spécifique (sandbox). */

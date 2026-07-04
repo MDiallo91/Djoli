@@ -68,7 +68,7 @@ export function SubscriptionsTab() {
       <div className="flex flex-wrap gap-2">
         {([['all','Tous'],['active','Actifs'],['trial','Essai'],['expired','Expirés'],['suspended','Bloqués']] as [string,string][]).map(([k, l]) => (
           <button key={k} onClick={() => setFilter(k)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold border transition-all ${filter === k ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold border transition-all ${filter === k ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>
             {l}
             <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${filter === k ? 'bg-white/20' : 'bg-slate-100'}`}>
               {counts[k as keyof typeof counts]}

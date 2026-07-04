@@ -134,20 +134,20 @@ export function FileUpload({
           className={[
             'flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 cursor-pointer transition-all group',
             uploading
-              ? 'border-indigo-300 bg-indigo-50/50'
-              : 'border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/30',
+              ? 'border-primary-300 bg-primary-50/50'
+              : 'border-slate-200 hover:border-primary-400 hover:bg-primary-50/30',
           ].join(' ')}
           onClick={e => { e.preventDefault(); inputRef.current?.click(); }}
         >
           {uploading ? (
             <>
-              <Spinner size="md" className="text-indigo-500 mb-2" />
-              <p className="text-sm font-medium text-indigo-600">Upload en cours…</p>
+              <Spinner size="md" className="text-primary-500 mb-2" />
+              <p className="text-sm font-medium text-primary-600">Upload en cours…</p>
             </>
           ) : (
             <>
-              <Upload size={20} className="text-slate-400 group-hover:text-indigo-500 mb-2 transition-colors" />
-              <p className="text-sm font-medium text-slate-500 group-hover:text-indigo-600 transition-colors">
+              <Upload size={20} className="text-slate-400 group-hover:text-primary-500 mb-2 transition-colors" />
+              <p className="text-sm font-medium text-slate-500 group-hover:text-primary-600 transition-colors">
                 Cliquez pour uploader
               </p>
               {hint && <p className="text-xs text-slate-400 mt-1">{hint}</p>}

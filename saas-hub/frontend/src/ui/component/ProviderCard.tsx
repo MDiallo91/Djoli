@@ -34,7 +34,7 @@ export function ProviderCard({
   return (
     <div className={[
       'bg-white border rounded-xl overflow-hidden transition-all',
-      enabled ? 'border-indigo-200 shadow-sm' : 'border-slate-200',
+      enabled ? 'border-primary-200 shadow-sm' : 'border-slate-200',
     ].join(' ')}>
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100">
@@ -42,7 +42,7 @@ export function ProviderCard({
         {logo ? (
           <img src={logo} alt={name} className="w-8 h-8 object-contain rounded-lg flex-shrink-0" />
         ) : (
-          <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 text-xs font-bold flex-shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center text-primary-600 text-xs font-bold flex-shrink-0">
             {initials ?? name[0]}
           </div>
         )}

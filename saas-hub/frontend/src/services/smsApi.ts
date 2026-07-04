@@ -23,7 +23,7 @@ export async function fetchSmsSettings(): Promise<SmsSettings | null> {
 
 /** Sauvegarde la configuration SMS complète. */
 export async function saveSmsSettings(settings: SmsSettings): Promise<void> {
-  await apiClient.post(BASE, { data: settings });
+  await apiClient.put(BASE, { data: settings });
 }
 
 /** Envoie un SMS de test via le provider actif. */

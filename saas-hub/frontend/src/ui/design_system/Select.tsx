@@ -35,7 +35,7 @@ export function Select({ label, error, helper, options, optional, ...props }: Se
           'transition-all bg-white appearance-none cursor-pointer',
           error
             ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/10'
-            : 'border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
+            : 'border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20',
         ].join(' ')}
       >
         {options.map(o => (

@@ -37,7 +37,7 @@ const DEFAULT_TEMPLATES: SmsEventTemplate[] = [
 
 const DEFAULT: SmsSettings = { providers: DEFAULT_PROVIDERS, templates: DEFAULT_TEMPLATES };
 
-const inputCls = 'w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all bg-white placeholder:text-slate-400';
+const inputCls = 'w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all bg-white placeholder:text-slate-400';
 
 // Labels des champs par provider
 const PROVIDER_FIELDS: Record<SmsProviderType, { key: string; label: string; placeholder: string; secret?: boolean }[]> = {
@@ -197,7 +197,7 @@ export function SmsSection() {
               onChange={e => setTestPhone(e.target.value)}
               className={inputCls + ' text-xs'} />
             <button type="button" onClick={sendTest} disabled={testing}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs hover:bg-indigo-700 transition-all disabled:opacity-50 whitespace-nowrap flex-shrink-0">
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-xs hover:bg-primary-700 transition-all disabled:opacity-50 whitespace-nowrap flex-shrink-0">
               <Send size={12}/> {testing ? 'Envoi…' : 'Envoyer test'}
             </button>
           </div>

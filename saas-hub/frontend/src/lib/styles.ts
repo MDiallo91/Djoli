@@ -8,7 +8,7 @@
 // ─── Champs de formulaire ─────────────────────────────────────
 export const inputCls =
   'w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 ' +
-  'outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 ' +
+  'outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 ' +
   'transition-all bg-white placeholder:text-slate-400';
 
 export const labelCls =

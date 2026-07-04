@@ -21,11 +21,11 @@ router.get('/', async (_req, res) => {
     }
 });
 
-// GET une setting par clé
+// GET une setting par clé — retourne { statut:1, data:null } si absente (jamais 404)
 router.get('/:key', async (req, res) => {
     try {
         const row = await Setting.findOne({ where: { key: req.params.key } });
-        if (!row) return res.status(404).json({ error: 'Not found' });
+        if (!row) return res.json({ statut: 1, data: null });
         res.json({
             id:     row.id,
             statut: row.statut,

@@ -26,10 +26,10 @@ interface ButtonProps {
 }
 
 const VARIANT_CLS: Record<ButtonVariant, string> = {
-  primary: 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700 hover:border-indigo-700',
-  ghost:   'bg-transparent text-slate-600 border-transparent hover:bg-slate-100',
+  primary: 'bg-primary-600 text-white border-primary-600 hover:bg-primary-700 hover:border-primary-700',
+  ghost:   'bg-transparent text-slate-600 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
   danger:  'bg-red-50 text-red-600 border-red-200 hover:bg-red-600 hover:text-white hover:border-red-600',
-  outline: 'bg-white text-slate-700 border-slate-200 hover:border-slate-400',
+  outline: 'bg-white text-slate-700 border-slate-200 hover:border-slate-400 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700',
   success: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-600 hover:text-white hover:border-emerald-600',
 };
 
