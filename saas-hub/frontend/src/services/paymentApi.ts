@@ -4,7 +4,7 @@
  * Consommé par : PaymentSection, hooks/usePaymentProviders
  * → Passe par apiClient (token injecté automatiquement)
  *
- * Pattern BELTAM : chaque gateway stocke son config en DB (type + value JSON).
+ * Pattern  : chaque gateway stocke son config en DB (type + value JSON).
  * L'activation d'un gateway ne désactive pas les autres (multi-gateway autorisé,
  * contrairement au SMS où un seul est actif à la fois).
  */
@@ -24,6 +24,7 @@ export async function fetchPaymentSettings(): Promise<PaymentSettings | null> {
     return null;
   }
 }
+
 
 /** Sauvegarde la configuration complète des gateways. */
 export async function savePaymentSettings(settings: PaymentSettings): Promise<void> {

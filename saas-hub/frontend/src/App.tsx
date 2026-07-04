@@ -7,29 +7,29 @@
  *               ├─ etablissements → SchoolsTab
  *               ├─ abonnements   → SubscriptionsTab
  *               ├─ en-attente    → PendingTab
- *               └─ parametres/*  → SettingsTab (remplacé au Sprint 5)
+ *               └─ parametres/*  → SettingsPage (Sprint 5)
  */
 
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Toaster, toast } from 'sonner';
-import { LandingPage }       from './components/LandingPage';
-import { Auth }              from './components/Auth';
-import { Dashboard }         from './components/Dashboard';
-import { LegalPage }         from './components/LegalPage';
-import { AdminProvider }     from './context/AdminContext';
-import { AdminLayout }       from './layout/AdminLayout';
-import { DashboardTab }      from './components/admin/DashboardTab';
-import { SchoolsTab }        from './components/admin/SchoolsTab';
-import { PendingTab }        from './components/admin/PendingTab';
-import { SubscriptionsTab }  from './components/admin/SubscriptionsTab';
-import { SettingsTab }       from './components/AdminDashboard';
-import { useAdminContext }   from './context/AdminContext';
+import { LandingPage }      from './components/LandingPage';
+import { Auth }             from './components/Auth';
+import { Dashboard }        from './components/Dashboard';
+import { LegalPage }        from './components/LegalPage';
+import { AdminProvider }    from './context/AdminContext';
+import { AdminLayout }      from './layout/AdminLayout';
+import { DashboardTab }     from './components/admin/DashboardTab';
+import { SchoolsTab }       from './components/admin/SchoolsTab';
+import { PendingTab }       from './components/admin/PendingTab';
+import { SubscriptionsTab } from './components/admin/SubscriptionsTab';
+import { SettingsPage }     from './page/admin/SettingsPage';
 
 export { toast };
 
 function getUser() {
   try { const s = localStorage.getItem('hub_user'); return s ? JSON.parse(s) : null; } catch { return null; }
 }
+
 
 // ─── Wrappers de routes ────────────────────────────────────────
 
@@ -91,12 +91,6 @@ function AdminGuard() {
   );
 }
 
-/** Wrapper SettingsTab — récupère les écoles depuis AdminContext */
-function SettingsRoute() {
-  const { schools } = useAdminContext();
-  return <SettingsTab schools={schools} />;
-}
-
 // ─── App ──────────────────────────────────────────────────────
 
 function App() {
@@ -122,7 +116,7 @@ function App() {
           <Route path="etablissements" element={<SchoolsTab />} />
           <Route path="abonnements"    element={<SubscriptionsTab />} />
           <Route path="en-attente"     element={<PendingTab />} />
-          <Route path="parametres/*"   element={<SettingsRoute />} />
+          <Route path="parametres/*"   element={<SettingsPage />} />
         </Route>
 
         <Route path="/legal/terms"    element={<LegalPage type="terms" />} />
