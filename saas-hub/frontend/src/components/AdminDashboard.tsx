@@ -1135,10 +1135,10 @@ function SettingsTab({ schools }: { schools: School[] }) {
       <div className="flex border-b border-slate-200 mb-6 overflow-x-auto scrollbar-none">
         {SETTINGS_TABS.map(t => (
           <button key={t.id} type="button" onClick={() => setSection(t.id)}
-            className={`flex-shrink-0 px-4 py-3 text-sm font-semibold border-b-2 -mb-px transition-all whitespace-nowrap ${
+            className={`flex-shrink-0 px-4 py-3 text-sm border-b-2 -mb-px transition-all whitespace-nowrap ${
               section === t.id
-                ? 'border-slate-900 text-slate-900'
-                : 'border-transparent text-slate-400 hover:text-slate-600'
+                ? 'border-slate-900 text-black'
+                : 'border-transparent text-black/50 hover:text-black'
             }`}>
             {t.label}
           </button>
@@ -1780,8 +1780,8 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
 
   const SidebarContent = () => (
     <>
-      {/* Logo */}
-      <div className={`flex items-center ${collapsed ? 'justify-center px-2' : 'px-4 gap-2.5'} py-4`}
+      {/* Logo + collapse button */}
+      <div className={`flex items-center ${collapsed ? 'flex-col gap-2 px-2 py-3' : 'px-4 gap-2.5 py-4'}`}
         style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', minHeight: 56 }}>
         <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
           {siteCfg.logoUrl
@@ -1789,11 +1789,16 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
             : <ShieldCheck size={14} className="text-white" />}
         </div>
         {!collapsed && (
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-sm font-bold text-white leading-none truncate">{siteCfg.siteName || 'SaaS Admin'}</p>
             <p className="text-[10px] text-indigo-400 font-medium mt-0.5">Master Panel</p>
           </div>
         )}
+        {/* Collapse toggle — desktop only */}
+        <button onClick={() => setCollapsed(c => !c)} title={collapsed ? 'Agrandir' : 'Réduire'}
+          className="hidden md:flex items-center justify-center w-6 h-6 rounded-lg text-slate-500 hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
+          {collapsed ? <ChevronRight size={13} /> : <ChevronLeft size={13} />}
+        </button>
       </div>
 
       {/* Nav */}
@@ -1813,12 +1818,6 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
 
       {/* Footer */}
       <div className="px-2 py-2" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-        {/* Collapse toggle */}
-        <button onClick={() => setCollapsed(c => !c)} title={collapsed ? 'Agrandir' : 'Réduire'}
-          className={`hidden md:flex w-full items-center ${collapsed ? 'justify-center' : 'gap-2 px-3'} py-2 rounded-xl text-slate-500 hover:text-white hover:bg-white/5 transition-all mb-1`}>
-          {collapsed ? <ChevronRight size={14} /> : <><ChevronLeft size={14} /><span className="text-xs">Réduire</span></>}
-        </button>
-
         {!collapsed && (
           <div className="flex items-center justify-between px-3 py-1.5 mb-1">
             <div className="flex items-center gap-1.5">
