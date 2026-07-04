@@ -967,6 +967,13 @@ function StatutToggle({ value, onChange }: { value: 0|1; onChange: (v: 0|1) => v
   )
 }
 
+// ─── Email providers ──────────────────────────────────────────
+type EProviderType = 'resend' | 'smtp'
+type ERoute = 'otp' | 'approval' | 'rejection'
+interface EProvider { id: string; type: EProviderType; name: string; enabled: boolean; config: Record<string, any> }
+interface EProvidersState { providers: EProvider[]; routing: Record<ERoute, string> }
+const DEFAULT_EMAIL_PS: EProvidersState = { providers: [], routing: { otp: '', approval: '', rejection: '' } }
+
 function SettingsTab({ schools }: { schools: School[] }) {
   const [cfg,     setCfg]     = useState<SiteConfig>(DEFAULT_SITE_CONFIG)
   const [legal,   setLegal]   = useState(DEFAULT_LEGAL)
@@ -976,8 +983,8 @@ function SettingsTab({ schools }: { schools: School[] }) {
   const [legalTab, setLegalTab] = useState<'terms' | 'privacy' | 'mentions'>('terms')
   const [saving,  setSaving]  = useState(false)
   const [loaded,  setLoaded]  = useState(false)
-  const [emailCfg, setEmailCfg] = useState({ apiKey: '', fromEmail: '' })
-  const [showKey,  setShowKey]  = useState(false)
+  const [emailPs,     setEmailPs]     = useState<EProvidersState>(DEFAULT_EMAIL_PS)
+  const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({})
 
   // Charger depuis l'API au montage
   useEffect(() => {
@@ -996,9 +1003,15 @@ function SettingsTab({ schools }: { schools: School[] }) {
         } else {
           try { const s = localStorage.getItem('hub_site_config'); if (s) setCfg(p => ({ ...p, ...JSON.parse(s) })) } catch {}
         }
-        if (all.email_config?.data) {
+        if (all.email_providers?.data) {
+          const d = typeof all.email_providers.data === 'string' ? JSON.parse(all.email_providers.data) : all.email_providers.data
+          setEmailPs(d)
+        } else if (all.email_config?.data) {
           const ed = typeof all.email_config.data === 'string' ? JSON.parse(all.email_config.data) : all.email_config.data
-          setEmailCfg({ apiKey: ed.apiKey || '', fromEmail: ed.fromEmail || '' })
+          if (ed?.apiKey) {
+            const pid = 'migrated_resend'
+            setEmailPs({ providers: [{ id: pid, type: 'resend', name: 'Resend', enabled: true, config: { apiKey: ed.apiKey, fromEmail: ed.fromEmail || '', fromName: 'DJOLI' } }], routing: { otp: pid, approval: pid, rejection: pid } })
+          }
         }
         newStatuts.legal = all.legal?.statut ?? 1
         if (all.legal?.data) {
@@ -1019,6 +1032,21 @@ function SettingsTab({ schools }: { schools: School[] }) {
   const set = (k: keyof SiteConfig, v: any) => setCfg(p => ({ ...p, [k]: v }))
   const setLeg = (k: 'terms' | 'privacy' | 'mentions', v: string) => setLegal(p => ({ ...p, [k]: v }))
 
+  const genEId = () => Math.random().toString(36).slice(2, 9)
+  const addEmailProvider = (type: EProviderType) => {
+    const id = genEId()
+    const defaultConfig = type === 'resend'
+      ? { apiKey: '', fromEmail: '', fromName: 'DJOLI' }
+      : { host: '', port: 587, secure: false, user: '', password: '', fromEmail: '', fromName: 'DJOLI' }
+    setEmailPs(p => ({ ...p, providers: [...p.providers, { id, type, name: type === 'resend' ? 'Resend' : 'SMTP Hébergeur', enabled: false, config: defaultConfig }] }))
+  }
+  const updateEProvider = (id: string, patch: Partial<EProvider>) =>
+    setEmailPs(p => ({ ...p, providers: p.providers.map(pr => pr.id === id ? { ...pr, ...patch } : pr) }))
+  const updateEProviderConfig = (id: string, key: string, val: any) =>
+    setEmailPs(p => ({ ...p, providers: p.providers.map(pr => pr.id === id ? { ...pr, config: { ...pr.config, [key]: val } } : pr) }))
+  const deleteEProvider = (id: string) =>
+    setEmailPs(p => ({ ...p, providers: p.providers.filter(pr => pr.id !== id), routing: Object.fromEntries(Object.entries(p.routing).map(([k, v]) => [k, v === id ? '' : v])) as Record<ERoute, string> }))
+
   const handleSave = async () => {
     setSaving(true)
     const H = { 'Content-Type': 'application/json' }
@@ -1035,7 +1063,7 @@ function SettingsTab({ schools }: { schools: School[] }) {
           fetch(`${SETTINGS_API}/${key}`, { method: 'PUT', headers: H, body: JSON.stringify({ statut: statuts[key] ?? 1, data }) })
         ),
         fetch(`${SETTINGS_API}/legal`, { method: 'PUT', headers: H, body: JSON.stringify({ statut: statuts.legal ?? 1, data: legal }) }),
-        fetch(`${SETTINGS_API}/email_config`, { method: 'PUT', headers: H, body: JSON.stringify({ statut: 1, data: emailCfg }) }),
+        fetch(`${SETTINGS_API}/email_providers`, { method: 'PUT', headers: H, body: JSON.stringify({ statut: 1, data: emailPs }) }),
       ])
       const failed = responses.filter(r => !r.ok)
       if (failed.length > 0) {
@@ -1395,62 +1423,197 @@ function SettingsTab({ schools }: { schools: School[] }) {
 
       {/* ── Email ── */}
       {section === 'email' && (
-        <div className="space-y-4">
-          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800 leading-relaxed">
-            <strong>Configuration Resend</strong> — La clé API et l'adresse d'envoi sont stockées dans la base de données.
-            Si les deux champs sont vides, le système utilise les variables d'environnement Vercel comme secours.
+        <div className="space-y-5">
+          {/* Header + add buttons */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-slate-700">Providers d'envoi d'email</p>
+              <p className="text-xs text-slate-400 mt-0.5">Configurez un ou plusieurs services d'envoi</p>
+            </div>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => addEmailProvider('resend')}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-all">
+                <Plus size={12}/> Resend
+              </button>
+              <button type="button" onClick={() => addEmailProvider('smtp')}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-100 transition-all">
+                <Plus size={12}/> SMTP
+              </button>
+            </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-5">
-            {/* Clé API */}
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Clé API Resend</p>
-              <p className="text-xs text-slate-500 mb-2">
-                Obtenir sur <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">resend.com/api-keys</a> — commence par <code className="bg-slate-100 px-1 rounded">re_</code>
-              </p>
-              <div className="flex items-center gap-2">
-                <input
-                  type={showKey ? 'text' : 'password'}
-                  placeholder="re_xxxxxxxxxxxxxxxxxxxx"
-                  value={emailCfg.apiKey}
-                  onChange={e => setEmailCfg(p => ({ ...p, apiKey: e.target.value }))}
-                  className={inputCls + ' font-mono text-xs'}
-                />
-                <button type="button" onClick={() => setShowKey(v => !v)}
-                  className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
-                  {showKey ? <EyeOff size={15} /> : <Eye size={15} />}
+          {/* Empty state */}
+          {emailPs.providers.length === 0 && (
+            <div className="border-2 border-dashed border-slate-200 rounded-xl py-10 text-center">
+              <p className="text-sm text-slate-400">Aucun provider configuré</p>
+              <p className="text-xs text-slate-300 mt-1">Ajoutez Resend ou SMTP pour activer l'envoi d'emails</p>
+            </div>
+          )}
+
+          {/* Provider cards */}
+          {emailPs.providers.map(prov => (
+            <div key={prov.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+              {/* Card header */}
+              <div className="flex items-center gap-3 px-5 py-3 border-b border-slate-100 bg-slate-50/50">
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wider flex-shrink-0 ${prov.type === 'resend' ? 'bg-indigo-100 text-indigo-700' : 'bg-sky-100 text-sky-700'}`}>
+                  {prov.type === 'resend' ? 'RESEND' : 'SMTP'}
+                </span>
+                <input type="text" value={prov.name}
+                  onChange={e => updateEProvider(prov.id, { name: e.target.value })}
+                  className="flex-1 text-sm font-semibold text-slate-800 bg-transparent border-0 outline-none focus:bg-white focus:border focus:border-slate-200 rounded px-1.5 py-0.5 min-w-0"
+                  placeholder="Nom du provider" />
+                <span className={`text-[10px] font-semibold flex-shrink-0 ${prov.enabled ? 'text-emerald-600' : 'text-slate-400'}`}>
+                  {prov.enabled ? 'Actif' : 'Inactif'}
+                </span>
+                <button type="button" onClick={() => updateEProvider(prov.id, { enabled: !prov.enabled })}
+                  className={`relative inline-flex w-9 h-5 flex-shrink-0 rounded-full transition-colors ${prov.enabled ? 'bg-emerald-500' : 'bg-slate-200'}`}>
+                  <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${prov.enabled ? 'translate-x-4' : ''}`}/>
                 </button>
-                {emailCfg.apiKey && (
-                  <button type="button" onClick={() => setEmailCfg(p => ({ ...p, apiKey: '' }))}
-                    className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-red-200 rounded-xl text-red-400 hover:bg-red-50 transition-all">
-                    <X size={14} />
-                  </button>
-                )}
+                <button type="button" onClick={() => deleteEProvider(prov.id)}
+                  className="w-7 h-7 flex items-center justify-center text-slate-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-all flex-shrink-0">
+                  <Trash2 size={12}/>
+                </button>
+              </div>
+
+              {/* Config fields */}
+              <div className="px-5 py-4 space-y-4">
+                {prov.type === 'resend' ? (<>
+                  <div>
+                    <p className={labelCls}>Clé API</p>
+                    <p className="text-xs text-slate-400 mb-1.5">Obtenir sur <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:underline">resend.com/api-keys</a> — commence par <code className="bg-slate-100 px-1 rounded">re_</code></p>
+                    <div className="flex gap-2">
+                      <input type={showSecrets[prov.id] ? 'text' : 'password'} placeholder="re_xxxxxxxxxxxxxxxxxxxx"
+                        value={prov.config.apiKey || ''}
+                        onChange={e => updateEProviderConfig(prov.id, 'apiKey', e.target.value)}
+                        className={inputCls + ' font-mono text-xs'} />
+                      <button type="button" onClick={() => setShowSecrets(p => ({ ...p, [prov.id]: !p[prov.id] }))}
+                        className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-400 hover:bg-slate-50 transition-all">
+                        {showSecrets[prov.id] ? <EyeOff size={14}/> : <Eye size={14}/>}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className={labelCls}>Email d'envoi</p>
+                      <input type="email" placeholder="noreply@tondomaine.com"
+                        value={prov.config.fromEmail || ''}
+                        onChange={e => updateEProviderConfig(prov.id, 'fromEmail', e.target.value)}
+                        className={inputCls + ' text-xs'} />
+                    </div>
+                    <div>
+                      <p className={labelCls}>Nom d'envoi</p>
+                      <input type="text" placeholder="DJOLI"
+                        value={prov.config.fromName || ''}
+                        onChange={e => updateEProviderConfig(prov.id, 'fromName', e.target.value)}
+                        className={inputCls + ' text-xs'} />
+                    </div>
+                  </div>
+                </>) : (<>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="col-span-2">
+                      <p className={labelCls}>Serveur SMTP</p>
+                      <input type="text" placeholder="smtp.votrehebergeur.com"
+                        value={prov.config.host || ''}
+                        onChange={e => updateEProviderConfig(prov.id, 'host', e.target.value)}
+                        className={inputCls + ' text-xs'} />
+                    </div>
+                    <div>
+                      <p className={labelCls}>Port</p>
+                      <input type="number" placeholder="587"
+                        value={prov.config.port || ''}
+                        onChange={e => updateEProviderConfig(prov.id, 'port', parseInt(e.target.value) || 587)}
+                        className={inputCls + ' text-xs'} />
+                    </div>
+                  </div>
+                  <div>
+                    <p className={labelCls}>Chiffrement</p>
+                    <div className="flex gap-5">
+                      {([['false','TLS / STARTTLS','Port 587'],['true','SSL','Port 465']] as [string,string,string][]).map(([val, label, hint]) => (
+                        <label key={val} className="flex items-center gap-1.5 cursor-pointer">
+                          <input type="radio" name={`ssl_${prov.id}`}
+                            checked={String(prov.config.secure ?? false) === val}
+                            onChange={() => updateEProviderConfig(prov.id, 'secure', val === 'true')}
+                            className="accent-indigo-600 w-3.5 h-3.5" />
+                          <span className="text-xs text-slate-700">{label}</span>
+                          <span className="text-[10px] text-slate-400">{hint}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className={labelCls}>Utilisateur SMTP</p>
+                      <input type="text" placeholder="contact@votredomaine.com"
+                        value={prov.config.user || ''}
+                        onChange={e => updateEProviderConfig(prov.id, 'user', e.target.value)}
+                        className={inputCls + ' text-xs'} />
+                    </div>
+                    <div>
+                      <p className={labelCls}>Mot de passe</p>
+                      <div className="flex gap-2">
+                        <input type={showSecrets[prov.id] ? 'text' : 'password'} placeholder="••••••••"
+                          value={prov.config.password || ''}
+                          onChange={e => updateEProviderConfig(prov.id, 'password', e.target.value)}
+                          className={inputCls + ' text-xs'} />
+                        <button type="button" onClick={() => setShowSecrets(p => ({ ...p, [prov.id]: !p[prov.id] }))}
+                          className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-400 hover:bg-slate-50 transition-all">
+                          {showSecrets[prov.id] ? <EyeOff size={14}/> : <Eye size={14}/>}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className={labelCls}>Email d'envoi</p>
+                      <input type="email" placeholder="noreply@votredomaine.com"
+                        value={prov.config.fromEmail || ''}
+                        onChange={e => updateEProviderConfig(prov.id, 'fromEmail', e.target.value)}
+                        className={inputCls + ' text-xs'} />
+                    </div>
+                    <div>
+                      <p className={labelCls}>Nom d'envoi</p>
+                      <input type="text" placeholder="DJOLI"
+                        value={prov.config.fromName || ''}
+                        onChange={e => updateEProviderConfig(prov.id, 'fromName', e.target.value)}
+                        className={inputCls + ' text-xs'} />
+                    </div>
+                  </div>
+                </>)}
               </div>
             </div>
+          ))}
 
-            {/* Email d'envoi */}
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Email d'envoi (From)</p>
-              <p className="text-xs text-slate-500 mb-2">
-                Doit être un domaine vérifié sur Resend. Ex: <code className="bg-slate-100 px-1 rounded">noreply@tondomaine.com</code><br/>
-                En phase de test, utilisez <code className="bg-slate-100 px-1 rounded">onboarding@resend.dev</code> (envoie uniquement à votre propre email Resend).
-              </p>
-              <input
-                type="email"
-                placeholder="noreply@tondomaine.com"
-                value={emailCfg.fromEmail}
-                onChange={e => setEmailCfg(p => ({ ...p, fromEmail: e.target.value }))}
-                className={inputCls + ' text-xs'}
-              />
+          {/* Routing */}
+          {emailPs.providers.length > 0 && (
+            <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+              <div>
+                <p className={labelCls}>Routage par type d'email</p>
+                <p className="text-xs text-slate-400">Choisissez quel provider envoie chaque type d'email. "Automatique" = premier provider actif.</p>
+              </div>
+              <div className="space-y-1">
+                {([
+                  ['otp',      'OTP / Vérification email',  'Code envoyé à l\'inscription'],
+                  ['approval', 'Approbation de compte',      'Dossier accepté'],
+                  ['rejection','Rejet de demande',           'Dossier refusé'],
+                ] as [ERoute, string, string][]).map(([route, label, hint]) => (
+                  <div key={route} className="flex items-center gap-4 py-2.5 border-b border-slate-100 last:border-0">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-slate-700">{label}</p>
+                      <p className="text-[10px] text-slate-400">{hint}</p>
+                    </div>
+                    <select value={emailPs.routing[route] || ''}
+                      onChange={e => setEmailPs(p => ({ ...p, routing: { ...p.routing, [route]: e.target.value } }))}
+                      className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 flex-shrink-0 min-w-[180px]">
+                      <option value="">Automatique (1er actif)</option>
+                      {emailPs.providers.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}{!p.enabled ? ' (inactif)' : ''}</option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+              </div>
             </div>
-
-            {/* Statut visuel */}
-            <div className={`flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-lg ${emailCfg.apiKey ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-500'}`}>
-              <div className={`w-2 h-2 rounded-full ${emailCfg.apiKey ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-              {emailCfg.apiKey ? 'Clé API configurée — les emails seront envoyés via Resend' : 'Aucune clé API — les emails sont désactivés'}
-            </div>
-          </div>
+          )}
         </div>
       )}
 
