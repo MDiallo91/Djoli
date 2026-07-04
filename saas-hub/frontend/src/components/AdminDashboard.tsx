@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   LogOut, Settings, Search, TrendingUp, CreditCard,
@@ -932,6 +933,27 @@ function ColorPicker({ label, value, onChange, hint }: {
 export type SiteConfig = typeof DEFAULT_SITE_CONFIG
 
 type SettingsSection = 'site' | 'contact' | 'tarification' | 'application' | 'accueil' | 'email' | 'legal' | 'audit'
+
+// ─── URL ↔ tab/section maps ────────────────────────────────────
+const TAB_TO_PATH: Record<MainView, string> = {
+  dashboard:     '/admin',
+  schools:       '/admin/etablissements',
+  subscriptions: '/admin/abonnements',
+  pending:       '/admin/en-attente',
+  settings:      '/admin/parametres',
+}
+function pathToTab(pathname: string): MainView {
+  if (pathname.startsWith('/admin/etablissements')) return 'schools'
+  if (pathname.startsWith('/admin/abonnements'))    return 'subscriptions'
+  if (pathname.startsWith('/admin/en-attente'))     return 'pending'
+  if (pathname.startsWith('/admin/parametres'))     return 'settings'
+  return 'dashboard'
+}
+const VALID_SECTIONS: SettingsSection[] = ['site','contact','tarification','application','accueil','email','legal','audit']
+function pathToSection(pathname: string): SettingsSection {
+  const seg = pathname.split('/').pop() as SettingsSection
+  return VALID_SECTIONS.includes(seg) ? seg : 'site'
+}
 const SETTINGS_TABS: { id: SettingsSection; label: string }[] = [
   { id: 'site',         label: 'Site' },
   { id: 'contact',      label: 'Contact' },
@@ -979,7 +1001,10 @@ function SettingsTab({ schools }: { schools: School[] }) {
   const [legal,   setLegal]   = useState(DEFAULT_LEGAL)
   const [statuts, setStatuts] = useState<Record<string, 0|1>>({})
   const setStatutFor = (key: string, v: 0|1) => setStatuts(p => ({ ...p, [key]: v }))
-  const [section, setSection] = useState<SettingsSection>('site')
+  const settingsNav = useNavigate()
+  const settingsLoc = useLocation()
+  const section = pathToSection(settingsLoc.pathname)
+  const setSection = (s: SettingsSection) => settingsNav(`/admin/parametres/${s}`, { replace: true })
   const [legalTab, setLegalTab] = useState<'terms' | 'privacy' | 'mentions'>('terms')
   const [saving,  setSaving]  = useState(false)
   const [loaded,  setLoaded]  = useState(false)
@@ -1710,9 +1735,12 @@ function AuditLogPanel() {
 
 // ─── MAIN ─────────────────────────────────────────────────────
 export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
+  const navigate    = useNavigate()
+  const location    = useLocation()
+  const activeTab   = pathToTab(location.pathname)
+  const setActiveTab = (tab: MainView) => navigate(TAB_TO_PATH[tab])
   const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<MainView>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const siteCfg = useSiteConfigLive();
 

@@ -84,7 +84,7 @@ function App() {
         <Route path="/"               element={<LandingRoute />} />
         <Route path="/login"          element={<AuthRoute />} />
         <Route path="/dashboard"      element={<DashboardRoute />} />
-        <Route path="/admin"          element={<AdminRoute />} />
+        <Route path="/admin/*"         element={<AdminRoute />} />
         <Route path="/legal/terms"    element={<LegalPage type="terms" />} />
         <Route path="/legal/privacy"  element={<LegalPage type="privacy" />} />
         <Route path="/legal/mentions" element={<LegalPage type="mentions" />} />
