@@ -6,7 +6,8 @@ import {
   School as SchoolIcon, CheckCircle, AlertCircle, Clock,
   Trash2, RefreshCw, BarChart3, Activity, ShieldCheck,
   Plus, Edit2, Eye, EyeOff, Ban, ArrowLeft, Upload, FileText,
-  X, User, Phone, Mail, MapPin, Building2, Menu
+  X, User, Phone, Mail, MapPin, Building2, Menu,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────
@@ -1739,9 +1740,10 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
   const location    = useLocation()
   const activeTab   = pathToTab(location.pathname)
   const setActiveTab = (tab: MainView) => navigate(TAB_TO_PATH[tab])
-  const [schools, setSchools] = useState<School[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [schools,     setSchools]     = useState<School[]>([]);
+  const [loading,     setLoading]     = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed,   setCollapsed]   = useState(false);
   const siteCfg = useSiteConfigLive();
 
   const fetchSchools = useCallback(async () => {
@@ -1774,40 +1776,65 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
     </div>
   );
 
+  const sidebarW = collapsed ? 'w-14' : 'w-56';
+
   const SidebarContent = () => (
     <>
-      <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-            {siteCfg.logoUrl
-              ? <img src={siteCfg.logoUrl} alt="Logo" className="w-full h-full object-contain" />
-              : <ShieldCheck size={14} className="text-white" />}
-          </div>
-          <div>
-            <p className="text-sm font-bold text-white leading-none truncate max-w-[120px]">
-              {siteCfg.siteName || 'SaaS Admin'}
-            </p>
+      {/* Logo */}
+      <div className={`flex items-center ${collapsed ? 'justify-center px-2' : 'px-4 gap-2.5'} py-4`}
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', minHeight: 56 }}>
+        <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+          {siteCfg.logoUrl
+            ? <img src={siteCfg.logoUrl} alt="Logo" className="w-full h-full object-contain" />
+            : <ShieldCheck size={14} className="text-white" />}
+        </div>
+        {!collapsed && (
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-white leading-none truncate">{siteCfg.siteName || 'SaaS Admin'}</p>
             <p className="text-[10px] text-indigo-400 font-medium mt-0.5">Master Panel</p>
           </div>
-        </div>
+        )}
       </div>
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
+
+      {/* Nav */}
+      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
         {NAV.map(({ id, label, icon: Icon, badge }) => (
-          <button key={id} onClick={() => { setActiveTab(id); setSidebarOpen(false); }}
-            className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-all ${activeTab === id ? 'bg-indigo-600/20 text-indigo-300' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}>
+          <button key={id} title={collapsed ? label : undefined}
+            onClick={() => { setActiveTab(id); setSidebarOpen(false); }}
+            className={`relative w-full flex items-center ${collapsed ? 'justify-center px-0' : 'gap-2.5 px-3'} py-2.5 rounded-xl text-sm transition-all
+              ${activeTab === id ? 'bg-indigo-600/20 text-indigo-300' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}>
             <Icon size={15} />
-            <span className="flex-1 text-left">{label}</span>
-            {badge ? <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full">{badge}</span> : null}
+            {!collapsed && <span className="flex-1 text-left">{label}</span>}
+            {!collapsed && badge ? <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full">{badge}</span> : null}
+            {collapsed && badge ? <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-amber-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center">{badge}</span> : null}
           </button>
         ))}
       </nav>
-      <div className="p-3" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="flex items-center justify-between px-3 py-2 mb-1">
-          <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" /><span className="text-[11px] text-slate-400">En ligne</span></div>
-          <button onClick={fetchSchools} className="p-1 text-slate-500 hover:text-white transition-colors"><RefreshCw size={12} /></button>
-        </div>
-        <button onClick={onLogout} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-all">
-          <LogOut size={14} /> Déconnexion
+
+      {/* Footer */}
+      <div className="px-2 py-2" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        {/* Collapse toggle */}
+        <button onClick={() => setCollapsed(c => !c)} title={collapsed ? 'Agrandir' : 'Réduire'}
+          className={`hidden md:flex w-full items-center ${collapsed ? 'justify-center' : 'gap-2 px-3'} py-2 rounded-xl text-slate-500 hover:text-white hover:bg-white/5 transition-all mb-1`}>
+          {collapsed ? <ChevronRight size={14} /> : <><ChevronLeft size={14} /><span className="text-xs">Réduire</span></>}
+        </button>
+
+        {!collapsed && (
+          <div className="flex items-center justify-between px-3 py-1.5 mb-1">
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+              <span className="text-[11px] text-slate-400">En ligne</span>
+            </div>
+            <button onClick={fetchSchools} className="p-1 text-slate-500 hover:text-white transition-colors" title="Actualiser">
+              <RefreshCw size={12} />
+            </button>
+          </div>
+        )}
+
+        <button onClick={onLogout} title={collapsed ? 'Déconnexion' : undefined}
+          className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-2.5 px-3'} py-2 rounded-xl text-sm text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-all`}>
+          <LogOut size={14} />
+          {!collapsed && 'Déconnexion'}
         </button>
       </div>
     </>
@@ -1820,14 +1847,17 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
         <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar — drawer on mobile, static on desktop */}
-      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-56 flex-shrink-0 flex flex-col transition-transform duration-200 md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      {/* Sidebar — fixed always, drawer on mobile */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex-shrink-0 flex flex-col transition-all duration-200
+          ${sidebarW}
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
         style={{ backgroundColor: '#0f172a' }}>
         <SidebarContent />
       </aside>
 
-      {/* Right side */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Right side — margin-left = sidebar width */}
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-200 ${collapsed ? 'md:ml-14' : 'md:ml-56'}`}>
         {/* Mobile topbar */}
         <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-slate-200 sticky top-0 z-30">
           <button onClick={() => setSidebarOpen(true)} className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg">
@@ -1841,7 +1871,7 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
           )}
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="flex-1 p-4 md:p-6">
           {activeTab === 'dashboard'     && <DashboardTab     schools={schools} />}
           {activeTab === 'schools'       && <SchoolsTab       schools={schools} onRefresh={fetchSchools} />}
           {activeTab === 'subscriptions' && <SubscriptionsTab schools={schools} onRefresh={fetchSchools} />}
