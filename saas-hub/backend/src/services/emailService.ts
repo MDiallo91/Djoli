@@ -1,21 +1,23 @@
 import { Resend } from 'resend';
 import Setting from '../models/settingModel';
 
-function getResend(): Resend {
-    const key = process.env.RESEND_API_KEY;
-    if (!key) throw new Error('RESEND_API_KEY non configuré');
-    return new Resend(key);
-}
+// Lit la config email depuis la DB admin (email_config) en priorité, env vars en fallback.
+async function getEmailConfig(): Promise<{ resend: Resend; from: string }> {
+    let apiKey  = process.env.RESEND_API_KEY || '';
+    let fromRaw = process.env.FROM_EMAIL     || '';
 
-async function getFromEmail(): Promise<string> {
-  try {
-    const row = await Setting.findOne({ where: { key: 'contact' } });
-    if (row) {
-      const data = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
-      if (data?.email) return `DJOLI <${data.email}>`;
-    }
-  } catch {}
-  return process.env.FROM_EMAIL || 'DJOLI <onboarding@resend.dev>';
+    try {
+        const row = await Setting.findOne({ where: { key: 'email_config' } });
+        if (row?.data) {
+            const data = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
+            if (data?.apiKey)    apiKey  = data.apiKey;
+            if (data?.fromEmail) fromRaw = data.fromEmail;
+        }
+    } catch {}
+
+    if (!apiKey) throw new Error('Clé API Resend non configurée (Admin → Email ou variable RESEND_API_KEY)');
+    const from = fromRaw.includes('<') ? fromRaw : `DJOLI <${fromRaw || 'onboarding@resend.dev'}>`;
+    return { resend: new Resend(apiKey), from };
 }
 
 const BRAND_COLOR  = '#1e3a5f';
@@ -81,7 +83,7 @@ function emailShell(content: string): string {
 
 // ─── Approbation ──────────────────────────────────────────────
 export async function sendApprovalEmail(school: { email: string; schoolName: string }) {
-  const from     = await getFromEmail();
+  const { resend, from } = await getEmailConfig();
   const loginUrl = `${FRONTEND_URL}/login`;
 
   const body = `
@@ -132,7 +134,7 @@ export async function sendApprovalEmail(school: { email: string; schoolName: str
     </table>
   `;
 
-  await getResend().emails.send({
+  await resend.emails.send({
     from,
     to:      school.email,
     subject: `Votre compte DJOLI est approuvé — Bienvenue, ${school.schoolName}`,
@@ -142,7 +144,7 @@ export async function sendApprovalEmail(school: { email: string; schoolName: str
 
 // ─── Rejet ────────────────────────────────────────────────────
 export async function sendRejectionEmail(school: { email: string; schoolName: string }) {
-  const from = await getFromEmail();
+  const { resend, from } = await getEmailConfig();
 
   const body = `
     <p style="margin:0 0 8px;color:#64748b;font-size:13px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Information sur votre dossier</p>
@@ -174,7 +176,7 @@ export async function sendRejectionEmail(school: { email: string; schoolName: st
     </p>
   `;
 
-  await getResend().emails.send({
+  await resend.emails.send({
     from,
     to:      school.email,
     subject: `Information concernant votre demande DJOLI — ${school.schoolName}`,
@@ -184,7 +186,7 @@ export async function sendRejectionEmail(school: { email: string; schoolName: st
 
 // ─── OTP vérification email ───────────────────────────────────
 export async function sendOTPEmail(email: string, code: string, schoolName: string) {
-  const from = await getFromEmail();
+  const { resend, from } = await getEmailConfig();
   const digits = code.split('').map(d =>
     `<span style="display:inline-block;width:44px;height:56px;line-height:56px;text-align:center;background:#f8fafc;border:2px solid #e2e8f0;border-radius:10px;font-size:28px;font-weight:800;color:#0f172a;font-family:'Courier New',monospace;margin:0 4px;">${d}</span>`
   ).join('');
@@ -221,7 +223,7 @@ export async function sendOTPEmail(email: string, code: string, schoolName: stri
     </p>
   `;
 
-  await getResend().emails.send({
+  await resend.emails.send({
     from,
     to:      email,
     subject: `[DJOLI] Votre code de vérification : ${code}`,

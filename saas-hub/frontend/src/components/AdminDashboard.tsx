@@ -4,7 +4,7 @@ import {
   LogOut, Settings, Search, TrendingUp, CreditCard,
   School as SchoolIcon, CheckCircle, AlertCircle, Clock,
   Trash2, RefreshCw, BarChart3, Activity, ShieldCheck,
-  Plus, Edit2, Eye, Ban, ArrowLeft, Upload, FileText,
+  Plus, Edit2, Eye, EyeOff, Ban, ArrowLeft, Upload, FileText,
   X, User, Phone, Mail, MapPin, Building2, Menu
 } from 'lucide-react';
 
@@ -931,13 +931,14 @@ function ColorPicker({ label, value, onChange, hint }: {
 }
 export type SiteConfig = typeof DEFAULT_SITE_CONFIG
 
-type SettingsSection = 'site' | 'contact' | 'tarification' | 'application' | 'accueil' | 'legal' | 'audit'
+type SettingsSection = 'site' | 'contact' | 'tarification' | 'application' | 'accueil' | 'email' | 'legal' | 'audit'
 const SETTINGS_TABS: { id: SettingsSection; label: string }[] = [
   { id: 'site',         label: 'Site' },
   { id: 'contact',      label: 'Contact' },
   { id: 'tarification', label: 'Tarification' },
   { id: 'application',  label: 'Application' },
   { id: 'accueil',      label: 'Page d\'accueil' },
+  { id: 'email',        label: 'Email' },
   { id: 'legal',        label: 'Pages légales' },
   { id: 'audit',        label: 'Journal' },
 ]
@@ -975,6 +976,8 @@ function SettingsTab({ schools }: { schools: School[] }) {
   const [legalTab, setLegalTab] = useState<'terms' | 'privacy' | 'mentions'>('terms')
   const [saving,  setSaving]  = useState(false)
   const [loaded,  setLoaded]  = useState(false)
+  const [emailCfg, setEmailCfg] = useState({ apiKey: '', fromEmail: '' })
+  const [showKey,  setShowKey]  = useState(false)
 
   // Charger depuis l'API au montage
   useEffect(() => {
@@ -992,6 +995,10 @@ function SettingsTab({ schools }: { schools: School[] }) {
           setCfg(p => ({ ...p, ...merged }))
         } else {
           try { const s = localStorage.getItem('hub_site_config'); if (s) setCfg(p => ({ ...p, ...JSON.parse(s) })) } catch {}
+        }
+        if (all.email_config?.data) {
+          const ed = typeof all.email_config.data === 'string' ? JSON.parse(all.email_config.data) : all.email_config.data
+          setEmailCfg({ apiKey: ed.apiKey || '', fromEmail: ed.fromEmail || '' })
         }
         newStatuts.legal = all.legal?.statut ?? 1
         if (all.legal?.data) {
@@ -1028,6 +1035,7 @@ function SettingsTab({ schools }: { schools: School[] }) {
           fetch(`${SETTINGS_API}/${key}`, { method: 'PUT', headers: H, body: JSON.stringify({ statut: statuts[key] ?? 1, data }) })
         ),
         fetch(`${SETTINGS_API}/legal`, { method: 'PUT', headers: H, body: JSON.stringify({ statut: statuts.legal ?? 1, data: legal }) }),
+        fetch(`${SETTINGS_API}/email_config`, { method: 'PUT', headers: H, body: JSON.stringify({ statut: 1, data: emailCfg }) }),
       ])
       const failed = responses.filter(r => !r.ok)
       if (failed.length > 0) {
@@ -1381,6 +1389,67 @@ function SettingsTab({ schools }: { schools: School[] }) {
             )}
 
             <p className="text-xs text-slate-400">{cfg.clientSchoolIds.length} école{cfg.clientSchoolIds.length !== 1 ? 's' : ''} sélectionnée{cfg.clientSchoolIds.length !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Email ── */}
+      {section === 'email' && (
+        <div className="space-y-4">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800 leading-relaxed">
+            <strong>Configuration Resend</strong> — La clé API et l'adresse d'envoi sont stockées dans la base de données.
+            Si les deux champs sont vides, le système utilise les variables d'environnement Vercel comme secours.
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-5">
+            {/* Clé API */}
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Clé API Resend</p>
+              <p className="text-xs text-slate-500 mb-2">
+                Obtenir sur <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">resend.com/api-keys</a> — commence par <code className="bg-slate-100 px-1 rounded">re_</code>
+              </p>
+              <div className="flex items-center gap-2">
+                <input
+                  type={showKey ? 'text' : 'password'}
+                  placeholder="re_xxxxxxxxxxxxxxxxxxxx"
+                  value={emailCfg.apiKey}
+                  onChange={e => setEmailCfg(p => ({ ...p, apiKey: e.target.value }))}
+                  className={inputCls + ' font-mono text-xs'}
+                />
+                <button type="button" onClick={() => setShowKey(v => !v)}
+                  className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
+                  {showKey ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+                {emailCfg.apiKey && (
+                  <button type="button" onClick={() => setEmailCfg(p => ({ ...p, apiKey: '' }))}
+                    className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-red-200 rounded-xl text-red-400 hover:bg-red-50 transition-all">
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Email d'envoi */}
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Email d'envoi (From)</p>
+              <p className="text-xs text-slate-500 mb-2">
+                Doit être un domaine vérifié sur Resend. Ex: <code className="bg-slate-100 px-1 rounded">noreply@tondomaine.com</code><br/>
+                En phase de test, utilisez <code className="bg-slate-100 px-1 rounded">onboarding@resend.dev</code> (envoie uniquement à votre propre email Resend).
+              </p>
+              <input
+                type="email"
+                placeholder="noreply@tondomaine.com"
+                value={emailCfg.fromEmail}
+                onChange={e => setEmailCfg(p => ({ ...p, fromEmail: e.target.value }))}
+                className={inputCls + ' text-xs'}
+              />
+            </div>
+
+            {/* Statut visuel */}
+            <div className={`flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-lg ${emailCfg.apiKey ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-500'}`}>
+              <div className={`w-2 h-2 rounded-full ${emailCfg.apiKey ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+              {emailCfg.apiKey ? 'Clé API configurée — les emails seront envoyés via Resend' : 'Aucune clé API — les emails sont désactivés'}
+            </div>
           </div>
         </div>
       )}
