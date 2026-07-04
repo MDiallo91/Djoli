@@ -1124,64 +1124,44 @@ function SettingsTab({ schools }: { schools: School[] }) {
   return (
     <div className="space-y-0 w-full">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-base font-semibold text-slate-900">Paramètres Hub</h1>
+        <h1 className="text-base text-black">Paramètres Hub</h1>
         <button type="button" onClick={handleSave} disabled={saving}
-          className="flex items-center gap-2 px-5 py-2 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-700 transition-all disabled:opacity-50">
+          className="flex items-center gap-2 px-5 py-2 bg-slate-900 text-white rounded-lg text-sm hover:bg-slate-700 transition-all disabled:opacity-50">
           <ShieldCheck size={13} /> {saving ? 'Sauvegarde…' : 'Sauvegarder'}
         </button>
       </div>
 
-      {/* Tabs — underline style, scrollable on mobile */}
       <div className="flex border-b border-slate-200 mb-6 overflow-x-auto scrollbar-none">
         {SETTINGS_TABS.map(t => (
           <button key={t.id} type="button" onClick={() => setSection(t.id)}
             className={`flex-shrink-0 px-4 py-3 text-sm border-b-2 -mb-px transition-all whitespace-nowrap ${
-              section === t.id
-                ? 'border-slate-900 text-black'
-                : 'border-transparent text-black/50 hover:text-black'
+              section === t.id ? 'border-slate-900 text-black' : 'border-transparent text-black/50 hover:text-black'
             }`}>
             {t.label}
           </button>
         ))}
       </div>
 
-      {/* ── Site ── */}
       {section === 'site' && (
         <div className="space-y-4">
           <StatutToggle value={statuts.site ?? 1} onChange={v => setStatutFor('site', v)} />
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
             <div>
-              <label className={labelCls}>Nom du site</label>
+              <label className="block text-xs text-black mb-1.5">Nom du site</label>
               <input className={inputCls} value={cfg.siteName} onChange={e => set('siteName', e.target.value)} placeholder="DJOLI" />
             </div>
             <FileUpload label="Logo du site" value={cfg.logoUrl} onChange={v => set('logoUrl', v)} accept="image/*" hint="PNG ou SVG avec fond transparent recommandé" />
           </div>
-
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-5">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Couleurs</p>
-
-            <ColorPicker
-              label="Couleur primaire"
-              value={cfg.primaryColor || '#4f46e5'}
-              onChange={v => set('primaryColor', v)}
-              hint="Boutons, liens actifs, accents principaux"
-            />
-            <ColorPicker
-              label="Couleur secondaire"
-              value={cfg.secondaryColor || '#10b981'}
-              onChange={v => set('secondaryColor', v)}
-              hint="Dégradés, éléments de succès, highlights"
-            />
-
-            {/* Preview */}
+            <p className="text-xs text-black">Couleurs</p>
+            <ColorPicker label="Couleur primaire" value={cfg.primaryColor || '#4f46e5'} onChange={v => set('primaryColor', v)} hint="Boutons, liens actifs, accents principaux" />
+            <ColorPicker label="Couleur secondaire" value={cfg.secondaryColor || '#10b981'} onChange={v => set('secondaryColor', v)} hint="Dégradés, éléments de succès, highlights" />
             <div className="rounded-xl overflow-hidden border border-slate-100">
-              <div className="p-3 text-xs font-semibold text-slate-500 bg-slate-50 border-b border-slate-100">Aperçu</div>
+              <div className="p-3 text-xs text-black bg-slate-50 border-b border-slate-100">Aperçu</div>
               <div className="p-4 bg-white flex items-center gap-3 flex-wrap">
-                <button className="px-4 py-2 rounded-lg text-white text-sm font-semibold shadow-sm"
-                  style={{ backgroundColor: cfg.primaryColor || '#4f46e5' }}>Bouton principal</button>
-                <button className="px-4 py-2 rounded-lg text-white text-sm font-semibold shadow-sm"
-                  style={{ backgroundColor: cfg.secondaryColor || '#10b981' }}>Bouton secondaire</button>
-                <span className="text-sm font-semibold" style={{ color: cfg.primaryColor || '#4f46e5' }}>Lien / Texte actif</span>
+                <button className="px-4 py-2 rounded-lg text-white text-sm shadow-sm" style={{ backgroundColor: cfg.primaryColor || '#4f46e5' }}>Bouton principal</button>
+                <button className="px-4 py-2 rounded-lg text-white text-sm shadow-sm" style={{ backgroundColor: cfg.secondaryColor || '#10b981' }}>Bouton secondaire</button>
+                <span className="text-sm" style={{ color: cfg.primaryColor || '#4f46e5' }}>Lien / Texte actif</span>
                 <div className="h-6 w-24 rounded-full" style={{ background: `linear-gradient(135deg, ${cfg.primaryColor || '#4f46e5'}, ${cfg.secondaryColor || '#10b981'})` }} />
               </div>
             </div>
@@ -1189,50 +1169,42 @@ function SettingsTab({ schools }: { schools: School[] }) {
         </div>
       )}
 
-      {/* ── Contact ── */}
       {section === 'contact' && (
         <div className="space-y-4">
           <StatutToggle value={statuts.contact ?? 1} onChange={v => setStatutFor('contact', v)} />
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
             <div>
-              <label className={labelCls}>Email de contact</label>
+              <label className="block text-xs text-black mb-1.5">Email de contact</label>
               <div className="relative">
                 <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input type="email" className={inputCls} style={{ paddingLeft: 36 }} value={cfg.email}
-                  onChange={e => set('email', e.target.value)} placeholder="contact@smspro.com" />
+                <input type="email" className={inputCls} style={{ paddingLeft: 36 }} value={cfg.email} onChange={e => set('email', e.target.value)} placeholder="contact@smspro.com" />
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">Affiché dans le footer de la page d'accueil</p>
             </div>
             <div>
-              <label className={labelCls}>Numéro WhatsApp (avec indicatif pays)</label>
+              <label className="block text-xs text-black mb-1.5">Numéro WhatsApp (avec indicatif pays)</label>
               <div className="relative">
                 <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input className={inputCls} style={{ paddingLeft: 36 }} value={cfg.whatsappPhone}
-                  onChange={e => set('whatsappPhone', e.target.value)} placeholder="+224 620 000 000" />
+                <input className={inputCls} style={{ paddingLeft: 36 }} value={cfg.whatsappPhone} onChange={e => set('whatsappPhone', e.target.value)} placeholder="+224 620 000 000" />
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">Active le bouton WhatsApp flottant sur la page d'accueil</p>
             </div>
             <div>
-              <label className={labelCls}>Lien vidéo YouTube (démo)</label>
-              <input className={inputCls} value={cfg.youtubeUrl}
-                onChange={e => set('youtubeUrl', e.target.value)} placeholder="https://youtube.com/watch?v=..." />
-              <p className="text-[11px] text-slate-400 mt-1">Lié au bouton « Voir la démo » sur l'accueil</p>
+              <label className="block text-xs text-black mb-1.5">Lien vidéo YouTube (démo)</label>
+              <input className={inputCls} value={cfg.youtubeUrl} onChange={e => set('youtubeUrl', e.target.value)} placeholder="https://youtube.com/watch?v=..." />
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Tarification ── */}
       {section === 'tarification' && (
         <div className="space-y-4">
           <StatutToggle value={statuts.tarification ?? 1} onChange={v => setStatutFor('tarification', v)} />
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
             <div>
-              <label className={labelCls}>Devise</label>
+              <label className="block text-xs text-black mb-1.5">Devise</label>
               <div className="flex gap-2">
                 {(['EUR','USD','GNF'] as const).map(c => (
                   <button key={c} type="button" onClick={() => set('currency', c)}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-all ${cfg.currency === c ? 'bg-slate-900 text-white border-slate-900' : 'border-slate-200 text-slate-600 hover:border-slate-400'}`}>
+                    className={`px-4 py-2 rounded-lg text-sm border transition-all ${cfg.currency === c ? 'bg-slate-900 text-white border-slate-900' : 'border-slate-200 text-black hover:border-slate-400'}`}>
                     {c === 'EUR' ? '€ Euro' : c === 'USD' ? '$ Dollar' : 'GNF Franc'}
                   </button>
                 ))}
@@ -1241,15 +1213,15 @@ function SettingsTab({ schools }: { schools: School[] }) {
             <div className="grid grid-cols-3 gap-4">
               {([['price30','30 jours'],['price90','90 jours'],['price365','1 an']] as const).map(([k, l]) => (
                 <div key={k}>
-                  <label className={labelCls}>{l}</label>
+                  <label className="block text-xs text-black mb-1.5">{l}</label>
                   <input type="number" className={inputCls} value={cfg[k]} onChange={e => set(k, e.target.value)} placeholder="0" />
                 </div>
               ))}
             </div>
-            <div className="flex flex-wrap items-center gap-4 p-3 bg-slate-50 rounded-lg text-xs text-slate-500 border border-slate-100">
-              <span className="font-medium text-slate-600">Aperçu affiché :</span>
+            <div className="flex flex-wrap items-center gap-4 p-3 bg-slate-50 rounded-lg text-xs border border-slate-100">
+              <span className="text-black">Aperçu affiché :</span>
               {[['30 jours', cfg.price30],['90 jours', cfg.price90],['1 an', cfg.price365]].map(([l,p]) => (
-                <span key={l} className="font-semibold text-slate-800">
+                <span key={l} className="text-black">
                   {l} → {cfg.currency === 'GNF' ? `${Number(p).toLocaleString('fr')} GNF` : cfg.currency === 'EUR' ? `${p} €` : `$${p}`}
                 </span>
               ))}
@@ -1258,182 +1230,129 @@ function SettingsTab({ schools }: { schools: School[] }) {
         </div>
       )}
 
-      {/* ── Application ── */}
       {section === 'application' && (
         <div className="space-y-4">
           <StatutToggle value={statuts.application ?? 1} onChange={v => setStatutFor('application', v)} />
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-            {/* Lien direct (prioritaire) */}
             <div>
-              <label className={labelCls}>URL de téléchargement direct (.exe)</label>
-              <input className={inputCls} value={cfg.downloadUrl}
-                onChange={e => set('downloadUrl', e.target.value)}
-                placeholder="https://exemple.com/djoli-setup.exe" />
-              <p className="text-[11px] text-slate-400 mt-1">
-                Colle ici le lien direct vers le fichier .exe (Google Drive, GitHub, serveur…). Ce lien est prioritaire sur le dépôt GitHub ci-dessous.
-              </p>
+              <label className="block text-xs text-black mb-1.5">URL de téléchargement direct (.exe)</label>
+              <input className={inputCls} value={cfg.downloadUrl} onChange={e => set('downloadUrl', e.target.value)} placeholder="https://exemple.com/djoli-setup.exe" />
+              <p className="text-xs text-black mt-1">Lien direct vers le fichier .exe (Google Drive, GitHub, serveur…). Prioritaire sur le dépôt GitHub ci-dessous.</p>
             </div>
             {cfg.downloadUrl && (
               <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
                 <CheckCircle size={15} className="text-emerald-600 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-emerald-800">Lien direct configuré</p>
-                  <p className="text-[11px] text-emerald-600 truncate">{cfg.downloadUrl}</p>
+                  <p className="text-xs text-emerald-800">Lien direct configuré</p>
+                  <p className="text-xs text-emerald-600 truncate">{cfg.downloadUrl}</p>
                 </div>
-                <a href={cfg.downloadUrl} target="_blank" rel="noopener noreferrer"
-                  className="text-xs font-semibold text-emerald-700 hover:underline whitespace-nowrap">Tester →</a>
+                <a href={cfg.downloadUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-emerald-700 hover:underline whitespace-nowrap">Tester →</a>
               </div>
             )}
-
-            {/* GitHub (fallback) */}
             <div>
-              <label className={labelCls}>Dépôt GitHub (owner/repo) — optionnel</label>
-              <input className={inputCls} value={cfg.githubRepo}
-                onChange={e => set('githubRepo', e.target.value)}
-                placeholder="ex : mdoudev/djoli" />
-              <p className="text-[11px] text-slate-400 mt-1">
-                Utilisé en secours si l'URL directe n'est pas renseignée. Pointe vers le dernier release GitHub contenant un .exe.
-              </p>
+              <label className="block text-xs text-black mb-1.5">Dépôt GitHub (owner/repo) — optionnel</label>
+              <input className={inputCls} value={cfg.githubRepo} onChange={e => set('githubRepo', e.target.value)} placeholder="ex : mdoudev/djoli" />
+              <p className="text-xs text-black mt-1">Utilisé en secours si l'URL directe n'est pas renseignée. Pointe vers le dernier release GitHub contenant un .exe.</p>
             </div>
             {cfg.githubRepo && (
               <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
                 <CheckCircle size={15} className="text-slate-400 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-slate-600">Dépôt GitHub</p>
-                  <p className="text-[11px] text-slate-400 truncate">github.com/{cfg.githubRepo}</p>
+                  <p className="text-xs text-black">Dépôt GitHub</p>
+                  <p className="text-xs text-black truncate">github.com/{cfg.githubRepo}</p>
                 </div>
-                <a href={`https://github.com/${cfg.githubRepo}/releases/latest`} target="_blank" rel="noopener noreferrer"
-                  className="text-xs font-semibold text-slate-500 hover:underline whitespace-nowrap">Voir →</a>
+                <a href={`https://github.com/${cfg.githubRepo}/releases/latest`} target="_blank" rel="noopener noreferrer" className="text-xs text-black hover:underline whitespace-nowrap">Voir →</a>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* ── Page d'accueil ── */}
       {section === 'accueil' && (
         <div className="space-y-4">
           <StatutToggle value={statuts.accueil ?? 1} onChange={v => setStatutFor('accueil', v)} />
-
-          {/* Image de fond hero */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Image de fond (Hero)</p>
-              <p className="text-xs text-slate-500">Image affichée en arrière-plan de la section d'accueil. Un overlay sombre est appliqué automatiquement pour garder le texte lisible.</p>
+              <p className="text-xs text-black mb-1">Image de fond (Hero)</p>
+              <p className="text-xs text-black">Image affichée en arrière-plan de la section d'accueil. Un overlay sombre est appliqué automatiquement.</p>
             </div>
             <div className="flex items-center gap-2">
-              <input
-                type="url"
-                placeholder="URL de l'image (ex : Cloudinary, Unsplash…)"
-                value={cfg.heroBgUrl || ''}
-                onChange={e => set('heroBgUrl', e.target.value)}
-                className={inputCls + ' text-xs'}
-              />
+              <input type="url" placeholder="URL de l'image (ex : Cloudinary, Unsplash…)" value={cfg.heroBgUrl || ''} onChange={e => set('heroBgUrl', e.target.value)} className={inputCls + ' text-xs'} />
               <label title="Uploader un fichier" className="flex-shrink-0 cursor-pointer w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-500 hover:bg-indigo-50 hover:border-indigo-400 hover:text-indigo-600 transition-all">
                 <Upload size={15} />
-                <input type="file" accept="image/*" className="hidden" onChange={e => {
-                  const f = e.target.files?.[0]; if (!f) return;
-                  const r = new FileReader(); r.onloadend = () => set('heroBgUrl', r.result as string); r.readAsDataURL(f);
-                }} />
+                <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onloadend = () => set('heroBgUrl', r.result as string); r.readAsDataURL(f); }} />
               </label>
               {cfg.heroBgUrl && (
-                <button type="button" onClick={() => set('heroBgUrl', '')} title="Supprimer"
-                  className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-red-200 rounded-xl text-red-400 hover:bg-red-50 hover:text-red-600 transition-all">
+                <button type="button" onClick={() => set('heroBgUrl', '')} title="Supprimer" className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-red-200 rounded-xl text-red-400 hover:bg-red-50 hover:text-red-600 transition-all">
                   <X size={14} />
                 </button>
               )}
             </div>
             {cfg.heroBgUrl && (
               <div className="relative rounded-xl overflow-hidden border border-slate-200 h-36">
-                <img src={cfg.heroBgUrl} alt="Hero bg" className="w-full h-full object-cover"
-                  onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                <img src={cfg.heroBgUrl} alt="Hero bg" className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                  <span className="text-white text-xs font-semibold opacity-70">Aperçu avec overlay</span>
+                  <span className="text-white text-xs opacity-70">Aperçu avec overlay</span>
                 </div>
               </div>
             )}
           </div>
-
-          {/* Aperçus fonctionnalités */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Aperçus des fonctionnalités</p>
-              <p className="text-xs text-slate-500">Ces images apparaissent dans la section fonctionnalités de la page d'accueil.</p>
+              <p className="text-xs text-black mb-1">Aperçus des fonctionnalités</p>
+              <p className="text-xs text-black">Ces images apparaissent dans la section fonctionnalités de la page d'accueil.</p>
             </div>
-            {[
-              ['Inscriptions & Élèves', 0],
-              ['Finance & Caisse',      1],
-              ['Notes & Bulletins',     2],
-            ].map(([label, idx]) => {
+            {[['Inscriptions & Élèves', 0],['Finance & Caisse', 1],['Notes & Bulletins', 2]].map(([label, idx]) => {
               const i = idx as number;
               const imgs = Array.isArray(cfg.featureImages) ? cfg.featureImages : ['','',''];
               const setImg = (val: string) => { const next = Array.isArray(cfg.featureImages) ? [...cfg.featureImages] : ['','','']; next[i] = val; set('featureImages', next); };
               return (
                 <div key={i} className="space-y-2">
-                  <label className={labelCls}>{label as string}</label>
-
-                  {/* Champ URL */}
+                  <label className="block text-xs text-black mb-1.5">{label as string}</label>
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">
                       <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Pinterest-logo.png" alt="pinterest" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none" />
-                      <input
-                        type="url"
-                        placeholder="Coller un lien image (Pinterest, etc.)"
-                        value={imgs[i] && !imgs[i].startsWith('data:') ? imgs[i] : ''}
-                        onChange={e => setImg(e.target.value)}
-                        className={inputCls + ' pl-9 text-xs'}
-                      />
+                      <input type="url" placeholder="Coller un lien image (Pinterest, etc.)" value={imgs[i] && !imgs[i].startsWith('data:') ? imgs[i] : ''} onChange={e => setImg(e.target.value)} className={inputCls + ' pl-9 text-xs'} />
                     </div>
                     <label title="Uploader un fichier" className="flex-shrink-0 cursor-pointer w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-500 hover:bg-indigo-50 hover:border-indigo-400 hover:text-indigo-600 transition-all">
                       <Upload size={15} />
-                      <input type="file" accept="image/*" className="hidden" onChange={e => {
-                        const f = e.target.files?.[0]; if (!f) return;
-                        const r = new FileReader(); r.onloadend = () => setImg(r.result as string); r.readAsDataURL(f);
-                      }} />
+                      <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onloadend = () => setImg(r.result as string); r.readAsDataURL(f); }} />
                     </label>
                     {imgs[i] && (
-                      <button type="button" onClick={() => setImg('')} title="Supprimer"
-                        className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-red-200 rounded-xl text-red-400 hover:bg-red-50 hover:text-red-600 transition-all">
+                      <button type="button" onClick={() => setImg('')} title="Supprimer" className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-red-200 rounded-xl text-red-400 hover:bg-red-50 hover:text-red-600 transition-all">
                         <X size={14} />
                       </button>
                     )}
                   </div>
-
-                  {/* Aperçu */}
                   {imgs[i] && (
                     <div className="relative rounded-xl overflow-hidden border border-slate-200 h-36">
-                      <img src={imgs[i]} alt="" className="w-full h-full object-cover"
-                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                      <img src={imgs[i]} alt="" className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                     </div>
                   )}
                 </div>
               );
             })}
           </div>
-
-          {/* Écoles */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Section « Ils nous font confiance »</p>
-              <p className="text-xs text-slate-500">Cochez les écoles à afficher sur la page d'accueil. Si aucune n'est cochée, des noms par défaut seront utilisés.</p>
+              <p className="text-xs text-black mb-1">Section « Ils nous font confiance »</p>
+              <p className="text-xs text-black">Cochez les écoles à afficher sur la page d'accueil.</p>
             </div>
-
             {approvedSchools.length === 0 ? (
-              <p className="text-sm text-slate-400 text-center py-6">Aucun établissement approuvé pour l'instant</p>
+              <p className="text-sm text-black text-center py-6">Aucun établissement approuvé pour l'instant</p>
             ) : (
               <div className="space-y-1 max-h-80 overflow-y-auto">
                 {approvedSchools.map(s => {
                   const selected = cfg.clientSchoolIds.includes(s.id)
                   return (
                     <label key={s.id} className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${selected ? 'bg-indigo-50 border border-indigo-200' : 'border border-transparent hover:bg-slate-50'}`}>
-                      <input type="checkbox" checked={selected} onChange={() => toggleSchool(s.id)}
-                        className="w-4 h-4 accent-indigo-600 flex-shrink-0" />
+                      <input type="checkbox" checked={selected} onChange={() => toggleSchool(s.id)} className="w-4 h-4 accent-indigo-600 flex-shrink-0" />
                       {s.logoUrl
                         ? <img src={s.logoUrl} alt="" className="w-8 h-8 rounded object-contain border border-slate-200 flex-shrink-0" />
-                        : <div className="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-xs flex-shrink-0">{s.schoolName[0]}</div>}
+                        : <div className="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center text-indigo-600 text-xs flex-shrink-0">{s.schoolName[0]}</div>}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 truncate">{s.schoolName}</p>
-                        <p className="text-xs text-slate-400">{[s.city, s.country].filter(Boolean).join(', ') || s.email}</p>
+                        <p className="text-sm text-black truncate">{s.schoolName}</p>
+                        <p className="text-xs text-black">{[s.city, s.country].filter(Boolean).join(', ') || s.email}</p>
                       </div>
                       {selected && <CheckCircle size={14} className="text-indigo-600 flex-shrink-0" />}
                     </label>
@@ -1441,8 +1360,7 @@ function SettingsTab({ schools }: { schools: School[] }) {
                 })}
               </div>
             )}
-
-            <p className="text-xs text-slate-400">{cfg.clientSchoolIds.length} école{cfg.clientSchoolIds.length !== 1 ? 's' : ''} sélectionnée{cfg.clientSchoolIds.length !== 1 ? 's' : ''}</p>
+            <p className="text-xs text-black">{cfg.clientSchoolIds.length} école{cfg.clientSchoolIds.length !== 1 ? 's' : ''} sélectionnée{cfg.clientSchoolIds.length !== 1 ? 's' : ''}</p>
           </div>
         </div>
       )}
@@ -1450,7 +1368,6 @@ function SettingsTab({ schools }: { schools: School[] }) {
       {/* ── Email ── */}
       {section === 'email' && (
         <div className="grid grid-cols-2 gap-4">
-          {/* Header + add buttons */}
           <div className="col-span-2 flex items-center justify-between">
             <div>
               <p className="text-sm text-black">Providers d'envoi d'email</p>
@@ -1468,7 +1385,6 @@ function SettingsTab({ schools }: { schools: School[] }) {
             </div>
           </div>
 
-          {/* Empty state */}
           {emailPs.providers.length === 0 && (
             <div className="col-span-2 border-2 border-dashed border-slate-200 rounded-xl py-10 text-center">
               <p className="text-sm text-black">Aucun provider configuré</p>
@@ -1476,10 +1392,8 @@ function SettingsTab({ schools }: { schools: School[] }) {
             </div>
           )}
 
-          {/* Provider cards — 1 par colonne */}
           {emailPs.providers.map(prov => (
             <div key={prov.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-              {/* Card header */}
               <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 bg-white">
                 <span className={`text-[10px] px-2 py-0.5 rounded-full tracking-wider flex-shrink-0 ${prov.type === 'resend' ? 'bg-indigo-100 text-indigo-700' : 'bg-sky-100 text-sky-700'}`}>
                   {prov.type === 'resend' ? 'RESEND' : 'SMTP'}
@@ -1501,7 +1415,6 @@ function SettingsTab({ schools }: { schools: School[] }) {
                 </button>
               </div>
 
-              {/* Config fields */}
               <div className="px-5 py-4 space-y-4">
                 {prov.type === 'resend' ? (<>
                   <div>
@@ -1609,7 +1522,6 @@ function SettingsTab({ schools }: { schools: School[] }) {
             </div>
           ))}
 
-          {/* Routing */}
           {emailPs.providers.length > 0 && (
             <div className="col-span-2 bg-white border border-slate-200 rounded-xl p-5 space-y-4">
               <div>
@@ -1643,32 +1555,24 @@ function SettingsTab({ schools }: { schools: School[] }) {
         </div>
       )}
 
-      {/* ── Pages légales ── */}
       {section === 'legal' && (
         <div className="space-y-4">
           <StatutToggle value={statuts.legal ?? 1} onChange={v => setStatutFor('legal', v)} />
           <div className="flex gap-0 border border-slate-200 rounded-xl overflow-hidden">
             {([['terms',"Conditions d'utilisation"],['privacy','Politique de confidentialité'],['mentions','Mentions légales']] as const).map(([k, l]) => (
               <button key={k} type="button" onClick={() => setLegalTab(k)}
-                className={`flex-1 py-2.5 text-xs font-semibold transition-all border-r border-slate-200 last:border-0 ${legalTab === k ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}>
+                className={`flex-1 py-2.5 text-xs transition-all border-r border-slate-200 last:border-0 ${legalTab === k ? 'bg-slate-900 text-white' : 'bg-white text-black hover:bg-slate-50'}`}>
                 {l}
               </button>
             ))}
           </div>
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
-            <p className="text-[11px] text-slate-400">
-              Utilisez la barre d'outils pour mettre en forme le texte (titres, gras, listes…). Le contenu s'affiche sur la page <code>/legal/{legalTab}</code>.
-            </p>
-            <WysiwygEditor
-              key={legalTab}
-              value={legal[legalTab]}
-              onChange={v => setLeg(legalTab, v)}
-            />
+            <p className="text-xs text-black">Utilisez la barre d'outils pour mettre en forme le texte. Le contenu s'affiche sur la page <code>/legal/{legalTab}</code>.</p>
+            <WysiwygEditor key={legalTab} value={legal[legalTab]} onChange={v => setLeg(legalTab, v)} />
           </div>
         </div>
       )}
 
-      {/* ── Journal d'audit ── */}
       {section === 'audit' && <AuditLogPanel />}
     </div>
   )
@@ -1678,52 +1582,47 @@ function AuditLogPanel() {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   useEffect(() => { setEntries(getAuditLog()); }, []);
   const clear = () => { localStorage.removeItem('hub_audit_log'); setEntries([]); };
-
   const fmt = (iso: string) => {
     const d = new Date(iso);
-    return d.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' })
-      + ' ' + d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    return d.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
   };
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-semibold text-slate-900">Journal d'activité</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">{entries.length} action{entries.length !== 1 ? 's' : ''} enregistrée{entries.length !== 1 ? 's' : ''}</p>
+          <p className="text-sm text-black">Journal d'activité</p>
+          <p className="text-xs text-black mt-0.5">{entries.length} action{entries.length !== 1 ? 's' : ''} enregistrée{entries.length !== 1 ? 's' : ''}</p>
         </div>
         {entries.length > 0 && (
-          <button type="button" onClick={clear}
-            className="text-xs text-rose-500 hover:text-rose-700 px-3 py-1.5 rounded-lg hover:bg-rose-50 transition-all border border-rose-100">
+          <button type="button" onClick={clear} className="text-xs text-rose-500 hover:text-rose-700 px-3 py-1.5 rounded-lg hover:bg-rose-50 transition-all border border-rose-100">
             Tout effacer
           </button>
         )}
       </div>
-
       {entries.length === 0 ? (
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-10 text-center">
           <Activity size={32} className="mx-auto text-slate-300 mb-3" />
-          <p className="text-sm text-slate-400">Aucune activité enregistrée pour l'instant.</p>
-          <p className="text-xs text-slate-300 mt-1">Les actions admin apparaîtront ici.</p>
+          <p className="text-sm text-black">Aucune activité enregistrée pour l'instant.</p>
+          <p className="text-xs text-black mt-1">Les actions admin apparaîtront ici.</p>
         </div>
       ) : (
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
           <table className="w-full text-xs">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Date & heure</th>
-                <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Action</th>
-                <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Détail</th>
-                <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Utilisateur</th>
+                <th className="px-4 py-2.5 text-left text-[10px] text-black uppercase tracking-wider">Date & heure</th>
+                <th className="px-4 py-2.5 text-left text-[10px] text-black uppercase tracking-wider">Action</th>
+                <th className="px-4 py-2.5 text-left text-[10px] text-black uppercase tracking-wider">Détail</th>
+                <th className="px-4 py-2.5 text-left text-[10px] text-black uppercase tracking-wider">Utilisateur</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {entries.map(e => (
                 <tr key={e.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-4 py-2.5 font-mono text-slate-400 whitespace-nowrap">{fmt(e.ts)}</td>
-                  <td className="px-4 py-2.5 font-semibold text-slate-700">{e.action}</td>
-                  <td className="px-4 py-2.5 text-slate-500">{e.detail || '—'}</td>
-                  <td className="px-4 py-2.5 text-slate-400">{e.user}</td>
+                  <td className="px-4 py-2.5 font-mono text-black whitespace-nowrap">{fmt(e.ts)}</td>
+                  <td className="px-4 py-2.5 text-black">{e.action}</td>
+                  <td className="px-4 py-2.5 text-black">{e.detail || '—'}</td>
+                  <td className="px-4 py-2.5 text-black">{e.user}</td>
                 </tr>
               ))}
             </tbody>
