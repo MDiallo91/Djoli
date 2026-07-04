@@ -1450,11 +1450,12 @@ function SettingsTab({ schools }: { schools: School[] }) {
             </div>
           )}
 
-          {/* Provider cards */}
+          {/* Provider cards — 2 par ligne */}
+          <div className="grid grid-cols-2 gap-4">
           {emailPs.providers.map(prov => (
             <div key={prov.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
               {/* Card header */}
-              <div className="flex items-center gap-3 px-5 py-3 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 bg-white">
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wider flex-shrink-0 ${prov.type === 'resend' ? 'bg-indigo-100 text-indigo-700' : 'bg-sky-100 text-sky-700'}`}>
                   {prov.type === 'resend' ? 'RESEND' : 'SMTP'}
                 </span>
@@ -1582,6 +1583,7 @@ function SettingsTab({ schools }: { schools: School[] }) {
               </div>
             </div>
           ))}
+          </div>
 
           {/* Routing */}
           {emailPs.providers.length > 0 && (
