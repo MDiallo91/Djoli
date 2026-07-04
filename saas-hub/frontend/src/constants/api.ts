@@ -5,6 +5,6 @@
  * → Toute modification d'URL se fait ici, un seul endroit
  */
 
-export const API_ADMIN    = '/api/admin';
-export const API_SETTINGS = '/api/settings';
-export const API_AUTH     = '/api/auth';
+export const API_ADMIN    = '/api/admin';   // fetch() direct → chemin complet
+export const API_SETTINGS = '/settings';    // apiClient (baseURL = /api) → pas de /api ici
+export const API_AUTH     = '/auth';        // apiClient → idem
