@@ -1423,9 +1423,9 @@ function SettingsTab({ schools }: { schools: School[] }) {
 
       {/* ── Email ── */}
       {section === 'email' && (
-        <div className="space-y-5">
+        <div className="grid grid-cols-2 gap-4">
           {/* Header + add buttons */}
-          <div className="flex items-center justify-between">
+          <div className="col-span-2 flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-slate-700">Providers d'envoi d'email</p>
               <p className="text-xs text-slate-400 mt-0.5">Configurez un ou plusieurs services d'envoi</p>
@@ -1444,14 +1444,13 @@ function SettingsTab({ schools }: { schools: School[] }) {
 
           {/* Empty state */}
           {emailPs.providers.length === 0 && (
-            <div className="border-2 border-dashed border-slate-200 rounded-xl py-10 text-center">
+            <div className="col-span-2 border-2 border-dashed border-slate-200 rounded-xl py-10 text-center">
               <p className="text-sm text-slate-400">Aucun provider configuré</p>
               <p className="text-xs text-slate-300 mt-1">Ajoutez Resend ou SMTP pour activer l'envoi d'emails</p>
             </div>
           )}
 
-          {/* Provider cards — 2 par ligne */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Provider cards — 1 par colonne */}
           {emailPs.providers.map(prov => (
             <div key={prov.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
               {/* Card header */}
@@ -1583,11 +1582,10 @@ function SettingsTab({ schools }: { schools: School[] }) {
               </div>
             </div>
           ))}
-          </div>
 
           {/* Routing */}
           {emailPs.providers.length > 0 && (
-            <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+            <div className="col-span-2 bg-white border border-slate-200 rounded-xl p-5 space-y-4">
               <div>
                 <p className={labelCls}>Routage par type d'email</p>
                 <p className="text-xs text-slate-400">Choisissez quel provider envoie chaque type d'email. "Automatique" = premier provider actif.</p>
