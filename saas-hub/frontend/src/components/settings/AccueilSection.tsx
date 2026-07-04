@@ -81,7 +81,7 @@ export function AccueilSection() {
             <input type="url" placeholder="URL de l'image…" value={data.heroBgUrl || ''}
               onChange={e => set('heroBgUrl', e.target.value)}
               className={inputCls + ' text-xs'} />
-            <label title="Uploader" className="flex-shrink-0 cursor-pointer w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-500 hover:bg-indigo-50 hover:border-indigo-400 hover:text-indigo-600 transition-all">
+            <label title="Uploader" className="flex-shrink-0 cursor-pointer w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-500 hover:bg-primary-50 hover:border-primary-400 hover:text-primary-600 transition-all">
               <Upload size={15} />
               <input type="file" accept="image/*" className="hidden" onChange={e => {
                 const f = e.target.files?.[0]; if (!f) return;
@@ -116,7 +116,7 @@ export function AccueilSection() {
                 <input type="url" placeholder="Lien image…" value={imgs[i] && !imgs[i].startsWith('data:') ? imgs[i] : ''}
                   onChange={e => setFeatureImg(i, e.target.value)}
                   className={inputCls + ' text-xs'} />
-                <label title="Uploader" className="flex-shrink-0 cursor-pointer w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-500 hover:bg-indigo-50 hover:border-indigo-400 hover:text-indigo-600 transition-all">
+                <label title="Uploader" className="flex-shrink-0 cursor-pointer w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-500 hover:bg-primary-50 hover:border-primary-400 hover:text-primary-600 transition-all">
                   <Upload size={15} />
                   <input type="file" accept="image/*" className="hidden" onChange={e => {
                     const f = e.target.files?.[0]; if (!f) return;
@@ -151,16 +151,16 @@ export function AccueilSection() {
                 const selected = (data.clientSchoolIds ?? []).includes(s.id);
                 return (
                   <label key={s.id}
-                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${selected ? 'bg-indigo-50 border border-indigo-200' : 'border border-transparent hover:bg-slate-50'}`}>
-                    <input type="checkbox" checked={selected} onChange={() => toggleSchool(s.id)} className="w-4 h-4 accent-indigo-600 flex-shrink-0" />
+                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${selected ? 'bg-primary-50 border border-primary-200' : 'border border-transparent hover:bg-slate-50'}`}>
+                    <input type="checkbox" checked={selected} onChange={() => toggleSchool(s.id)} className="w-4 h-4 accent-primary-600 flex-shrink-0" />
                     {s.logoUrl
                       ? <img src={s.logoUrl} alt="" className="w-8 h-8 rounded object-contain border border-slate-200 flex-shrink-0" />
-                      : <div className="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center text-indigo-600 text-xs flex-shrink-0">{s.schoolName[0]}</div>}
+                      : <div className="w-8 h-8 rounded bg-primary-50 flex items-center justify-center text-primary-600 text-xs flex-shrink-0">{s.schoolName[0]}</div>}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-black truncate">{s.schoolName}</p>
                       <p className="text-xs text-black">{[s.city, s.country].filter(Boolean).join(', ') || s.email}</p>
                     </div>
-                    {selected && <CheckCircle size={14} className="text-indigo-600 flex-shrink-0" />}
+                    {selected && <CheckCircle size={14} className="text-primary-600 flex-shrink-0" />}
                   </label>
                 );
               })}

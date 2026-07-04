@@ -23,7 +23,7 @@ export const SUB_LABEL: Record<string, string> = {
 };
 
 export const SUB_CLS: Record<string, string> = {
-  active:    'bg-emerald-50 text-emerald-700 border-emerald-200',
+  active:    'bg-secondary-50 text-secondary-700 border-secondary-200',
   trial:     'bg-blue-50 text-blue-700 border-blue-200',
   expired:   'bg-red-50 text-red-700 border-red-200',
   suspended: 'bg-slate-100 text-slate-600 border-slate-300',
@@ -31,7 +31,7 @@ export const SUB_CLS: Record<string, string> = {
 
 // ─── Statut approbation ───────────────────────────────────────
 export const APV_CLS: Record<string, string> = {
-  approved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  approved: 'bg-secondary-50 text-secondary-700 border-secondary-200',
   pending:  'bg-amber-50 text-amber-700 border-amber-200',
   rejected: 'bg-red-50 text-red-700 border-red-200',
 };

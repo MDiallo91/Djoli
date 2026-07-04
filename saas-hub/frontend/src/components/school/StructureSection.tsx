@@ -262,7 +262,7 @@ export default function StructureSection() {
                       <td className="px-6 py-4 text-sm text-gray-500">{y.end_date ? new Date(y.end_date).toLocaleDateString('fr-FR') : '—'}</td>
                       <td className="px-6 py-4 text-center">
                         {isActive ? (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-[10px] font-black uppercase">
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-secondary-50 text-secondary-700 rounded-full text-[10px] font-black uppercase">
                             <CheckSquare size={10} /> Active
                           </span>
                         ) : (

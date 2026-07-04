@@ -38,7 +38,7 @@ export function EventTemplateForm({
   return (
     <div className={[
       'border rounded-xl p-4 transition-all',
-      enabled ? 'border-indigo-100 bg-indigo-50/30' : 'border-slate-100 bg-slate-50/50',
+      enabled ? 'border-primary-100 bg-primary-50/30' : 'border-slate-100 bg-slate-50/50',
     ].join(' ')}>
       {/* Header : label + toggle */}
       <div className="flex items-center justify-between mb-3">
@@ -55,7 +55,7 @@ export function EventTemplateForm({
               value={title ?? ''}
               onChange={e => onTitleChange(e.target.value)}
               placeholder="Titre de la notification…"
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-indigo-400 bg-white"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-primary-400 bg-white"
             />
           )}
 
@@ -65,7 +65,7 @@ export function EventTemplateForm({
             onChange={e => onChange(e.target.value)}
             rows={rows}
             placeholder="Corps du message…"
-            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-indigo-400 bg-white resize-none"
+            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-primary-400 bg-white resize-none"
           />
 
           {/* Placeholders cliquables */}
@@ -77,7 +77,7 @@ export function EventTemplateForm({
                   key={ph}
                   type="button"
                   onClick={() => insertPlaceholder(onTitleChange ? 'body' : 'body', ph)}
-                  className="text-[10px] font-mono px-2 py-0.5 bg-white border border-slate-200 rounded-md text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 transition-all"
+                  className="text-[10px] font-mono px-2 py-0.5 bg-white border border-slate-200 rounded-md text-primary-600 hover:border-primary-300 hover:bg-primary-50 transition-all"
                 >
                   {ph}
                 </button>

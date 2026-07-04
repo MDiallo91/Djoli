@@ -8,9 +8,9 @@ const EXAM_TYPES = ['Devoir', 'Composition', 'Moyenne'];
 
 function getMention(avg: number | null) {
   if (avg === null) return { label: '—', color: 'text-gray-400' };
-  if (avg >= 16) return { label: 'Très Bien', color: 'text-emerald-600' };
+  if (avg >= 16) return { label: 'Très Bien', color: 'text-secondary-600' };
   if (avg >= 14) return { label: 'Bien', color: 'text-blue-600' };
-  if (avg >= 12) return { label: 'Assez Bien', color: 'text-indigo-600' };
+  if (avg >= 12) return { label: 'Assez Bien', color: 'text-primary-600' };
   if (avg >= 10) return { label: 'Passable', color: 'text-amber-600' };
   return { label: 'Insuffisant', color: 'text-red-600' };
 }

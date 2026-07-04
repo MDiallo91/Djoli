@@ -98,7 +98,7 @@ export function SchoolsTab() {
                       <div className="flex items-center gap-3">
                         {s.logoUrl
                           ? <img src={s.logoUrl} alt="" className="w-8 h-8 rounded object-contain border border-slate-200 flex-shrink-0" />
-                          : <div className="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-xs flex-shrink-0">{s.schoolName[0]}</div>
+                          : <div className="w-8 h-8 rounded bg-primary-50 flex items-center justify-center text-primary-600 font-bold text-xs flex-shrink-0">{s.schoolName[0]}</div>
                         }
                         <div>
                           <p className="text-sm font-medium text-slate-900">{s.schoolName}</p>
@@ -115,7 +115,7 @@ export function SchoolsTab() {
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-1">
-                        <button onClick={() => setSub({ kind: 'detail', school: s })} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="Voir détails"><Eye size={14} /></button>
+                        <button onClick={() => setSub({ kind: 'detail', school: s })} className="p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all" title="Voir détails"><Eye size={14} /></button>
                         <button onClick={() => setSub({ kind: 'form', school: s })}   className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all" title="Modifier"><Edit2 size={14} /></button>
                       </div>
                     </td>

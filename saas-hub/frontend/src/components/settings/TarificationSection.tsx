@@ -182,24 +182,24 @@ export function TarificationSection() {
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
                       d.id === 'mensuel' ? 'bg-slate-100 text-slate-600 border-slate-200'
                       : d.id === 'trimestriel' ? 'bg-primary-50 text-primary-700 border-primary-200'
-                      : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-secondary-50 text-secondary-700 border-secondary-200'
                     }`}>{d.label}</span>
                   </td>
                   <td className="py-3 pr-4">
                     <input type="number" min={1} value={d.months}
                       onChange={e => setDuration(d.id, { months: parseInt(e.target.value) || 1 })}
-                      className="w-20 border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-900 outline-none focus:border-indigo-400 bg-white text-center"
+                      className="w-20 border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-900 outline-none focus:border-primary-400 bg-white text-center"
                     />
                   </td>
                   <td className="py-3">
                     <div className="flex items-center gap-2">
                       <input type="number" min={0} max={100} value={d.discountPct}
                         onChange={e => setDuration(d.id, { discountPct: parseFloat(e.target.value) || 0 })}
-                        className="w-20 border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-900 outline-none focus:border-indigo-400 bg-white text-center"
+                        className="w-20 border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-900 outline-none focus:border-primary-400 bg-white text-center"
                       />
                       <span className="text-xs text-slate-400">%</span>
                       {d.discountPct > 0 && (
-                        <span className="text-[10px] text-emerald-600 font-semibold">−{d.discountPct}%</span>
+                        <span className="text-[10px] text-secondary-600 font-semibold">−{d.discountPct}%</span>
                       )}
                     </div>
                   </td>
@@ -226,7 +226,7 @@ export function TarificationSection() {
               <div className="flex items-center gap-2">
                 <input type="number" min={0} max={100} value={m.discountPct}
                   onChange={e => setMLDiscount(m.count, parseFloat(e.target.value) || 0)}
-                  className="w-20 border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-900 outline-none focus:border-indigo-400 bg-white text-center"
+                  className="w-20 border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-900 outline-none focus:border-primary-400 bg-white text-center"
                 />
                 <span className="text-xs text-slate-400">% de réduction</span>
               </div>
@@ -287,13 +287,13 @@ export function TarificationSection() {
                 <span>{fA(sim.baseMonthly * (data.durations.find(d => d.id === simDuration)?.months ?? 1))}</span>
               </div>
               {sim.durationDiscount > 0 && (
-                <div className="flex justify-between text-emerald-600">
+                <div className="flex justify-between text-secondary-600">
                   <span>Remise durée (−{data.durations.find(d => d.id === simDuration)?.discountPct}%)</span>
                   <span>−{fA(sim.durationDiscount)}</span>
                 </div>
               )}
               {sim.multiDiscount > 0 && (
-                <div className="flex justify-between text-emerald-600">
+                <div className="flex justify-between text-secondary-600">
                   <span>Remise multi-niveaux (−{data.multiLevelDiscounts.find(m => m.count === simLevels.length)?.discountPct}%)</span>
                   <span>−{fA(sim.multiDiscount)}</span>
                 </div>
@@ -303,7 +303,7 @@ export function TarificationSection() {
                 <span className="text-primary-600">{fA(sim.total)}</span>
               </div>
               {sim.durationDiscount + sim.multiDiscount > 0 && (
-                <p className="text-[11px] text-emerald-600 text-right">
+                <p className="text-[11px] text-secondary-600 text-right">
                   Économie totale : {fA(sim.durationDiscount + sim.multiDiscount)} ({Math.round((sim.durationDiscount + sim.multiDiscount) / (sim.baseMonthly * (data.durations.find(d => d.id === simDuration)?.months ?? 1)) * 100)}%)
                 </p>
               )}

@@ -54,7 +54,7 @@ export function ProviderCard({
 
         {/* Toggle activé/désactivé */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className={`text-xs font-medium ${enabled ? 'text-emerald-600' : 'text-slate-400'}`}>
+          <span className={`text-xs font-medium ${enabled ? 'text-secondary-600' : 'text-slate-400'}`}>
             {enabled ? 'Actif' : 'Inactif'}
           </span>
           <SwitchToggle checked={enabled} onChange={onToggle} />

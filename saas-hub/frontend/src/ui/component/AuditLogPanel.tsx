@@ -49,7 +49,7 @@ export function AuditLogPanel() {
         <div className="space-y-1.5 max-h-[520px] overflow-y-auto pr-1">
           {entries.map(e => (
             <div key={e.id} className="flex items-start gap-3 bg-white border border-slate-100 rounded-xl px-4 py-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 flex-shrink-0" />
+              <div className="w-1.5 h-1.5 rounded-full bg-primary-400 mt-1.5 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-xs font-semibold text-slate-800">{e.action}</p>

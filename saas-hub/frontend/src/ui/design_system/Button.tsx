@@ -30,7 +30,7 @@ const VARIANT_CLS: Record<ButtonVariant, string> = {
   ghost:   'bg-transparent text-slate-600 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
   danger:  'bg-red-50 text-red-600 border-red-200 hover:bg-red-600 hover:text-white hover:border-red-600',
   outline: 'bg-white text-slate-700 border-slate-200 hover:border-slate-400 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700',
-  success: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-600 hover:text-white hover:border-emerald-600',
+  success: 'bg-secondary-50 text-secondary-700 border-secondary-200 hover:bg-secondary-600 hover:text-white hover:border-secondary-600',
 };
 
 const SIZE_CLS: Record<ButtonSize, string> = {

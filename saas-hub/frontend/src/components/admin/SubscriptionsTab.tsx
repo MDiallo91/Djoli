@@ -85,7 +85,7 @@ export function SubscriptionsTab() {
           return (
             <div key={s.id} className={`bg-white border rounded-xl p-4 flex items-center gap-4 ${urgent ? 'border-amber-200' : 'border-slate-200'}`}>
               <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 ${
-                s.subscriptionStatus === 'active' ? 'bg-emerald-50 text-emerald-700' :
+                s.subscriptionStatus === 'active' ? 'bg-secondary-50 text-secondary-700' :
                 s.subscriptionStatus === 'trial'  ? 'bg-blue-50 text-blue-700' :
                 'bg-red-50 text-red-600'}`}>
                 {s.schoolName[0]}
@@ -93,7 +93,7 @@ export function SubscriptionsTab() {
 
               <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSub({ kind: 'detail', school: s })}>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-medium text-slate-900 hover:text-indigo-600 transition-colors">{s.schoolName}</p>
+                  <p className="text-sm font-medium text-slate-900 hover:text-primary-600 transition-colors">{s.schoolName}</p>
                   <Badge label={SUB_LABEL[s.subscriptionStatus] ?? s.subscriptionStatus} cls={SUB_CLS[s.subscriptionStatus] ?? SUB_CLS.suspended} />
                   {urgent && (
                     <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">Expire bientôt</span>
@@ -114,7 +114,7 @@ export function SubscriptionsTab() {
               <div className="flex items-center gap-1 flex-shrink-0">
                 {[30, 90, 365].map(d => (
                   <button key={d} onClick={() => activate(s.id, d)} disabled={!!busy}
-                    className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-semibold hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all disabled:opacity-40">
+                    className="px-3 py-1.5 bg-secondary-50 text-secondary-700 border border-secondary-200 rounded-lg text-[11px] font-semibold hover:bg-secondary-600 hover:text-white hover:border-secondary-600 transition-all disabled:opacity-40">
                     {d === 365 ? '1an' : `${d}j`}
                   </button>
                 ))}

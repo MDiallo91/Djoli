@@ -161,7 +161,7 @@ function ModelThumb({ model, color, selected, onClick }: { model: typeof MODELS[
   return (
     <button
       onClick={onClick}
-      className={`relative rounded-xl border-2 p-3 text-left transition-all cursor-pointer w-full ${selected ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 hover:border-slate-300 bg-white'}`}
+      className={`relative rounded-xl border-2 p-3 text-left transition-all cursor-pointer w-full ${selected ? 'border-primary-500 bg-primary-50' : 'border-slate-200 hover:border-slate-300 bg-white'}`}
     >
       {/* Mini card preview */}
       <div style={{ height: 44, borderRadius: 6, overflow: 'hidden', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', marginBottom: 6 }}>
@@ -203,10 +203,10 @@ function ModelThumb({ model, color, selected, onClick }: { model: typeof MODELS[
           </div>
         )}
       </div>
-      <p className={`text-xs font-semibold ${selected ? 'text-indigo-700' : 'text-slate-700'}`}>{model.label}</p>
+      <p className={`text-xs font-semibold ${selected ? 'text-primary-700' : 'text-slate-700'}`}>{model.label}</p>
       <p className="text-[10px] text-slate-400 leading-tight">{model.desc}</p>
       {selected && (
-        <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-indigo-500 flex items-center justify-center">
+        <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-primary-500 flex items-center justify-center">
           <svg viewBox="0 0 8 8" className="w-2.5 h-2.5 fill-white"><path d="M1 4l2 2 4-4" stroke="white" strokeWidth="1.2" fill="none" strokeLinecap="round" /></svg>
         </div>
       )}
@@ -384,7 +384,7 @@ export default function SchoolCardsPage({ user }: Props) {
                   <Calendar size={11} /> Année scolaire
                 </label>
                 <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)}
-                  className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
+                  className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white">
                   {years.map((y: any) => <option key={y.id} value={String(y.id)}>{y.label || y.name}</option>)}
                 </select>
               </div>
@@ -393,7 +393,7 @@ export default function SchoolCardsPage({ user }: Props) {
                   <Filter size={11} /> Classe
                 </label>
                 <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)}
-                  className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
+                  className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white">
                   <option value="all">Toutes les classes</option>
                   {classes.map((c: any) => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
                 </select>
@@ -404,7 +404,7 @@ export default function SchoolCardsPage({ user }: Props) {
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1.5">Date de validité</label>
               <input type="date" value={expiryDate} onChange={e => setExpiryDate(e.target.value)}
-                className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white" />
+                className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white" />
             </div>
 
             {/* Modèles */}
@@ -438,8 +438,8 @@ export default function SchoolCardsPage({ user }: Props) {
           {/* Liste élèves */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-              <button onClick={toggleAll} className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 transition-colors">
-                {allChecked ? <CheckSquare size={14} className="text-indigo-600" /> : <Square size={14} />}
+              <button onClick={toggleAll} className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-primary-600 transition-colors">
+                {allChecked ? <CheckSquare size={14} className="text-primary-600" /> : <Square size={14} />}
                 {allChecked ? 'Tout désélectionner' : 'Tout sélectionner'}
               </button>
               <span className="text-xs text-slate-400 flex items-center gap-1">
@@ -449,7 +449,7 @@ export default function SchoolCardsPage({ user }: Props) {
 
             {loading ? (
               <div className="py-12 flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-primary-400 border-t-transparent rounded-full animate-spin" />
               </div>
             ) : filtered.length === 0 ? (
               <div className="py-12 text-center text-slate-400 text-sm">Aucun élève trouvé</div>
@@ -461,11 +461,11 @@ export default function SchoolCardsPage({ user }: Props) {
                   const isPreviewed = previewId === id;
                   return (
                     <div key={id}
-                      className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${isPreviewed ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}
+                      className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${isPreviewed ? 'bg-primary-50' : 'hover:bg-slate-50'}`}
                       onClick={() => toggleOne(id)}>
                       <div onClick={e => { e.stopPropagation(); toggleOne(id); }}>
                         {isChecked
-                          ? <CheckSquare size={16} className="text-indigo-600 flex-shrink-0" />
+                          ? <CheckSquare size={16} className="text-primary-600 flex-shrink-0" />
                           : <Square size={16} className="text-slate-300 flex-shrink-0" />}
                       </div>
                       <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 flex-shrink-0 flex items-center justify-center">
@@ -478,7 +478,7 @@ export default function SchoolCardsPage({ user }: Props) {
                         <p className="text-xs text-slate-400 truncate">{st.class_name || 'Sans classe'}{st.matricule ? ` · ${st.matricule}` : ''}</p>
                       </div>
                       {qrReady && qrCodes[id] && <img src={qrCodes[id]} alt="" className="w-6 h-6 opacity-40 flex-shrink-0" />}
-                      {isPreviewed && <span className="text-[9px] font-semibold text-indigo-400 flex-shrink-0">Aperçu</span>}
+                      {isPreviewed && <span className="text-[9px] font-semibold text-primary-400 flex-shrink-0">Aperçu</span>}
                     </div>
                   );
                 })}

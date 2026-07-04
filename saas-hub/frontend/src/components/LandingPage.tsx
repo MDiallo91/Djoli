@@ -35,7 +35,7 @@ function useSiteConfig() {
         .then((all: any[]) => {
           const featured = all
             .filter((sc: any) => ids.includes(sc.id) && sc.approvalStatus === 'approved')
-            .map((sc: any) => ({ id: sc.id, name: sc.schoolName, logoUrl: sc.logoUrl ?? '', color: 'bg-indigo-500' }));
+            .map((sc: any) => ({ id: sc.id, name: sc.schoolName, logoUrl: sc.logoUrl ?? '', color: 'bg-primary-500' }));
           setCfg({ ...merged, clientSchools: featured });
         })
         .catch(() => setCfg(merged));
@@ -104,7 +104,7 @@ const FEATURES = [
   },
   {
     icon: Wallet,
-    color: 'bg-emerald-50 text-emerald-600',
+    color: 'bg-secondary-50 text-secondary-600',
     tag: 'Finance',
     title: 'Suivi financier en temps réel',
     desc: 'Encaissez les scolarités, suivez les paiements mois par mois, gérez la caisse et la paie des enseignants.',
@@ -112,7 +112,7 @@ const FEATURES = [
   },
   {
     icon: Award,
-    color: 'bg-indigo-50 text-indigo-600',
+    color: 'bg-primary-50 text-primary-600',
     tag: 'Notes & Bulletins',
     title: 'Bulletins professionnels générés automatiquement',
     desc: 'Saisie des notes par matière, calcul automatique des moyennes avec coefficients, classements et bulletins PDF.',
@@ -132,7 +132,7 @@ const TESTIMONIALS = [
     name: 'M. Diallo',
     role: 'Directeur, Excellence Académie',
     avatar: 'D',
-    color: 'bg-indigo-100 text-indigo-600',
+    color: 'bg-primary-100 text-primary-600',
     stars: 5,
   },
   {
@@ -140,7 +140,7 @@ const TESTIMONIALS = [
     name: 'Mme. Aminata',
     role: 'Proviseure, Lycée Horizon',
     avatar: 'A',
-    color: 'bg-emerald-100 text-emerald-600',
+    color: 'bg-secondary-100 text-secondary-600',
     stars: 5,
   },
   {
@@ -337,7 +337,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
           <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold ${
             cfg.heroBgUrl
               ? 'bg-white/15 border border-white/30 text-white backdrop-blur-sm'
-              : 'bg-indigo-50 border border-indigo-200 text-indigo-700'
+              : 'bg-primary-50 border border-primary-200 text-primary-700'
           }`}>
             <span className="site-active-dot w-2 h-2 rounded-full animate-pulse" />
             Version 2.0 — Nouveau design & synchronisation cloud
@@ -414,8 +414,8 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
       {/* ─── LOGOS MARQUEE ────────────────────────────────────── */}
       {(() => {
         const DEFAULTS = [
-          { id:'1', name:'Excellence Académie', logoUrl:'', color:'bg-indigo-500' },
-          { id:'2', name:'Groupe Lumière',       logoUrl:'', color:'bg-emerald-500' },
+          { id:'1', name:'Excellence Académie', logoUrl:'', color:'bg-primary-500' },
+          { id:'2', name:'Groupe Lumière',       logoUrl:'', color:'bg-secondary-500' },
           { id:'3', name:'Institut Horizon',     logoUrl:'', color:'bg-amber-500' },
           { id:'4', name:'Lycée Moderne Pro',    logoUrl:'', color:'bg-rose-500' },
           { id:'5', name:'École Avenir',         logoUrl:'', color:'bg-sky-500' },
@@ -455,7 +455,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
               <div className="overflow-hidden">
                 <div className="marquee-track">
                   {loop.map((s: any, i: number) => (
-                    <div key={i} className="flex items-center gap-4 mx-4 bg-white border border-slate-200/80 rounded-2xl px-7 py-5 shadow-sm hover:shadow-lg hover:border-indigo-200 transition-all cursor-default whitespace-nowrap" style={{ flexShrink: 0 }}>
+                    <div key={i} className="flex items-center gap-4 mx-4 bg-white border border-slate-200/80 rounded-2xl px-7 py-5 shadow-sm hover:shadow-lg hover:border-primary-200 transition-all cursor-default whitespace-nowrap" style={{ flexShrink: 0 }}>
                       {s.logoUrl
                         ? <img src={s.logoUrl} alt={s.name} className="w-12 h-12 rounded-xl object-contain border border-slate-100" />
                         : (
@@ -477,7 +477,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
       <section id="fonctionnalités" className="py-28 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-20 space-y-4">
-            <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 border border-indigo-200 px-4 py-2 rounded-full text-xs font-semibold">
+            <div className="inline-flex items-center gap-2 bg-primary-50 text-primary-700 border border-primary-200 px-4 py-2 rounded-full text-xs font-semibold">
               <Zap size={13} /> Tout ce dont une école a besoin
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
@@ -501,12 +501,12 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
                   <ul className="space-y-2">
                     {f.items.map((item, j) => (
                       <li key={j} className="flex items-center gap-3 text-sm font-medium text-slate-700">
-                        <CheckCircle size={16} className="text-emerald-500 flex-shrink-0" />
+                        <CheckCircle size={16} className="text-secondary-500 flex-shrink-0" />
                         {item}
                       </li>
                     ))}
                   </ul>
-                  <button className="flex items-center gap-2 text-indigo-600 font-semibold text-sm hover:gap-3 transition-all w-fit">
+                  <button className="flex items-center gap-2 text-primary-600 font-semibold text-sm hover:gap-3 transition-all w-fit">
                     En savoir plus <ArrowRight size={15} />
                   </button>
                 </div>
@@ -542,7 +542,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
               { icon: Clock, label: 'Présences & pointage', color: 'text-rose-500 bg-rose-50' },
               { icon: Wifi, label: 'Mode hors-ligne', color: 'text-teal-500 bg-teal-50' },
             ].map((item, i) => (
-              <div key={i} className="flex items-center gap-3 bg-white border border-slate-100 rounded-2xl p-5 hover:border-indigo-200 hover:shadow-sm transition-all">
+              <div key={i} className="flex items-center gap-3 bg-white border border-slate-100 rounded-2xl p-5 hover:border-primary-200 hover:shadow-sm transition-all">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.color}`}>
                   <item.icon size={18} />
                 </div>
@@ -558,7 +558,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 text-white">
           <div className="space-y-2">
             <h3 className="text-2xl md:text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Prêt à moderniser votre école ?</h3>
-            <p className="text-indigo-200 font-medium">Rejoignez 500+ établissements qui gèrent mieux grâce à DJOLI.</p>
+            <p className="text-primary-200 font-medium">Rejoignez 500+ établissements qui gèrent mieux grâce à DJOLI.</p>
           </div>
           <button onClick={onGetStarted} className="site-btn-outline flex items-center gap-3 bg-white px-8 py-4 rounded-2xl font-bold text-sm border-2 hover:-translate-y-1 transition-all shadow-2xl whitespace-nowrap">
             Commencer gratuitement <ArrowRight size={16} />
@@ -634,9 +634,9 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
             {[
-              { key: 'price30', label: '30 Jours', period: '/ mois', desc: 'Idéal pour tester en conditions réelles', highlight: false, features: ['Accès complet à toutes les fonctions', 'Support par email', '1 poste connecté', 'Données sécurisées localement'], color: 'bg-slate-50 border-slate-200', textCls: 'text-slate-900', subCls: 'text-slate-400', descCls: 'text-slate-500', fcls: 'text-slate-600', btn: 'bg-slate-900 text-white hover:bg-slate-700', icon: 'text-emerald-500' },
-              { key: 'price90', label: '3 Mois', period: '/ trimestre', desc: 'Le choix le plus populaire', highlight: true, features: ['Accès complet à toutes les fonctions', 'Synchronisation cloud incluse', 'Support prioritaire 24h', "Jusqu'à 5 postes", 'Mises à jour automatiques'], color: 'bg-indigo-600 border-indigo-600', textCls: 'text-white', subCls: 'text-indigo-300', descCls: 'text-indigo-200', fcls: 'text-indigo-100', btn: 'bg-white text-indigo-600 hover:bg-indigo-50', icon: 'text-indigo-300' },
-              { key: 'price365', label: '1 An', period: '/ an', desc: 'Meilleur rapport qualité/prix', highlight: false, features: ['Accès complet à toutes les fonctions', 'Sync cloud illimitée', 'Support VIP & formation', 'Postes illimités', 'Personnalisation logo & couleurs'], color: 'bg-slate-50 border-slate-200', textCls: 'text-slate-900', subCls: 'text-slate-400', descCls: 'text-slate-500', fcls: 'text-slate-600', btn: 'bg-slate-900 text-white hover:bg-slate-700', icon: 'text-emerald-500' },
+              { key: 'price30', label: '30 Jours', period: '/ mois', desc: 'Idéal pour tester en conditions réelles', highlight: false, features: ['Accès complet à toutes les fonctions', 'Support par email', '1 poste connecté', 'Données sécurisées localement'], color: 'bg-slate-50 border-slate-200', textCls: 'text-slate-900', subCls: 'text-slate-400', descCls: 'text-slate-500', fcls: 'text-slate-600', btn: 'bg-slate-900 text-white hover:bg-slate-700', icon: 'text-secondary-500' },
+              { key: 'price90', label: '3 Mois', period: '/ trimestre', desc: 'Le choix le plus populaire', highlight: true, features: ['Accès complet à toutes les fonctions', 'Synchronisation cloud incluse', 'Support prioritaire 24h', "Jusqu'à 5 postes", 'Mises à jour automatiques'], color: 'bg-primary-600 border-primary-600', textCls: 'text-white', subCls: 'text-primary-300', descCls: 'text-primary-200', fcls: 'text-primary-100', btn: 'bg-white text-primary-600 hover:bg-primary-50', icon: 'text-primary-300' },
+              { key: 'price365', label: '1 An', period: '/ an', desc: 'Meilleur rapport qualité/prix', highlight: false, features: ['Accès complet à toutes les fonctions', 'Sync cloud illimitée', 'Support VIP & formation', 'Postes illimités', 'Personnalisation logo & couleurs'], color: 'bg-slate-50 border-slate-200', textCls: 'text-slate-900', subCls: 'text-slate-400', descCls: 'text-slate-500', fcls: 'text-slate-600', btn: 'bg-slate-900 text-white hover:bg-slate-700', icon: 'text-secondary-500' },
             ].map((p, i) => (
               <div key={i}
                 className={`rounded-3xl border-2 p-8 space-y-8 ${p.highlight ? 'shadow-2xl scale-105' : `${p.color} shadow-sm`}`}
@@ -697,11 +697,11 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
             </button>
           </div>
           <div className="flex items-center justify-center gap-6 text-slate-500 text-sm">
-            <div className="flex items-center gap-2"><Shield size={14} className="text-emerald-400" /> Données sécurisées</div>
+            <div className="flex items-center gap-2"><Shield size={14} className="text-secondary-400" /> Données sécurisées</div>
             <div className="w-1 h-1 bg-slate-600 rounded-full" />
-            <div className="flex items-center gap-2"><CheckCircle size={14} className="text-emerald-400" /> Mises à jour auto</div>
+            <div className="flex items-center gap-2"><CheckCircle size={14} className="text-secondary-400" /> Mises à jour auto</div>
             <div className="w-1 h-1 bg-slate-600 rounded-full" />
-            <div className="flex items-center gap-2"><Wifi size={14} className="text-emerald-400" /> Offline-first</div>
+            <div className="flex items-center gap-2"><Wifi size={14} className="text-secondary-400" /> Offline-first</div>
           </div>
         </div>
       </section>
@@ -738,7 +738,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
             <div className="flex flex-col gap-3 text-sm">
               {whatsappHref && (
                 <a href={whatsappHref} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-emerald-600 font-semibold hover:text-emerald-800 transition-colors">
+                  className="inline-flex items-center gap-2 text-secondary-600 font-semibold hover:text-secondary-800 transition-colors">
                   <MessageCircle size={16} /> WhatsApp — réponse rapide
                 </a>
               )}
@@ -748,10 +748,10 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
           {/* Right: form */}
           <div className="md:w-1/2 w-full">
             {contactSent ? (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-8 text-center space-y-3">
-                <CheckCircle size={36} className="mx-auto text-emerald-500" />
-                <p className="font-bold text-emerald-800">Message envoyé !</p>
-                <p className="text-sm text-emerald-600">Votre client mail s'est ouvert. Nous vous répondrons bientôt.</p>
+              <div className="bg-secondary-50 border border-secondary-200 rounded-2xl p-8 text-center space-y-3">
+                <CheckCircle size={36} className="mx-auto text-secondary-500" />
+                <p className="font-bold text-secondary-800">Message envoyé !</p>
+                <p className="text-sm text-secondary-600">Votre client mail s'est ouvert. Nous vous répondrons bientôt.</p>
               </div>
             ) : (
               <form onSubmit={handleContact} className="space-y-4">
@@ -763,7 +763,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
                     value={contactEmail}
                     onChange={e => setContactEmail(e.target.value)}
                     placeholder="directeur@monecole.com"
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 transition-all bg-white"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-500/10 transition-all bg-white"
                   />
                 </div>
                 <div>
@@ -774,7 +774,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
                     value={contactMsg}
                     onChange={e => setContactMsg(e.target.value)}
                     placeholder="Décrivez votre question ou votre projet…"
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 transition-all bg-white resize-none"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-500/10 transition-all bg-white resize-none"
                   />
                 </div>
                 <button type="submit" disabled={!cfg.email}

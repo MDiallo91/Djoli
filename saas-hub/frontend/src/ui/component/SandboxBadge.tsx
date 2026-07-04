@@ -19,7 +19,7 @@ export function SandboxBadge({ env, onChange, readonly = false }: SandboxBadgePr
       <span className={[
         'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border',
         env === 'live'
-          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+          ? 'bg-secondary-50 text-secondary-700 border-secondary-200'
           : 'bg-amber-50 text-amber-700 border-amber-200',
       ].join(' ')}>
         {env === 'live' ? '● LIVE' : '◌ SANDBOX'}
@@ -34,7 +34,7 @@ export function SandboxBadge({ env, onChange, readonly = false }: SandboxBadgePr
       className={[
         'text-[10px] font-bold px-2 py-0.5 rounded-full border cursor-pointer outline-none appearance-none',
         env === 'live'
-          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+          ? 'bg-secondary-50 text-secondary-700 border-secondary-200'
           : 'bg-amber-50 text-amber-700 border-amber-200',
       ].join(' ')}
     >

@@ -46,8 +46,8 @@ export function CopyField({ label, value, hint }: CopyFieldProps) {
           className={[
             'flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border transition-all',
             copied
-              ? 'border-emerald-200 bg-emerald-50 text-emerald-600'
-              : 'border-slate-200 text-slate-500 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50',
+              ? 'border-secondary-200 bg-secondary-50 text-secondary-600'
+              : 'border-slate-200 text-slate-500 hover:border-primary-300 hover:text-primary-600 hover:bg-primary-50',
           ].join(' ')}
         >
           {copied ? <Check size={15} /> : <Copy size={15} />}

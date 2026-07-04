@@ -110,16 +110,16 @@ export function FileUpload({
             </button>
           </div>
         ) : (
-          <div className="flex items-center gap-3 border border-emerald-200 bg-emerald-50 rounded-xl px-4 py-3">
-            <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <FileText size={18} className="text-emerald-600" />
+          <div className="flex items-center gap-3 border border-secondary-200 bg-secondary-50 rounded-xl px-4 py-3">
+            <div className="w-10 h-10 bg-secondary-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <FileText size={18} className="text-secondary-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-emerald-800 truncate">Document uploadé</p>
-              <p className="text-xs text-emerald-600">Cloudinary</p>
+              <p className="text-sm font-medium text-secondary-800 truncate">Document uploadé</p>
+              <p className="text-xs text-secondary-600">Cloudinary</p>
             </div>
             <a href={value} target="_blank" rel="noopener noreferrer"
-              className="p-1.5 text-emerald-500 hover:text-emerald-700 transition-colors">
+              className="p-1.5 text-secondary-500 hover:text-secondary-700 transition-colors">
               <ExternalLink size={15} />
             </a>
             <button type="button" onClick={() => onChange('')}

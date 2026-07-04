@@ -45,7 +45,7 @@ export function WysiwygEditor({ value, onChange, minHeight = 320, placeholder }:
   };
 
   return (
-    <div className="border border-slate-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500/10 focus-within:border-indigo-400 transition-all">
+    <div className="border border-slate-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-primary-500/20 focus-within:border-primary-400 transition-all">
       {/* Barre d'outils */}
       <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-slate-100 bg-slate-50 flex-wrap">
         {TOOLS.map((t, i) => (
@@ -61,7 +61,7 @@ export function WysiwygEditor({ value, onChange, minHeight = 320, placeholder }:
           </button>
         ))}
         <span className="ml-auto text-[10px] text-slate-400 pr-1 flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+          <span className="w-1.5 h-1.5 rounded-full bg-secondary-400 inline-block" />
           Éditeur visuel
         </span>
       </div>

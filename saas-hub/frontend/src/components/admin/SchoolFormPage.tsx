@@ -75,7 +75,7 @@ export function SchoolFormPage({ school, onBack, onSave }: Props) {
         {/* Identité */}
         <div>
           {sectionHeader(
-            <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center"><Building2 size={13} className="text-white" /></div>,
+            <div className="w-6 h-6 rounded-lg bg-primary-600 flex items-center justify-center"><Building2 size={13} className="text-white" /></div>,
             "Identité de l'école"
           )}
           <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">

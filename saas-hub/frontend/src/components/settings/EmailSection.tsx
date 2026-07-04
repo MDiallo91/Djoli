@@ -108,7 +108,7 @@ export function EmailSection() {
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={() => addProvider('resend')}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-all">
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-primary-50 text-primary-700 border border-primary-200 rounded-lg hover:bg-primary-100 transition-all">
             <Plus size={12}/> Resend
           </button>
           <button type="button" onClick={() => addProvider('smtp')}
@@ -132,17 +132,17 @@ export function EmailSection() {
           <div key={prov.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             {/* Header card */}
             <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 bg-white">
-              <span className={`text-[10px] px-2 py-0.5 rounded-full tracking-wider flex-shrink-0 ${prov.type === 'resend' ? 'bg-indigo-100 text-indigo-700' : 'bg-sky-100 text-sky-700'}`}>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full tracking-wider flex-shrink-0 ${prov.type === 'resend' ? 'bg-primary-100 text-primary-700' : 'bg-sky-100 text-sky-700'}`}>
                 {prov.type === 'resend' ? 'RESEND' : 'SMTP'}
               </span>
               <input type="text" value={prov.name} onChange={e => update(prov.id, { name: e.target.value })}
                 className="flex-1 text-sm text-black bg-transparent border-0 outline-none focus:bg-white focus:border focus:border-slate-200 rounded px-1.5 py-0.5 min-w-0"
                 placeholder="Nom du provider" />
-              <span className={`text-[10px] flex-shrink-0 ${prov.enabled ? 'text-emerald-600' : 'text-slate-400'}`}>
+              <span className={`text-[10px] flex-shrink-0 ${prov.enabled ? 'text-secondary-600' : 'text-slate-400'}`}>
                 {prov.enabled ? 'Actif' : 'Inactif'}
               </span>
               <button type="button" onClick={() => update(prov.id, { enabled: !prov.enabled })}
-                className={`relative inline-flex w-9 h-5 flex-shrink-0 rounded-full transition-colors ${prov.enabled ? 'bg-emerald-500' : 'bg-slate-200'}`}>
+                className={`relative inline-flex w-9 h-5 flex-shrink-0 rounded-full transition-colors ${prov.enabled ? 'bg-secondary-500' : 'bg-slate-200'}`}>
                 <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${prov.enabled ? 'translate-x-4' : ''}`}/>
               </button>
               <button type="button" onClick={() => remove(prov.id)}
@@ -158,7 +158,7 @@ export function EmailSection() {
                   <div>
                     <p className="text-xs text-black mb-1">Clé API</p>
                     <p className="text-xs text-black mb-1.5">
-                      Obtenir sur <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:underline">resend.com/api-keys</a> — commence par <code className="bg-slate-100 px-1 rounded">re_</code>
+                      Obtenir sur <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:underline">resend.com/api-keys</a> — commence par <code className="bg-slate-100 px-1 rounded">re_</code>
                     </p>
                     <div className="flex gap-2">
                       <input type={secrets[prov.id] ? 'text' : 'password'} placeholder="re_xxxxxxxxxxxxxxxxxxxx"
@@ -209,7 +209,7 @@ export function EmailSection() {
                           <input type="radio" name={`ssl_${prov.id}`}
                             checked={String(prov.config.secure ?? false) === val}
                             onChange={() => updateCfg(prov.id, 'secure', val === 'true')}
-                            className="accent-indigo-600 w-3.5 h-3.5" />
+                            className="accent-primary-600 w-3.5 h-3.5" />
                           <span className="text-xs text-black">{label}</span>
                           <span className="text-[10px] text-black">{hint}</span>
                         </label>
@@ -277,7 +277,7 @@ export function EmailSection() {
                 </div>
                 <select value={state.routing[route] || ''}
                   onChange={e => setState(p => ({ ...p, routing: { ...p.routing, [route]: e.target.value } }))}
-                  className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-indigo-300 flex-shrink-0 min-w-[180px]">
+                  className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-primary-300 flex-shrink-0 min-w-[180px]">
                   <option value="">Automatique (1er actif)</option>
                   {state.providers.map(p => (
                     <option key={p.id} value={p.id}>{p.name}{!p.enabled ? ' (inactif)' : ''}</option>

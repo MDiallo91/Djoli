@@ -31,9 +31,9 @@ export function Toggle({ value, onChange, label, offHint, size = 'md' }: ToggleP
           type="radio"
           checked={isOn}
           onChange={() => onChange(1)}
-          className="accent-emerald-500 w-3.5 h-3.5"
+          className="accent-secondary-500 w-3.5 h-3.5"
         />
-        <span className={`${textSz} font-semibold ${isOn ? 'text-emerald-600' : 'text-slate-400'}`}>Actif</span>
+        <span className={`${textSz} font-semibold ${isOn ? 'text-secondary-600' : 'text-slate-400'}`}>Actif</span>
       </label>
 
       <label className="flex items-center gap-1.5 cursor-pointer select-none">
@@ -75,7 +75,7 @@ export function SwitchToggle({ checked, onChange, disabled = false }: SwitchTogg
         'relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent',
         'transition-colors duration-200 focus:outline-none',
         'disabled:opacity-40 disabled:cursor-not-allowed',
-        checked ? 'bg-emerald-500' : 'bg-slate-200',
+        checked ? 'bg-secondary-500' : 'bg-slate-200',
       ].join(' ')}
     >
       <span

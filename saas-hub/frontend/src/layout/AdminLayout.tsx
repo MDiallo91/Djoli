@@ -158,7 +158,7 @@ export function AdminLayout({ onLogout }: AdminLayoutProps) {
           {!collapsed && (
             <div className="flex items-center justify-between px-3 py-1.5 mb-1">
               <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                <div className="w-1.5 h-1.5 bg-secondary-400 rounded-full animate-pulse" />
                 <span className="text-[11px] text-slate-400">En ligne</span>
               </div>
               <button

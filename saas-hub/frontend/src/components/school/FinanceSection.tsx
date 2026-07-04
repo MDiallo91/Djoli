@@ -223,14 +223,14 @@ export default function FinanceSection() {
               <div className="sm:hidden divide-y divide-gray-50">
                 {filtered.map(tx => (
                   <div key={tx.id} className="px-4 py-3 flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${tx.type === 'IN' ? 'bg-emerald-50' : 'bg-red-50'}`}>
-                      {tx.type === 'IN' ? <ArrowUpCircle size={18} className="text-emerald-600" /> : <ArrowDownCircle size={18} className="text-red-500" />}
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${tx.type === 'IN' ? 'bg-secondary-50' : 'bg-red-50'}`}>
+                      {tx.type === 'IN' ? <ArrowUpCircle size={18} className="text-secondary-600" /> : <ArrowDownCircle size={18} className="text-red-500" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-gray-900 truncate">{tx.description || tx.reason || '—'}</p>
                       <p className="text-[11px] text-gray-400">{tx.created_at ? new Date(tx.created_at).toLocaleDateString('fr-FR') : '—'}{tx.student_name ? ` · ${tx.student_name}` : ''}</p>
                     </div>
-                    <p className={`font-black text-sm flex-shrink-0 ${tx.type === 'IN' ? 'text-emerald-600' : 'text-red-600'}`}>
+                    <p className={`font-black text-sm flex-shrink-0 ${tx.type === 'IN' ? 'text-secondary-600' : 'text-red-600'}`}>
                       {tx.type === 'IN' ? '+' : '−'}{fmt(tx.amount || 0)}
                     </p>
                   </div>
@@ -257,12 +257,12 @@ export default function FinanceSection() {
                       <td className="px-4 py-3.5 text-sm font-bold text-gray-800 max-w-[160px] truncate">{tx.description || tx.reason || '—'}</td>
                       <td className="px-4 py-3.5 text-sm text-gray-600 hidden md:table-cell">{tx.student_name || tx.reason || '—'}</td>
                       <td className="px-4 py-3.5">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${tx.type === 'IN' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${tx.type === 'IN' ? 'bg-secondary-50 text-secondary-700' : 'bg-red-50 text-red-600'}`}>
                           {tx.type === 'IN' ? <ArrowUpCircle size={9} /> : <ArrowDownCircle size={9} />}
                           {tx.type === 'IN' ? 'Entrée' : 'Sortie'}
                         </span>
                       </td>
-                      <td className={`px-4 py-3.5 text-right font-black text-sm ${tx.type === 'IN' ? 'text-emerald-600' : 'text-red-600'}`}>
+                      <td className={`px-4 py-3.5 text-right font-black text-sm ${tx.type === 'IN' ? 'text-secondary-600' : 'text-red-600'}`}>
                         {tx.type === 'IN' ? '+' : '−'}{fmt(tx.amount || 0)}
                       </td>
                       <td className="px-4 py-3.5 text-center relative">
@@ -338,7 +338,7 @@ export default function FinanceSection() {
                       <td className="px-6 py-4 font-bold text-gray-900">{s.first_name} {s.last_name}</td>
                       <td className="px-6 py-4 text-sm text-gray-500">{s.class_name || '—'}</td>
                       <td className="px-6 py-4 text-center">
-                        <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${s.has_paid ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${s.has_paid ? 'bg-secondary-50 text-secondary-700' : 'bg-amber-50 text-amber-700'}`}>
                           {s.has_paid ? 'Payé' : 'Non payé'}
                         </span>
                       </td>
@@ -433,7 +433,7 @@ export default function FinanceSection() {
                 <label className="block text-sm font-bold text-gray-700 mb-2">Type</label>
                 <div className="flex gap-3">
                   {(['IN', 'OUT'] as const).map(t => (
-                    <label key={t} className={`flex-1 flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer font-bold text-sm transition-all ${generalData.type === t ? (t === 'IN' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-red-500 bg-red-50 text-red-700') : 'border-gray-100 text-gray-500'}`}>
+                    <label key={t} className={`flex-1 flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer font-bold text-sm transition-all ${generalData.type === t ? (t === 'IN' ? 'border-secondary-500 bg-secondary-50 text-secondary-700' : 'border-red-500 bg-red-50 text-red-700') : 'border-gray-100 text-gray-500'}`}>
                       <input type="radio" name="type" value={t} checked={generalData.type === t}
                         onChange={() => setGeneralData(p => ({ ...p, type: t }))} className="sr-only" />
                       {t === 'IN' ? <ArrowUpCircle size={16} /> : <ArrowDownCircle size={16} />}

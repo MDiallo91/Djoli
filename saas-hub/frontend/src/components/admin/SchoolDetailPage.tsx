@@ -97,7 +97,7 @@ export function SchoolDetailPage({ school, onBack, onEdit, onRefresh }: Props) {
         <div className="bg-white border border-slate-200 rounded-2xl p-6 flex items-center gap-5">
           {school.logoUrl
             ? <img src={school.logoUrl} alt="" className="w-16 h-16 rounded-xl object-contain border border-slate-200 flex-shrink-0" />
-            : <div className="w-16 h-16 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-2xl flex-shrink-0">{school.schoolName[0]}</div>
+            : <div className="w-16 h-16 rounded-xl bg-primary-50 flex items-center justify-center text-primary-600 font-bold text-2xl flex-shrink-0">{school.schoolName[0]}</div>
           }
           <div>
             <p className="text-lg font-bold text-slate-900">{school.schoolName}</p>

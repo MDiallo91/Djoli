@@ -98,7 +98,7 @@ export function PendingTab() {
                     : s.level && <span>🎓 {s.level}</span>
                   }
                   {s.directorName && <span>👤 {s.directorName}</span>}
-                  {s.rccm && <span className="font-semibold text-indigo-600">RCCM: {s.rccm}</span>}
+                  {s.rccm && <span className="font-semibold text-primary-600">RCCM: {s.rccm}</span>}
                 </div>
                 <div className="flex items-center gap-2 mt-3 flex-wrap">
                   <Button variant="outline" size="sm" onClick={() => setSub({ kind: 'detail', school: s })}>

@@ -143,7 +143,7 @@ export function PaymentSection() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-xs text-emerald-700">
+      <div className="bg-secondary-50 border border-secondary-200 rounded-xl px-4 py-3 text-xs text-secondary-700">
         {activeCount} gateway{activeCount !== 1 ? 's' : ''} actif{activeCount !== 1 ? 's' : ''}. Plusieurs gateways peuvent être activés simultanément.
         Configurez les URL de callback dans votre dashboard provider.
       </div>
@@ -174,7 +174,7 @@ export function PaymentSection() {
                   <button type="button"
                     onClick={() => testGateway(prov.id as PaymentProviderType)}
                     disabled={testing === prov.id}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-all disabled:opacity-50">
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-primary-50 text-primary-700 border border-primary-200 rounded-lg hover:bg-primary-100 transition-all disabled:opacity-50">
                     <Zap size={11}/> {testing === prov.id ? 'Test…' : 'Tester connexion'}
                   </button>
                 ) : undefined

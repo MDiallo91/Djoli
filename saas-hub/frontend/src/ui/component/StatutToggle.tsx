@@ -16,8 +16,8 @@ export function StatutToggle({ value, onChange }: StatutToggleProps) {
     <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl mb-5">
       <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Statut :</span>
       <label className="flex items-center gap-1.5 cursor-pointer">
-        <input type="radio" checked={value === 1} onChange={() => onChange(1)} className="accent-emerald-500 w-3.5 h-3.5" />
-        <span className={`text-xs font-semibold ${value === 1 ? 'text-emerald-600' : 'text-slate-400'}`}>Actif</span>
+        <input type="radio" checked={value === 1} onChange={() => onChange(1)} className="accent-secondary-500 w-3.5 h-3.5" />
+        <span className={`text-xs font-semibold ${value === 1 ? 'text-secondary-600' : 'text-slate-400'}`}>Actif</span>
       </label>
       <label className="flex items-center gap-1.5 cursor-pointer">
         <input type="radio" checked={value === 0} onChange={() => onChange(0)} className="accent-slate-400 w-3.5 h-3.5" />

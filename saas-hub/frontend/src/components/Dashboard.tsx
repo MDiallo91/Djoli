@@ -251,9 +251,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       {/* Footer */}
       <div className="p-3 border-t border-white/8">
         {/* Subscription status */}
-        <div className={`flex items-center gap-2 px-3 py-2 rounded-xl mb-2 ${isActive ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
-          <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isActive ? 'bg-emerald-400' : 'bg-red-400'} animate-pulse-soft`} />
-          <p className={`text-[11px] font-semibold ${isActive ? 'text-emerald-400' : 'text-red-400'}`}>
+        <div className={`flex items-center gap-2 px-3 py-2 rounded-xl mb-2 ${isActive ? 'bg-secondary-500/10' : 'bg-red-500/10'}`}>
+          <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isActive ? 'bg-secondary-400' : 'bg-red-400'} animate-pulse-soft`} />
+          <p className={`text-[11px] font-semibold ${isActive ? 'text-secondary-400' : 'text-red-400'}`}>
             {isActive ? `Actif · ${daysLeft > 0 ? `${daysLeft}j restants` : 'À renouveler'}` : 'Abonnement expiré'}
           </p>
         </div>
@@ -378,7 +378,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                     label: 'Total encaissé', sub: 'Entrées cumulées',
                     value: dashStats ? `${formatAmt(dashStats.totalIn)} GNF` : '—',
                     icon: <RiMoneyDollarCircleLine />, iconColor: '#059669', iconBg: 'linear-gradient(135deg,#059669,#34d399)',
-                    subColor: 'text-emerald-500', trend: <RiArrowUpLine />,
+                    subColor: 'text-secondary-500', trend: <RiArrowUpLine />,
                   },
                   {
                     label: 'Personnel', sub: 'Membres actifs',
@@ -391,7 +391,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                     value: dashStats ? `${formatAmt(dashStats.balance)} GNF` : '—',
                     icon: <RiBankLine />, iconColor: dashStats && dashStats.balance < 0 ? '#dc2626' : '#7c3aed',
                     iconBg: dashStats && dashStats.balance < 0 ? 'linear-gradient(135deg,#dc2626,#f87171)' : 'linear-gradient(135deg,#7c3aed,#a78bfa)',
-                    subColor: dashStats && dashStats.balance < 0 ? 'text-red-500' : 'text-emerald-500',
+                    subColor: dashStats && dashStats.balance < 0 ? 'text-red-500' : 'text-secondary-500',
                     trend: dashStats && dashStats.balance < 0 ? <RiArrowDownLine /> : <RiArrowUpLine />,
                   },
                 ].map((card, i) => (
@@ -418,7 +418,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
                 <div className="lg:col-span-2 bg-white rounded-2xl lg:rounded-3xl border border-slate-100 p-4 lg:p-7 shadow-sm">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-base lg:text-lg">
+                    <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-xl bg-primary-50 flex items-center justify-center text-primary-600 text-base lg:text-lg">
                       <RiBarChartGroupedLine />
                     </div>
                     <div>
@@ -445,7 +445,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   </ResponsiveContainer>
                   <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-50">
                     {[
-                      { label: 'Total IN',  value: dashStats ? formatAmtFull(dashStats.totalIn)   : '—', color: 'text-emerald-600', icon: <RiArrowUpLine /> },
+                      { label: 'Total IN',  value: dashStats ? formatAmtFull(dashStats.totalIn)   : '—', color: 'text-secondary-600', icon: <RiArrowUpLine /> },
                       { label: 'Total OUT', value: dashStats ? formatAmtFull(dashStats.totalOut)  : '—', color: 'text-red-500',     icon: <RiArrowDownLine /> },
                       { label: 'Solde net', value: dashStats ? formatAmtFull(dashStats.balance)   : '—', color: dashStats && dashStats.balance < 0 ? 'text-red-600' : 'text-slate-900', icon: <RiExchangeDollarLine /> },
                     ].map((s, i) => (
@@ -498,9 +498,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                     </div>
                   </div>
                   <div className="space-y-2 mt-2">
-                    <div className="flex items-center justify-between px-3 py-2 bg-emerald-50 rounded-xl">
-                      <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5"><RiUserLine /> Ont payé</span>
-                      <span className="text-xs font-bold text-emerald-700">{dashStats?.paidStudents ?? 0} élèves</span>
+                    <div className="flex items-center justify-between px-3 py-2 bg-secondary-50 rounded-xl">
+                      <span className="text-xs font-semibold text-secondary-700 flex items-center gap-1.5"><RiUserLine /> Ont payé</span>
+                      <span className="text-xs font-bold text-secondary-700">{dashStats?.paidStudents ?? 0} élèves</span>
                     </div>
                     <div className="flex items-center justify-between px-3 py-2 bg-red-50 rounded-xl">
                       <span className="text-xs font-semibold text-red-600 flex items-center gap-1.5"><RiUserLine /> Non payé</span>
@@ -515,7 +515,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 <div className="lg:col-span-2 bg-white rounded-2xl lg:rounded-3xl border border-slate-100 p-5 lg:p-8 shadow-sm">
                   <div className="flex items-start justify-between mb-4 gap-3">
                     <div className="min-w-0">
-                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold mb-2 ${isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold mb-2 ${isActive ? 'bg-secondary-50 text-secondary-700 border border-secondary-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
                         {isActive ? <CheckCircle size={11} /> : <AlertCircle size={11} />}
                         {isActive ? 'Abonnement Actif' : 'Expiré'}
                       </div>
@@ -525,7 +525,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                     <div className="text-right bg-slate-50 px-3 lg:px-5 py-3 lg:py-4 rounded-xl lg:rounded-2xl flex-shrink-0">
                       <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mb-0.5">Expire</p>
                       <p className="font-bold text-slate-900 text-xs">{new Date(subscriptionExpiry).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
-                      {isActive && daysLeft > 0 && <p className="text-[10px] text-emerald-600 font-medium mt-0.5">{daysLeft}j restants</p>}
+                      {isActive && daysLeft > 0 && <p className="text-[10px] text-secondary-600 font-medium mt-0.5">{daysLeft}j restants</p>}
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-2 lg:gap-4 mb-5">
@@ -535,7 +535,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                       { icon: Award,  label: 'Support',    sub: 'prioritaire' },
                     ].map((f, i) => (
                       <div key={i} className="flex items-center gap-2 bg-slate-50 rounded-xl p-2.5 lg:p-4">
-                        <f.icon size={14} className="text-indigo-500 flex-shrink-0" />
+                        <f.icon size={14} className="text-primary-500 flex-shrink-0" />
                         <div className="min-w-0">
                           <p className="text-xs font-semibold text-slate-800 truncate">{f.label}</p>
                           <p className="text-[10px] text-slate-400 hidden sm:block">{f.sub}</p>
@@ -555,14 +555,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center"><Download size={20} /></div>
                   <div className="flex-1">
                     <h3 className="text-base font-bold mb-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Application Desktop</h3>
-                    <p className="text-indigo-200 text-xs leading-relaxed hidden sm:block">Téléchargez la dernière version de DJOLI pour Windows.</p>
+                    <p className="text-primary-200 text-xs leading-relaxed hidden sm:block">Téléchargez la dernière version de DJOLI pour Windows.</p>
                     <div className="mt-3 space-y-1.5">
                       {['Offline-first', 'Sync automatique', 'Bulletins PDF'].map(f => (
-                        <div key={f} className="flex items-center gap-2 text-indigo-200 text-xs"><CheckCircle size={11} /> {f}</div>
+                        <div key={f} className="flex items-center gap-2 text-primary-200 text-xs"><CheckCircle size={11} /> {f}</div>
                       ))}
                     </div>
                   </div>
-                  <button onClick={() => navigate('downloads')} className="w-full py-2.5 bg-white text-indigo-600 rounded-xl font-semibold text-xs hover:bg-indigo-50 transition-all flex items-center justify-center gap-1.5">
+                  <button onClick={() => navigate('downloads')} className="w-full py-2.5 bg-white text-primary-600 rounded-xl font-semibold text-xs hover:bg-primary-50 transition-all flex items-center justify-center gap-1.5">
                     <Download size={14} /> Télécharger (.exe)
                   </button>
                 </div>
@@ -575,8 +575,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </div>
                 <div className="space-y-3">
                   {[
-                    { icon: CheckCircle, color: 'bg-emerald-50 text-emerald-600', title: 'Abonnement initialisé',    time: new Date(user.createdAt).toLocaleString('fr-FR'), note: 'Plan PRO' },
-                    { icon: RefreshCw,   color: 'bg-indigo-50 text-indigo-600',   title: 'Dernière synchronisation', time: relativeTime(syncStats?.lastSyncAt ?? null), note: syncStats ? `${Object.values(syncStats.counts).reduce((a, b) => a + b, 0)} enregistrements` : '—' },
+                    { icon: CheckCircle, color: 'bg-secondary-50 text-secondary-600', title: 'Abonnement initialisé',    time: new Date(user.createdAt).toLocaleString('fr-FR'), note: 'Plan PRO' },
+                    { icon: RefreshCw,   color: 'bg-primary-50 text-primary-600',   title: 'Dernière synchronisation', time: relativeTime(syncStats?.lastSyncAt ?? null), note: syncStats ? `${Object.values(syncStats.counts).reduce((a, b) => a + b, 0)} enregistrements` : '—' },
                   ].map((a, i) => (
                     <div key={i} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl">
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${a.color} flex-shrink-0`}><a.icon size={16} /></div>
@@ -639,7 +639,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
               <div className="bg-white rounded-2xl lg:rounded-3xl border border-slate-100 p-5 lg:p-8 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold mb-3 ${isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold mb-3 ${isActive ? 'bg-secondary-50 text-secondary-700 border border-secondary-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
                       {isActive ? <CheckCircle size={11} /> : <AlertCircle size={11} />}
                       {isActive ? 'Abonnement Actif' : 'Abonnement Expiré'}
                     </div>
@@ -649,7 +649,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   <div className="text-right bg-slate-50 px-4 py-3 rounded-xl flex-shrink-0">
                     <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mb-0.5">Expire le</p>
                     <p className="font-bold text-slate-900 text-xs">{new Date(subscriptionExpiry).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
-                    {daysLeft > 0 && <p className={`text-[10px] font-semibold mt-0.5 ${daysLeft <= 7 ? 'text-amber-600' : 'text-emerald-600'}`}>{daysLeft}j restants</p>}
+                    {daysLeft > 0 && <p className={`text-[10px] font-semibold mt-0.5 ${daysLeft <= 7 ? 'text-amber-600' : 'text-secondary-600'}`}>{daysLeft}j restants</p>}
                   </div>
                 </div>
               </div>
@@ -682,15 +682,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center"><Package size={24} /></div>
                   <div className="flex-1">
                     <h2 className="text-xl font-bold mb-1.5" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>DJOLI Desktop</h2>
-                    <p className="text-indigo-200 text-sm leading-relaxed">Application de gestion scolaire hors-ligne avec synchronisation automatique.</p>
+                    <p className="text-primary-200 text-sm leading-relaxed">Application de gestion scolaire hors-ligne avec synchronisation automatique.</p>
                     <div className="mt-4 space-y-2">
                       {['Gestion des élèves, classes et notes', 'Paiements & facturation', 'Bulletins & rapports PDF', 'Synchronisation cloud automatique'].map(f => (
-                        <div key={f} className="flex items-center gap-2 text-indigo-200 text-xs"><CheckCircle size={13} className="text-emerald-400 flex-shrink-0" />{f}</div>
+                        <div key={f} className="flex items-center gap-2 text-primary-200 text-xs"><CheckCircle size={13} className="text-secondary-400 flex-shrink-0" />{f}</div>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <div className="flex items-center gap-3 mb-3 text-xs text-indigo-300">
+                    <div className="flex items-center gap-3 mb-3 text-xs text-primary-300">
                       <span className="bg-white/10 px-3 py-1.5 rounded-lg font-mono">
                         {release ? `v${release.version}` : '…'}
                       </span>
@@ -700,7 +700,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                       href={release?.downloadUrl || '#'}
                       target={release ? '_blank' : undefined}
                       rel="noopener noreferrer"
-                      className={`w-full py-3 bg-white text-indigo-600 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${release ? 'hover:bg-indigo-50' : 'opacity-50 cursor-not-allowed pointer-events-none'}`}
+                      className={`w-full py-3 bg-white text-primary-600 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${release ? 'hover:bg-primary-50' : 'opacity-50 cursor-not-allowed pointer-events-none'}`}
                     >
                       <Download size={16} /> {release ? 'Télécharger (.exe)' : 'Chargement…'}
                     </a>
@@ -718,7 +718,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                       { step: '04', title: 'Synchroniser', desc: "DJOLI télécharge automatiquement vos données depuis le cloud." },
                     ].map(s => (
                       <li key={s.step} className="flex gap-3">
-                        <span className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0">{s.step}</span>
+                        <span className="w-8 h-8 bg-primary-50 text-primary-600 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0">{s.step}</span>
                         <div>
                           <p className="font-semibold text-slate-900 text-sm">{s.title}</p>
                           <p className="text-slate-500 text-xs mt-0.5 leading-relaxed">{s.desc}</p>
@@ -758,8 +758,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
             <>
               <div className="bg-white rounded-2xl lg:rounded-3xl border border-slate-100 p-5 lg:p-8 shadow-sm">
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center">
-                    <Building2 size={16} className="text-indigo-600" />
+                  <div className="w-9 h-9 bg-primary-50 rounded-xl flex items-center justify-center">
+                    <Building2 size={16} className="text-primary-600" />
                   </div>
                   <div>
                     <h3 className="font-bold text-slate-900 text-sm" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Informations de l'école</h3>
@@ -806,7 +806,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                         value={profile[field]}
                         onChange={e => setField(field, e.target.value)}
                         placeholder={placeholder}
-                        className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 placeholder:text-slate-300 transition-all"
+                        className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-400 placeholder:text-slate-300 transition-all"
                       />
                     </div>
                   ))}
@@ -819,7 +819,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                         return (
                           <label key={lvl}
                             className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border-2 cursor-pointer transition-all select-none ${
-                              checked ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                              checked ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-slate-200 hover:border-slate-300 text-slate-600'
                             }`}
                             onClick={() => {
                               const cur = profile.levels
@@ -827,7 +827,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                             }}
                           >
                             <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                              checked ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'
+                              checked ? 'bg-primary-600 border-primary-600' : 'border-slate-300'
                             }`}>
                               {checked && <svg viewBox="0 0 10 10" className="w-2.5 h-2.5 text-white fill-current"><path d="M1 5l3 3 5-5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                             </div>
@@ -843,7 +843,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   <button
                     onClick={saveProfile}
                     disabled={saving}
-                    className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all disabled:opacity-50"
+                    className="flex items-center gap-2 bg-primary-600 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-primary-700 transition-all disabled:opacity-50"
                   >
                     <Save size={14} />
                     {saving ? 'Sauvegarde...' : 'Enregistrer'}
@@ -874,7 +874,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                         value={pwd[key]}
                         onChange={e => setPwd(p => ({ ...p, [key]: e.target.value }))}
                         placeholder="••••••••"
-                        className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition-all"
+                        className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-400 transition-all"
                       />
                     </div>
                   ))}

@@ -34,8 +34,8 @@ export function DashboardTab() {
     .slice(0, 5);
 
   const CARDS = [
-    { label: 'Total',      value: stats.total,   icon: SchoolIcon,  cls: 'text-indigo-600 bg-indigo-50' },
-    { label: 'Actifs',     value: stats.active,  icon: CheckCircle, cls: 'text-emerald-600 bg-emerald-50' },
+    { label: 'Total',      value: stats.total,   icon: SchoolIcon,  cls: 'text-primary-600 bg-primary-50' },
+    { label: 'Actifs',     value: stats.active,  icon: CheckCircle, cls: 'text-secondary-600 bg-secondary-50' },
     { label: 'Essai',      value: stats.trial,   icon: Clock,       cls: 'text-blue-600 bg-blue-50' },
     { label: 'Expirés',    value: stats.expired, icon: AlertCircle, cls: 'text-red-600 bg-red-50' },
     { label: 'En attente', value: stats.pending, icon: Activity,    cls: 'text-amber-600 bg-amber-50' },
@@ -63,12 +63,12 @@ export function DashboardTab() {
         <div className="bg-white border border-slate-200 rounded-xl p-5">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Répartition</p>
           <div className="flex h-2 rounded-full overflow-hidden gap-0.5">
-            <div className="bg-emerald-500" style={{ width: `${(stats.active / stats.total) * 100}%` }} />
+            <div className="bg-secondary-500" style={{ width: `${(stats.active / stats.total) * 100}%` }} />
             <div className="bg-blue-400"    style={{ width: `${(stats.trial  / stats.total) * 100}%` }} />
             <div className="bg-red-400"     style={{ width: `${(stats.expired / stats.total) * 100}%` }} />
           </div>
           <div className="flex gap-5 mt-2 text-xs text-slate-500">
-            {[['bg-emerald-500','Actif',stats.active],['bg-blue-400','Essai',stats.trial],['bg-red-400','Expiré',stats.expired]].map(([c,l,v]) => (
+            {[['bg-secondary-500','Actif',stats.active],['bg-blue-400','Essai',stats.trial],['bg-red-400','Expiré',stats.expired]].map(([c,l,v]) => (
               <span key={l as string} className="flex items-center gap-1.5">
                 <span className={`w-2 h-2 rounded-full ${c}`} />{l as string} ({v as number})
               </span>
@@ -88,7 +88,7 @@ export function DashboardTab() {
               <div key={sc.id} className="flex items-center gap-3 px-5 py-3">
                 {sc.logoUrl
                   ? <img src={sc.logoUrl} alt="" className="w-7 h-7 rounded object-contain border border-slate-200 flex-shrink-0" />
-                  : <div className="w-7 h-7 rounded bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-xs flex-shrink-0">{sc.schoolName[0]}</div>
+                  : <div className="w-7 h-7 rounded bg-primary-50 flex items-center justify-center text-primary-600 font-bold text-xs flex-shrink-0">{sc.schoolName[0]}</div>
                 }
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-slate-900 truncate">{sc.schoolName}</p>

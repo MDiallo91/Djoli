@@ -25,17 +25,17 @@ function FileUpload({ label, value, onChange, accept, hint }: {
     <div>
       <label className={labelCls}>{label}</label>
       {value ? (
-        <div className="flex items-center gap-3 border border-emerald-200 bg-emerald-50 rounded-xl px-4 py-3">
+        <div className="flex items-center gap-3 border border-secondary-200 bg-secondary-50 rounded-xl px-4 py-3">
           {value.startsWith('data:image') ? (
-            <img src={value} alt="" className="w-10 h-10 object-contain rounded-lg border border-emerald-200" />
+            <img src={value} alt="" className="w-10 h-10 object-contain rounded-lg border border-secondary-200" />
           ) : (
-            <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center"><FileText size={18} className="text-emerald-600" /></div>
+            <div className="w-10 h-10 bg-secondary-100 rounded-lg flex items-center justify-center"><FileText size={18} className="text-secondary-600" /></div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-emerald-800 truncate">{fileName || 'Fichier chargé'}</p>
-            <p className="text-xs text-emerald-600">Cliquez pour remplacer</p>
+            <p className="text-sm font-medium text-secondary-800 truncate">{fileName || 'Fichier chargé'}</p>
+            <p className="text-xs text-secondary-600">Cliquez pour remplacer</p>
           </div>
-          <label className="cursor-pointer p-1 text-emerald-500 hover:text-emerald-700">
+          <label className="cursor-pointer p-1 text-secondary-500 hover:text-secondary-700">
             <Upload size={15} />
             <input type="file" accept={accept} className="hidden" onChange={e => {
               const f = e.target.files?.[0]; if (!f) return;
@@ -48,8 +48,8 @@ function FileUpload({ label, value, onChange, accept, hint }: {
           <button type="button" onClick={() => { onChange('', ''); setFileName(''); }} className="p-1 text-slate-400 hover:text-red-500"><X size={14} /></button>
         </div>
       ) : (
-        <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl p-5 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 transition-all group">
-          <Upload size={20} className="text-slate-400 group-hover:text-indigo-500 mb-2 transition-colors" />
+        <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl p-5 cursor-pointer hover:border-primary-400 hover:bg-primary-50/50 transition-all group">
+          <Upload size={20} className="text-slate-400 group-hover:text-primary-500 mb-2 transition-colors" />
           <p className="text-sm font-medium text-slate-500 group-hover:text-primary-600 transition-colors">Cliquez pour uploader</p>
           {hint && <p className="text-xs text-slate-400 mt-1">{hint}</p>}
           <input type="file" accept={accept} className="hidden" onChange={e => {
@@ -162,7 +162,7 @@ function LoginForm({ onBack, onSuccess }: AuthProps) {
           <ArrowLeft size={16} /> Retour au site
         </button>
         <div>
-          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center mb-8">
+          <div className="w-12 h-12 bg-primary-600 rounded-2xl flex items-center justify-center mb-8">
             <BookOpen size={22} className="text-white" />
           </div>
           <h2 className="text-3xl font-bold text-white mb-4 leading-tight">Content de vous revoir !</h2>
@@ -170,7 +170,7 @@ function LoginForm({ onBack, onSuccess }: AuthProps) {
           <div className="mt-10 space-y-3">
             {['Synchronisation cloud illimitée', 'Mode hors-ligne complet', 'Support technique inclus'].map(f => (
               <div key={f} className="flex items-center gap-3 text-slate-300">
-                <CheckCircle size={16} className="text-indigo-400 flex-shrink-0" /> <span className="text-sm">{f}</span>
+                <CheckCircle size={16} className="text-primary-400 flex-shrink-0" /> <span className="text-sm">{f}</span>
               </div>
             ))}
           </div>
@@ -239,13 +239,13 @@ function RegisterStep1({ onBack, onNext, data, setData }: {
           <ArrowLeft size={16} /> Retour au site
         </button>
         <div>
-          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center mb-8">
+          <div className="w-12 h-12 bg-primary-600 rounded-2xl flex items-center justify-center mb-8">
             <BookOpen size={22} className="text-white" />
           </div>
           {/* Progress */}
           <div className="flex items-center gap-3 mb-10">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold">1</div>
+              <div className="w-7 h-7 rounded-full bg-primary-600 flex items-center justify-center text-white text-xs font-bold">1</div>
               <span className="text-white text-sm font-medium">Accès</span>
             </div>
             <div className="flex-1 h-px bg-slate-700" />
@@ -267,7 +267,7 @@ function RegisterStep1({ onBack, onNext, data, setData }: {
           </button>
 
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-bold text-primary-600 bg-indigo-50 px-2.5 py-1 rounded-full">Étape 1 / 2</span>
+            <span className="text-xs font-bold text-primary-600 bg-primary-50 px-2.5 py-1 rounded-full">Étape 1 / 2</span>
           </div>
           <h1 className="text-2xl font-bold text-slate-900 mb-1">Informations de connexion</h1>
           <p className="text-slate-500 text-sm mb-8">Ces identifiants vous serviront à vous connecter.</p>
@@ -305,7 +305,7 @@ function RegisterStep1({ onBack, onNext, data, setData }: {
             </div>
 
             <label className="flex items-start gap-3 cursor-pointer group">
-              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${data.terms ? 'bg-primary-600 border-primary-600' : 'border-slate-300 group-hover:border-indigo-400'}`}
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${data.terms ? 'bg-primary-600 border-primary-600' : 'border-slate-300 group-hover:border-primary-400'}`}
                 onClick={() => setData({ ...data, terms: !data.terms })}>
                 {data.terms && <CheckCircle size={12} className="text-white" />}
               </div>
@@ -356,15 +356,15 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
         </button>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-primary-600 bg-indigo-50 px-2.5 py-1 rounded-full">Étape 2 / 2</span>
+            <span className="text-xs font-bold text-primary-600 bg-primary-50 px-2.5 py-1 rounded-full">Étape 2 / 2</span>
             <span className="text-sm text-slate-500">Informations de l'établissement & responsable</span>
           </div>
         </div>
         {/* Progress bar */}
         <div className="hidden md:flex items-center gap-2">
-          <div className="w-4 h-4 rounded-full bg-indigo-600 flex items-center justify-center"><CheckCircle size={10} className="text-white" /></div>
-          <div className="w-16 h-1 bg-indigo-600 rounded-full" />
-          <div className="w-4 h-4 rounded-full bg-indigo-600 flex items-center justify-center text-white text-[10px] font-bold">2</div>
+          <div className="w-4 h-4 rounded-full bg-primary-600 flex items-center justify-center"><CheckCircle size={10} className="text-white" /></div>
+          <div className="w-16 h-1 bg-primary-600 rounded-full" />
+          <div className="w-4 h-4 rounded-full bg-primary-600 flex items-center justify-center text-white text-[10px] font-bold">2</div>
         </div>
       </div>
 
@@ -373,7 +373,7 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
           {/* ── Section 1: École ── */}
           <div>
             <div className="flex items-center gap-2 mb-5">
-              <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-primary-600 flex items-center justify-center flex-shrink-0">
                 <Building2 size={14} className="text-white" />
               </div>
               <h2 className="text-base font-semibold text-slate-900">Informations de l'école</h2>
@@ -414,7 +414,7 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
                       return (
                         <label key={lvl}
                           className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all select-none ${
-                            checked ? 'border-indigo-500 bg-primary-50 text-primary-700' : 'border-slate-200 hover:border-slate-300 text-slate-700'
+                            checked ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-slate-200 hover:border-slate-300 text-slate-700'
                           }`}
                           onClick={() => {
                             const cur = data.levels || []
@@ -496,7 +496,7 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
           </div>
 
           <button type="submit" disabled={loading}
-            className="w-full py-4 bg-primary-600 text-white rounded-xl font-semibold text-base hover:bg-primary-700 transition-all disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
+            className="w-full py-4 bg-primary-600 text-white rounded-xl font-semibold text-base hover:bg-primary-700 transition-all disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg shadow-primary-600/20">
             {loading
               ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Envoi en cours…</>
               : <><CheckCircle size={18} /> Soumettre ma demande d'inscription</>
@@ -517,8 +517,8 @@ function RegisterSuccess({ schoolName, onBack }: { schoolName: string; onBack: (
   return (
     <div className="min-h-screen flex items-center justify-center p-8" style={{ backgroundColor: '#f8fafc' }}>
       <div className="max-w-md text-center">
-        <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle size={32} className="text-emerald-600" />
+        <div className="w-16 h-16 bg-secondary-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <CheckCircle size={32} className="text-secondary-600" />
         </div>
         <h1 className="text-2xl font-bold text-slate-900 mb-3">Demande envoyée !</h1>
         <p className="text-slate-500 leading-relaxed mb-2">
@@ -600,7 +600,7 @@ export const Auth: React.FC<AuthProps> = ({ onBack, onSuccess }) => {
         </button>
 
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
             <BookOpen size={18} className="text-white" />
           </div>
           <div>

@@ -67,14 +67,14 @@ export function ApplicationSection() {
         </div>
 
         {data.downloadUrl && (
-          <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-            <CheckCircle size={15} className="text-emerald-600 flex-shrink-0" />
+          <div className="flex items-center gap-3 p-3 bg-secondary-50 border border-secondary-200 rounded-lg">
+            <CheckCircle size={15} className="text-secondary-600 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-emerald-800">Lien direct configuré</p>
-              <p className="text-xs text-emerald-600 truncate">{data.downloadUrl}</p>
+              <p className="text-xs text-secondary-800">Lien direct configuré</p>
+              <p className="text-xs text-secondary-600 truncate">{data.downloadUrl}</p>
             </div>
             <a href={data.downloadUrl} target="_blank" rel="noopener noreferrer"
-              className="text-xs text-emerald-700 hover:underline whitespace-nowrap">Tester →</a>
+              className="text-xs text-secondary-700 hover:underline whitespace-nowrap">Tester →</a>
           </div>
         )}
 

@@ -47,7 +47,7 @@ export function ColorPicker({ label, value, onChange, hint }: ColorPickerProps) 
           onChange={e => onChange(e.target.value)}
           maxLength={7}
           placeholder="#4f46e5"
-          className="w-28 border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/10 uppercase bg-white"
+          className="w-28 border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-400/10 uppercase bg-white"
         />
 
         {/* Swatches + hint */}
