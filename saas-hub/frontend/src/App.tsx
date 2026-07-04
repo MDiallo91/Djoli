@@ -1,69 +1,100 @@
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
-import { Toaster, toast } from 'sonner'
-import { LandingPage } from './components/LandingPage'
-import { Auth } from './components/Auth'
-import { Dashboard } from './components/Dashboard'
-import { AdminDashboard } from './components/AdminDashboard'
-import { LegalPage } from './components/LegalPage'
+/**
+ * App.tsx — Routeur principal React Router v6.
+ *
+ * Structure des routes admin (nested layout) :
+ *   /admin/*  → AdminGuard (auth) → AdminProvider (context) → AdminLayout (sidebar+outlet)
+ *               ├─ index          → DashboardTab
+ *               ├─ etablissements → SchoolsTab
+ *               ├─ abonnements   → SubscriptionsTab
+ *               ├─ en-attente    → PendingTab
+ *               └─ parametres/*  → SettingsTab (remplacé au Sprint 5)
+ */
 
-export { toast }
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, Outlet } from 'react-router-dom';
+import { Toaster, toast } from 'sonner';
+import { LandingPage }       from './components/LandingPage';
+import { Auth }              from './components/Auth';
+import { Dashboard }         from './components/Dashboard';
+import { LegalPage }         from './components/LegalPage';
+import { AdminProvider }     from './context/AdminContext';
+import { AdminLayout }       from './layout/AdminLayout';
+import { DashboardTab }      from './components/admin/DashboardTab';
+import { SchoolsTab }        from './components/admin/SchoolsTab';
+import { PendingTab }        from './components/admin/PendingTab';
+import { SubscriptionsTab }  from './components/admin/SubscriptionsTab';
+import { SettingsTab }       from './components/AdminDashboard';
+import { useAdminContext }   from './context/AdminContext';
+
+export { toast };
 
 function getUser() {
   try { const s = localStorage.getItem('hub_user'); return s ? JSON.parse(s) : null; } catch { return null; }
 }
 
-// ─── Route wrappers (inject navigate-based callbacks) ─────────
+// ─── Wrappers de routes ────────────────────────────────────────
 
-function LandingRoute() {
-  return <LandingPage />
-}
+function LandingRoute() { return <LandingPage />; }
 
 function AuthRoute() {
-  const navigate = useNavigate()
-  const user = getUser()
-  if (user) return <Navigate to={user.role === 'super_admin' ? '/admin' : '/dashboard'} replace />
+  const navigate = useNavigate();
+  const user = getUser();
+  if (user) return <Navigate to={user.role === 'super_admin' ? '/admin' : '/dashboard'} replace />;
 
-  const handleSuccess = (data: any) => {
-    localStorage.setItem('hub_user', JSON.stringify(data))
-    const isAdmin = data.role === 'super_admin'
-    toast.success(isAdmin ? 'Espace Admin' : 'Connexion réussie', {
-      description: isAdmin
-        ? "Bienvenue sur le panneau d'administration."
-        : `Bienvenue, ${data.schoolName || data.email}`,
-    })
-    navigate(isAdmin ? '/admin' : '/dashboard')
-  }
-
-  return <Auth onBack={() => navigate('/')} onSuccess={handleSuccess} />
+  return (
+    <Auth
+      onBack={() => navigate('/')}
+      onSuccess={(data: any) => {
+        localStorage.setItem('hub_user', JSON.stringify(data));
+        const isAdmin = data.role === 'super_admin';
+        toast.success(isAdmin ? 'Espace Admin' : 'Connexion réussie', {
+          description: isAdmin ? "Bienvenue sur le panneau d'administration." : `Bienvenue, ${data.schoolName || data.email}`,
+        });
+        navigate(isAdmin ? '/admin' : '/dashboard');
+      }}
+    />
+  );
 }
 
 function DashboardRoute() {
-  const navigate = useNavigate()
-  const user = getUser()
-  if (!user) return <Navigate to="/login" replace />
-
-  const handleLogout = () => {
-    localStorage.removeItem('hub_user')
-    toast.info('Déconnecté', { description: 'À bientôt !' })
-    navigate('/')
-  }
-
-  return <Dashboard user={user} onLogout={handleLogout} />
+  const navigate = useNavigate();
+  const user = getUser();
+  if (!user) return <Navigate to="/login" replace />;
+  return (
+    <Dashboard
+      user={user}
+      onLogout={() => {
+        localStorage.removeItem('hub_user');
+        toast.info('Déconnecté', { description: 'À bientôt !' });
+        navigate('/');
+      }}
+    />
+  );
 }
 
-function AdminRoute() {
-  const navigate = useNavigate()
-  const user = getUser()
-  if (!user) return <Navigate to="/login" replace />
-  if (user.role !== 'super_admin') return <Navigate to="/dashboard" replace />
+/** Guard d'authentification + provider + layout admin */
+function AdminGuard() {
+  const navigate = useNavigate();
+  const user = getUser();
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== 'super_admin') return <Navigate to="/dashboard" replace />;
 
   const handleLogout = () => {
-    localStorage.removeItem('hub_user')
-    toast.info('Déconnecté', { description: 'À bientôt !' })
-    navigate('/')
-  }
+    localStorage.removeItem('hub_user');
+    toast.info('Déconnecté', { description: 'À bientôt !' });
+    navigate('/');
+  };
 
-  return <AdminDashboard onLogout={handleLogout} />
+  return (
+    <AdminProvider>
+      <AdminLayout onLogout={handleLogout} />
+    </AdminProvider>
+  );
+}
+
+/** Wrapper SettingsTab — récupère les écoles depuis AdminContext */
+function SettingsRoute() {
+  const { schools } = useAdminContext();
+  return <SettingsTab schools={schools} />;
 }
 
 // ─── App ──────────────────────────────────────────────────────
@@ -81,17 +112,26 @@ function App() {
         }}
       />
       <Routes>
-        <Route path="/"               element={<LandingRoute />} />
-        <Route path="/login"          element={<AuthRoute />} />
-        <Route path="/dashboard"      element={<DashboardRoute />} />
-        <Route path="/admin/*"         element={<AdminRoute />} />
+        <Route path="/"          element={<LandingRoute />} />
+        <Route path="/login"     element={<AuthRoute />} />
+        <Route path="/dashboard" element={<DashboardRoute />} />
+
+        {/* Routes admin imbriquées — AdminGuard contient AdminLayout + Outlet */}
+        <Route path="/admin" element={<AdminGuard />}>
+          <Route index                element={<DashboardTab />} />
+          <Route path="etablissements" element={<SchoolsTab />} />
+          <Route path="abonnements"    element={<SubscriptionsTab />} />
+          <Route path="en-attente"     element={<PendingTab />} />
+          <Route path="parametres/*"   element={<SettingsRoute />} />
+        </Route>
+
         <Route path="/legal/terms"    element={<LegalPage type="terms" />} />
         <Route path="/legal/privacy"  element={<LegalPage type="privacy" />} />
         <Route path="/legal/mentions" element={<LegalPage type="mentions" />} />
         <Route path="*"               element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;

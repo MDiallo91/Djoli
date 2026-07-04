@@ -997,7 +997,8 @@ interface EProvider { id: string; type: EProviderType; name: string; enabled: bo
 interface EProvidersState { providers: EProvider[]; routing: Record<ERoute, string> }
 const DEFAULT_EMAIL_PS: EProvidersState = { providers: [], routing: { otp: '', approval: '', rejection: '' } }
 
-function SettingsTab({ schools }: { schools: School[] }) {
+// Exporté temporairement pour App.tsx — sera remplacé par components/settings/* au Sprint 5
+export function SettingsTab({ schools }: { schools: School[] }) {
   const [cfg,     setCfg]     = useState<SiteConfig>(DEFAULT_SITE_CONFIG)
   const [legal,   setLegal]   = useState(DEFAULT_LEGAL)
   const [statuts, setStatuts] = useState<Record<string, 0|1>>({})
