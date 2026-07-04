@@ -1427,16 +1427,16 @@ function SettingsTab({ schools }: { schools: School[] }) {
           {/* Header + add buttons */}
           <div className="col-span-2 flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold text-slate-700">Providers d'envoi d'email</p>
-              <p className="text-xs text-slate-400 mt-0.5">Configurez un ou plusieurs services d'envoi</p>
+              <p className="text-sm text-black">Providers d'envoi d'email</p>
+              <p className="text-xs text-black mt-0.5">Configurez un ou plusieurs services d'envoi</p>
             </div>
             <div className="flex gap-2">
               <button type="button" onClick={() => addEmailProvider('resend')}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-all">
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-all">
                 <Plus size={12}/> Resend
               </button>
               <button type="button" onClick={() => addEmailProvider('smtp')}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-100 transition-all">
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-slate-50 text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-100 transition-all">
                 <Plus size={12}/> SMTP
               </button>
             </div>
@@ -1445,8 +1445,8 @@ function SettingsTab({ schools }: { schools: School[] }) {
           {/* Empty state */}
           {emailPs.providers.length === 0 && (
             <div className="col-span-2 border-2 border-dashed border-slate-200 rounded-xl py-10 text-center">
-              <p className="text-sm text-slate-400">Aucun provider configuré</p>
-              <p className="text-xs text-slate-300 mt-1">Ajoutez Resend ou SMTP pour activer l'envoi d'emails</p>
+              <p className="text-sm text-black">Aucun provider configuré</p>
+              <p className="text-xs text-black mt-1">Ajoutez Resend ou SMTP pour activer l'envoi d'emails</p>
             </div>
           )}
 
@@ -1455,14 +1455,14 @@ function SettingsTab({ schools }: { schools: School[] }) {
             <div key={prov.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
               {/* Card header */}
               <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 bg-white">
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wider flex-shrink-0 ${prov.type === 'resend' ? 'bg-indigo-100 text-indigo-700' : 'bg-sky-100 text-sky-700'}`}>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full tracking-wider flex-shrink-0 ${prov.type === 'resend' ? 'bg-indigo-100 text-indigo-700' : 'bg-sky-100 text-sky-700'}`}>
                   {prov.type === 'resend' ? 'RESEND' : 'SMTP'}
                 </span>
                 <input type="text" value={prov.name}
                   onChange={e => updateEProvider(prov.id, { name: e.target.value })}
-                  className="flex-1 text-sm font-semibold text-slate-800 bg-transparent border-0 outline-none focus:bg-white focus:border focus:border-slate-200 rounded px-1.5 py-0.5 min-w-0"
+                  className="flex-1 text-sm text-black bg-transparent border-0 outline-none focus:bg-white focus:border focus:border-slate-200 rounded px-1.5 py-0.5 min-w-0"
                   placeholder="Nom du provider" />
-                <span className={`text-[10px] font-semibold flex-shrink-0 ${prov.enabled ? 'text-emerald-600' : 'text-slate-400'}`}>
+                <span className={`text-[10px] flex-shrink-0 ${prov.enabled ? 'text-emerald-600' : 'text-slate-400'}`}>
                   {prov.enabled ? 'Actif' : 'Inactif'}
                 </span>
                 <button type="button" onClick={() => updateEProvider(prov.id, { enabled: !prov.enabled })}
@@ -1479,8 +1479,8 @@ function SettingsTab({ schools }: { schools: School[] }) {
               <div className="px-5 py-4 space-y-4">
                 {prov.type === 'resend' ? (<>
                   <div>
-                    <p className={labelCls}>Clé API</p>
-                    <p className="text-xs text-slate-400 mb-1.5">Obtenir sur <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:underline">resend.com/api-keys</a> — commence par <code className="bg-slate-100 px-1 rounded">re_</code></p>
+                    <p className="text-xs text-black mb-1">Clé API</p>
+                    <p className="text-xs text-black mb-1.5">Obtenir sur <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:underline">resend.com/api-keys</a> — commence par <code className="bg-slate-100 px-1 rounded">re_</code></p>
                     <div className="flex gap-2">
                       <input type={showSecrets[prov.id] ? 'text' : 'password'} placeholder="re_xxxxxxxxxxxxxxxxxxxx"
                         value={prov.config.apiKey || ''}
@@ -1494,14 +1494,14 @@ function SettingsTab({ schools }: { schools: School[] }) {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <p className={labelCls}>Email d'envoi</p>
+                      <p className="text-xs text-black mb-1">Email d'envoi</p>
                       <input type="email" placeholder="noreply@tondomaine.com"
                         value={prov.config.fromEmail || ''}
                         onChange={e => updateEProviderConfig(prov.id, 'fromEmail', e.target.value)}
                         className={inputCls + ' text-xs'} />
                     </div>
                     <div>
-                      <p className={labelCls}>Nom d'envoi</p>
+                      <p className="text-xs text-black mb-1">Nom d'envoi</p>
                       <input type="text" placeholder="DJOLI"
                         value={prov.config.fromName || ''}
                         onChange={e => updateEProviderConfig(prov.id, 'fromName', e.target.value)}
@@ -1511,14 +1511,14 @@ function SettingsTab({ schools }: { schools: School[] }) {
                 </>) : (<>
                   <div className="grid grid-cols-3 gap-3">
                     <div className="col-span-2">
-                      <p className={labelCls}>Serveur SMTP</p>
+                      <p className="text-xs text-black mb-1">Serveur SMTP</p>
                       <input type="text" placeholder="smtp.votrehebergeur.com"
                         value={prov.config.host || ''}
                         onChange={e => updateEProviderConfig(prov.id, 'host', e.target.value)}
                         className={inputCls + ' text-xs'} />
                     </div>
                     <div>
-                      <p className={labelCls}>Port</p>
+                      <p className="text-xs text-black mb-1">Port</p>
                       <input type="number" placeholder="587"
                         value={prov.config.port || ''}
                         onChange={e => updateEProviderConfig(prov.id, 'port', parseInt(e.target.value) || 587)}
@@ -1526,7 +1526,7 @@ function SettingsTab({ schools }: { schools: School[] }) {
                     </div>
                   </div>
                   <div>
-                    <p className={labelCls}>Chiffrement</p>
+                    <p className="text-xs text-black mb-1">Chiffrement</p>
                     <div className="flex gap-5">
                       {([['false','TLS / STARTTLS','Port 587'],['true','SSL','Port 465']] as [string,string,string][]).map(([val, label, hint]) => (
                         <label key={val} className="flex items-center gap-1.5 cursor-pointer">
@@ -1534,22 +1534,22 @@ function SettingsTab({ schools }: { schools: School[] }) {
                             checked={String(prov.config.secure ?? false) === val}
                             onChange={() => updateEProviderConfig(prov.id, 'secure', val === 'true')}
                             className="accent-indigo-600 w-3.5 h-3.5" />
-                          <span className="text-xs text-slate-700">{label}</span>
-                          <span className="text-[10px] text-slate-400">{hint}</span>
+                          <span className="text-xs text-black">{label}</span>
+                          <span className="text-[10px] text-black">{hint}</span>
                         </label>
                       ))}
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <p className={labelCls}>Utilisateur SMTP</p>
+                      <p className="text-xs text-black mb-1">Utilisateur SMTP</p>
                       <input type="text" placeholder="contact@votredomaine.com"
                         value={prov.config.user || ''}
                         onChange={e => updateEProviderConfig(prov.id, 'user', e.target.value)}
                         className={inputCls + ' text-xs'} />
                     </div>
                     <div>
-                      <p className={labelCls}>Mot de passe</p>
+                      <p className="text-xs text-black mb-1">Mot de passe</p>
                       <div className="flex gap-2">
                         <input type={showSecrets[prov.id] ? 'text' : 'password'} placeholder="••••••••"
                           value={prov.config.password || ''}
@@ -1564,14 +1564,14 @@ function SettingsTab({ schools }: { schools: School[] }) {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <p className={labelCls}>Email d'envoi</p>
+                      <p className="text-xs text-black mb-1">Email d'envoi</p>
                       <input type="email" placeholder="noreply@votredomaine.com"
                         value={prov.config.fromEmail || ''}
                         onChange={e => updateEProviderConfig(prov.id, 'fromEmail', e.target.value)}
                         className={inputCls + ' text-xs'} />
                     </div>
                     <div>
-                      <p className={labelCls}>Nom d'envoi</p>
+                      <p className="text-xs text-black mb-1">Nom d'envoi</p>
                       <input type="text" placeholder="DJOLI"
                         value={prov.config.fromName || ''}
                         onChange={e => updateEProviderConfig(prov.id, 'fromName', e.target.value)}
@@ -1587,8 +1587,8 @@ function SettingsTab({ schools }: { schools: School[] }) {
           {emailPs.providers.length > 0 && (
             <div className="col-span-2 bg-white border border-slate-200 rounded-xl p-5 space-y-4">
               <div>
-                <p className={labelCls}>Routage par type d'email</p>
-                <p className="text-xs text-slate-400">Choisissez quel provider envoie chaque type d'email. "Automatique" = premier provider actif.</p>
+                <p className="text-xs text-black mb-1">Routage par type d'email</p>
+                <p className="text-xs text-black">Choisissez quel provider envoie chaque type d'email. "Automatique" = premier provider actif.</p>
               </div>
               <div className="space-y-1">
                 {([
@@ -1598,12 +1598,12 @@ function SettingsTab({ schools }: { schools: School[] }) {
                 ] as [ERoute, string, string][]).map(([route, label, hint]) => (
                   <div key={route} className="flex items-center gap-4 py-2.5 border-b border-slate-100 last:border-0">
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-slate-700">{label}</p>
-                      <p className="text-[10px] text-slate-400">{hint}</p>
+                      <p className="text-xs text-black">{label}</p>
+                      <p className="text-[10px] text-black">{hint}</p>
                     </div>
                     <select value={emailPs.routing[route] || ''}
                       onChange={e => setEmailPs(p => ({ ...p, routing: { ...p.routing, [route]: e.target.value } }))}
-                      className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 flex-shrink-0 min-w-[180px]">
+                      className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-indigo-300 flex-shrink-0 min-w-[180px]">
                       <option value="">Automatique (1er actif)</option>
                       {emailPs.providers.map(p => (
                         <option key={p.id} value={p.id}>{p.name}{!p.enabled ? ' (inactif)' : ''}</option>
