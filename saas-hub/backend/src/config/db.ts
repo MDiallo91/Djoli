@@ -45,6 +45,22 @@ export const DBconnect = async (): Promise<void> => {
     await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "logoUrl" TEXT`).catch(() => {});
     await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_code VARCHAR(8)`).catch(() => {});
     await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_expires_at TEXT`).catch(() => {});
+    // Table payments (créée automatiquement par sync mais on s'assure des colonnes)
+    await sequelize.query(`
+        CREATE TABLE IF NOT EXISTS payments (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            "schoolId" UUID NOT NULL,
+            plan INTEGER NOT NULL,
+            amount FLOAT NOT NULL,
+            currency VARCHAR(10) NOT NULL DEFAULT 'GNF',
+            gateway VARCHAR(50) NOT NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'pending',
+            reference VARCHAR(128),
+            metadata TEXT,
+            "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+    `).catch(() => {});
     _ready = true;
     console.log('PostgreSQL connecté et synchronisé');
 };

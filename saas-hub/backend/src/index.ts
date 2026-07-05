@@ -4,6 +4,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import UserModel from './models/userModel';
 import SchoolRecord from './models/schoolRecordModel';
+import Payment from './models/paymentModel';
 
 dotenv.config();
 

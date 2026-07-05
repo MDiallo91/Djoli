@@ -6,6 +6,7 @@ import {
   Building2, Key, Package, Menu, X, Briefcase, GraduationCap, DollarSign, CreditCard,
 } from 'lucide-react';
 import StructureSection from './school/StructureSection';
+import { SubscriptionPage } from './school/SubscriptionPage';
 import ImageUpload from './ui/ImageUpload';
 import StaffSection from './school/StaffSection';
 import GradesSection from './school/GradesSection';
@@ -635,41 +636,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
               BILLING
           ══════════════════════════════════════════ */}
           {activeNav === 'billing' && (
-            <>
-              <div className="bg-white rounded-2xl lg:rounded-3xl border border-slate-100 p-5 lg:p-8 shadow-sm">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold mb-3 ${isActive ? 'bg-secondary-50 text-secondary-700 border border-secondary-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
-                      {isActive ? <CheckCircle size={11} /> : <AlertCircle size={11} />}
-                      {isActive ? 'Abonnement Actif' : 'Abonnement Expiré'}
-                    </div>
-                    <h2 className="text-base lg:text-xl font-bold text-slate-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Plan de Gestion Scolaire Pro</h2>
-                    <p className="text-slate-500 text-xs mt-1 hidden sm:block">Accès complet · Sync cloud · Support prioritaire · 5 postes max</p>
-                  </div>
-                  <div className="text-right bg-slate-50 px-4 py-3 rounded-xl flex-shrink-0">
-                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mb-0.5">Expire le</p>
-                    <p className="font-bold text-slate-900 text-xs">{new Date(subscriptionExpiry).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
-                    {daysLeft > 0 && <p className={`text-[10px] font-semibold mt-0.5 ${daysLeft <= 7 ? 'text-amber-600' : 'text-secondary-600'}`}>{daysLeft}j restants</p>}
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-amber-50 border border-amber-100 rounded-2xl lg:rounded-3xl p-8 flex flex-col items-center text-center gap-4">
-                <div className="w-14 h-14 bg-amber-100 rounded-2xl flex items-center justify-center">
-                  <AlertCircle size={26} className="text-amber-600" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-base mb-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Renouvellement géré par l'administrateur</h3>
-                  <p className="text-slate-500 text-sm leading-relaxed max-w-sm">
-                    Le renouvellement de votre abonnement est effectué par l'administrateur DJOLI.<br />
-                    Contactez-le pour prolonger votre accès.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 bg-white border border-amber-200 rounded-xl px-4 py-2.5 text-sm font-medium text-amber-800">
-                  <span>support@djoli.app</span>
-                </div>
-              </div>
-            </>
+            <SubscriptionPage schoolName={profile.schoolName || user.schoolName} />
           )}
 
           {/* ══════════════════════════════════════════
