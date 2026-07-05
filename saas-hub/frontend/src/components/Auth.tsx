@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import {
   Mail, Lock, Eye, EyeOff, BookOpen, ArrowLeft, ArrowRight,
   Upload, FileText, CheckCircle, User, Phone,
-  Building2, X, ShieldCheck
+  Building2, X, ShieldCheck,
 } from 'lucide-react';
 import apiClient from '../lib/apiClient';
 import DocumentUpload from './ui/DocumentUpload';
@@ -14,7 +14,103 @@ interface AuthProps {
 }
 
 const inputCls = 'w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all bg-white placeholder:text-slate-400';
-const labelCls = 'block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide';
+const labelCls = 'block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider';
+
+// ─── Panneau gauche partagé ────────────────────────────────────
+function AuthPanel({ onBack, step, totalSteps, children }: {
+  onBack: () => void;
+  step?: number;
+  totalSteps?: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-h-screen flex">
+      {/* ── Colonne gauche ── */}
+      <div
+        className="hidden lg:flex lg:w-[44%] flex-col relative overflow-hidden"
+        style={{ background: 'linear-gradient(145deg, var(--primary-900) 0%, var(--primary-800) 60%, var(--primary-700) 100%)' }}
+      >
+        {/* Cercles décoratifs */}
+        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full opacity-10"
+          style={{ background: 'radial-gradient(circle, var(--primary-400), transparent 70%)' }} />
+        <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full opacity-10 translate-x-1/3 translate-y-1/3"
+          style={{ background: 'radial-gradient(circle, var(--primary-300), transparent 70%)' }} />
+        <div className="absolute top-1/2 -right-12 w-48 h-48 rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, white, transparent 70%)' }} />
+
+        {/* Contenu */}
+        <div className="relative flex flex-col h-full p-10">
+          {/* Top */}
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 text-white/50 hover:text-white text-sm font-medium transition-colors w-fit"
+          >
+            <ArrowLeft size={15} /> Retour au site
+          </button>
+
+          {/* Centre */}
+          <div className="flex-1 flex flex-col justify-center">
+            {/* Logo */}
+            <div className="flex items-center gap-3 mb-10">
+              <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20">
+                <BookOpen size={18} className="text-white" />
+              </div>
+              <span className="text-white font-bold text-lg tracking-tight">DJOLI</span>
+            </div>
+
+            <h2 className="text-4xl font-bold text-white leading-tight mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              La gestion scolaire<br />
+              <span className="text-white/60">réinventée.</span>
+            </h2>
+            <p className="text-white/50 text-sm leading-relaxed mb-10 max-w-xs">
+              Pilotez élèves, notes, paiements et personnels depuis une seule plateforme — en ligne ou hors ligne.
+            </p>
+
+            {/* Feature pills */}
+            <div className="space-y-3">
+              {[
+                { icon: '🔄', text: 'Synchronisation cloud automatique' },
+                { icon: '📶', text: 'Mode hors-ligne complet' },
+                { icon: '🔒', text: 'Données sécurisées & chiffrées' },
+              ].map(f => (
+                <div key={f.text} className="flex items-center gap-3">
+                  <span className="text-base">{f.icon}</span>
+                  <span className="text-white/65 text-sm">{f.text}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Progress steps */}
+            {step !== undefined && totalSteps !== undefined && (
+              <div className="flex items-center gap-2 mt-10">
+                {Array.from({ length: totalSteps }).map((_, i) => (
+                  <div key={i} className={`h-1 rounded-full transition-all ${i < step ? 'flex-1 bg-white' : i === step - 1 ? 'flex-[2] bg-white' : 'flex-1 bg-white/20'}`} />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Bottom */}
+          <p className="text-white/25 text-xs">© 2026 DJOLI — Tous droits réservés</p>
+        </div>
+      </div>
+
+      {/* ── Colonne droite ── */}
+      <div className="flex-1 flex items-center justify-center bg-slate-50 p-6 lg:p-10">
+        <div className="w-full max-w-md">
+          {/* Mobile: bouton retour */}
+          <button
+            onClick={onBack}
+            className="lg:hidden flex items-center gap-2 text-slate-400 hover:text-slate-700 text-sm font-medium mb-8 transition-colors"
+          >
+            <ArrowLeft size={15} /> Retour
+          </button>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─── File uploader helper ─────────────────────────────────────
 function FileUpload({ label, value, onChange, accept, hint }: {
@@ -65,7 +161,7 @@ function FileUpload({ label, value, onChange, accept, hint }: {
   );
 }
 
-// ─── OTP step (réutilisable) ──────────────────────────────────
+// ─── OTP step ─────────────────────────────────────────────────
 function OTPStep({ email, onSuccess, onResend, onBack }: {
   email: string; onSuccess: () => void;
   onResend: () => Promise<void>; onBack: () => void;
@@ -104,45 +200,42 @@ function OTPStep({ email, onSuccess, onResend, onBack }: {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-8" style={{ backgroundColor: '#f8fafc' }}>
-      <div className="w-full max-w-md">
-        <button onClick={onBack} className="flex items-center gap-2 text-slate-400 hover:text-slate-700 text-sm font-medium mb-8 transition-colors">
-          <ArrowLeft size={16} /> Retour
-        </button>
-        <div className="w-12 h-12 bg-primary-100 rounded-2xl flex items-center justify-center mb-6">
-          <ShieldCheck size={22} className="text-primary-600" />
+    <AuthPanel onBack={onBack}>
+      <div className="text-center mb-8">
+        <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-primary-100">
+          <ShieldCheck size={26} className="text-primary-600" />
         </div>
-        <h1 className="text-2xl font-bold text-slate-900 mb-1">Confirmez votre email</h1>
-        <p className="text-slate-500 text-sm mb-1">Un code à 6 chiffres a été envoyé à</p>
-        <p className="font-semibold text-slate-800 text-sm mb-8">{email}</p>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex gap-2 justify-center">
-            {otp.map((d, i) => (
-              <input key={i} ref={el => { inputsRef.current[i] = el; }}
-                type="text" inputMode="numeric" maxLength={1} value={d}
-                onChange={e => handleChange(i, e.target.value)}
-                onKeyDown={e => handleKey(i, e)}
-                className="w-12 h-14 text-center text-2xl font-bold border-2 border-slate-200 rounded-xl focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all bg-white" />
-            ))}
-          </div>
-          <button type="submit" disabled={loading || otp.join('').length < 6}
-            className="w-full py-3.5 bg-primary-600 text-white rounded-xl font-semibold text-sm hover:bg-primary-700 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
-            {loading ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Vérification…</> : 'Confirmer mon email'}
-          </button>
-        </form>
-        <p className="text-center text-xs text-slate-400 mt-4">
-          Code valable 10 minutes.{' '}
-          <button onClick={handleResend} className="text-primary-600 hover:underline font-medium">Renvoyer le code</button>
-        </p>
+        <h1 className="text-2xl font-bold text-slate-900 mb-2">Vérification email</h1>
+        <p className="text-slate-500 text-sm">Code envoyé à <span className="font-semibold text-slate-700">{email}</span></p>
       </div>
-    </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="flex gap-2.5 justify-center">
+          {otp.map((d, i) => (
+            <input key={i} ref={el => { inputsRef.current[i] = el; }}
+              type="text" inputMode="numeric" maxLength={1} value={d}
+              onChange={e => handleChange(i, e.target.value)}
+              onKeyDown={e => handleKey(i, e)}
+              className="w-12 h-14 text-center text-2xl font-bold border-2 border-slate-200 rounded-xl focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all bg-white" />
+          ))}
+        </div>
+        <button type="submit" disabled={loading || otp.join('').length < 6}
+          className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          style={{ background: 'linear-gradient(135deg, var(--primary-600), var(--primary-700))' }}>
+          {loading ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Vérification…</> : 'Confirmer mon email'}
+        </button>
+      </form>
+      <p className="text-center text-xs text-slate-400 mt-5">
+        Code valable 10 minutes.{' '}
+        <button onClick={handleResend} className="text-primary-600 hover:underline font-semibold">Renvoyer</button>
+      </p>
+    </AuthPanel>
   );
 }
 
-// ─── Login form (simple — pas d'OTP) ─────────────────────────
-function LoginForm({ onBack, onSuccess }: AuthProps) {
-  const [form, setForm]   = useState({ email: '', password: '' });
-  const [show, setShow]   = useState(false);
+// ─── Login form ────────────────────────────────────────────────
+function LoginForm({ onBack, onSuccess, onRegister }: AuthProps & { onRegister: () => void }) {
+  const [form, setForm]       = useState({ email: '', password: '' });
+  const [show, setShow]       = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -156,69 +249,55 @@ function LoginForm({ onBack, onSuccess }: AuthProps) {
   };
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: '#f8fafc' }}>
-      <div className="hidden lg:flex lg:w-2/5 flex-col justify-between p-12" style={{ backgroundColor: '#0f172a' }}>
-        <button onClick={onBack} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm font-medium transition-colors w-fit">
-          <ArrowLeft size={16} /> Retour au site
-        </button>
+    <AuthPanel onBack={onBack}>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-slate-900 mb-1.5">Connexion</h1>
+        <p className="text-slate-500 text-sm">Accédez à votre espace établissement.</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <div className="w-12 h-12 bg-primary-600 rounded-2xl flex items-center justify-center mb-8">
-            <BookOpen size={22} className="text-white" />
-          </div>
-          <h2 className="text-3xl font-bold text-white mb-4 leading-tight">Content de vous revoir !</h2>
-          <p className="text-slate-400 text-base leading-relaxed">Accédez à votre espace école pour gérer vos données et votre abonnement DJOLI.</p>
-          <div className="mt-10 space-y-3">
-            {['Synchronisation cloud illimitée', 'Mode hors-ligne complet', 'Support technique inclus'].map(f => (
-              <div key={f} className="flex items-center gap-3 text-slate-300">
-                <CheckCircle size={16} className="text-primary-400 flex-shrink-0" /> <span className="text-sm">{f}</span>
-              </div>
-            ))}
+          <label className={labelCls}>Adresse email</label>
+          <div className="relative">
+            <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input required type="email" autoComplete="email" placeholder="contact@ecole.com"
+              value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
+              className={inputCls + ' pl-10'} />
           </div>
         </div>
-        <p className="text-slate-600 text-xs">© 2026 DJOLI</p>
-      </div>
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          <button onClick={onBack} className="lg:hidden flex items-center gap-2 text-slate-400 hover:text-slate-700 text-sm font-medium mb-8 transition-colors">
-            <ArrowLeft size={16} /> Retour
-          </button>
-          <h1 className="text-2xl font-bold text-slate-900 mb-1">Connexion</h1>
-          <p className="text-slate-500 text-sm mb-8">Connectez-vous à votre espace école.</p>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className={labelCls}>Email</label>
-              <div className="relative">
-                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input required type="email" autoComplete="email" placeholder="contact@ecole.com" value={form.email}
-                  onChange={e => setForm({ ...form, email: e.target.value })} className={inputCls + ' pl-10'} />
-              </div>
-            </div>
-            <div>
-              <label className={labelCls}>Mot de passe</label>
-              <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input required type={show ? 'text' : 'password'} autoComplete="current-password" placeholder="••••••••"
-                  value={form.password} onChange={e => setForm({ ...form, password: e.target.value })}
-                  className={inputCls + ' pl-10 pr-10'} />
-                <button type="button" onClick={() => setShow(!show)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                  {show ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
-            <button type="submit" disabled={loading}
-              className="w-full py-3.5 bg-primary-600 text-white rounded-xl font-semibold text-sm hover:bg-primary-700 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
-              {loading ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Connexion…</> : 'Se connecter'}
+        <div>
+          <label className={labelCls}>Mot de passe</label>
+          <div className="relative">
+            <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input required type={show ? 'text' : 'password'} autoComplete="current-password" placeholder="••••••••"
+              value={form.password} onChange={e => setForm({ ...form, password: e.target.value })}
+              className={inputCls + ' pl-10 pr-10'} />
+            <button type="button" onClick={() => setShow(!show)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              {show ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
-          </form>
+          </div>
         </div>
-      </div>
-    </div>
+        <button type="submit" disabled={loading}
+          className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
+          style={{ background: 'linear-gradient(135deg, var(--primary-600), var(--primary-700))', boxShadow: '0 4px 14px rgba(var(--primary-600-rgb),0.35)' }}>
+          {loading
+            ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Connexion…</>
+            : 'Se connecter'}
+        </button>
+      </form>
+
+      <p className="text-center text-sm text-slate-400 mt-6">
+        Pas encore de compte ?{' '}
+        <button onClick={onRegister} className="text-primary-600 hover:underline font-semibold">Créer un compte école</button>
+      </p>
+    </AuthPanel>
   );
 }
 
 // ─── Register — Step 1 ────────────────────────────────────────
-function RegisterStep1({ onBack, onNext, data, setData }: {
-  onBack: () => void; onNext: () => void;
+function RegisterStep1({ onBack, onNext, onLogin, data, setData }: {
+  onBack: () => void; onNext: () => void; onLogin: () => void;
   data: any; setData: (d: any) => void;
 }) {
   const [show, setShow]   = useState(false);
@@ -227,104 +306,79 @@ function RegisterStep1({ onBack, onNext, data, setData }: {
   const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
     if (data.password !== data.confirmPassword) { toast.error('Les mots de passe ne correspondent pas.'); return; }
-    if (data.password.length < 8) { toast.error('Le mot de passe doit contenir au moins 8 caractères.'); return; }
-    if (!data.terms) { toast.error('Vous devez accepter les conditions d\'utilisation.'); return; }
+    if (data.password.length < 8) { toast.error('Minimum 8 caractères.'); return; }
+    if (!data.terms) { toast.error("Acceptez les conditions d'utilisation."); return; }
     onNext();
   };
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: '#f8fafc' }}>
-      <div className="hidden lg:flex lg:w-2/5 flex-col justify-between p-12" style={{ backgroundColor: '#0f172a' }}>
-        <button onClick={onBack} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm font-medium transition-colors w-fit">
-          <ArrowLeft size={16} /> Retour au site
-        </button>
+    <AuthPanel onBack={onBack} step={1} totalSteps={2}>
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-[11px] font-bold text-primary-600 bg-primary-50 px-2.5 py-1 rounded-full border border-primary-100">Étape 1 / 2</span>
+      </div>
+      <h1 className="text-2xl font-bold text-slate-900 mb-1">Créer un compte</h1>
+      <p className="text-slate-500 text-sm mb-7">Vos identifiants de connexion.</p>
+
+      <form onSubmit={handleNext} className="space-y-4">
         <div>
-          <div className="w-12 h-12 bg-primary-600 rounded-2xl flex items-center justify-center mb-8">
-            <BookOpen size={22} className="text-white" />
+          <label className={labelCls}>Email de connexion *</label>
+          <div className="relative">
+            <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input required type="email" placeholder="contact@ecole.com" value={data.email}
+              onChange={e => setData({ ...data, email: e.target.value })} className={inputCls + ' pl-10'} />
           </div>
-          {/* Progress */}
-          <div className="flex items-center gap-3 mb-10">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-primary-600 flex items-center justify-center text-white text-xs font-bold">1</div>
-              <span className="text-white text-sm font-medium">Accès</span>
-            </div>
-            <div className="flex-1 h-px bg-slate-700" />
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-slate-400 text-xs font-bold">2</div>
-              <span className="text-slate-400 text-sm">École & Responsable</span>
-            </div>
-          </div>
-          <h2 className="text-3xl font-bold text-white mb-4 leading-tight">Créez votre compte en 2 étapes</h2>
-          <p className="text-slate-400 leading-relaxed">Vos informations de connexion d'abord, puis les détails de votre établissement.</p>
         </div>
-        <p className="text-slate-600 text-xs">© 2026 DJOLI</p>
-      </div>
-
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          <button onClick={onBack} className="lg:hidden flex items-center gap-2 text-slate-400 hover:text-slate-700 text-sm font-medium mb-8 transition-colors">
-            <ArrowLeft size={16} /> Retour
-          </button>
-
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-bold text-primary-600 bg-primary-50 px-2.5 py-1 rounded-full">Étape 1 / 2</span>
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-1">Informations de connexion</h1>
-          <p className="text-slate-500 text-sm mb-8">Ces identifiants vous serviront à vous connecter.</p>
-
-          <form onSubmit={handleNext} className="space-y-4">
-            <div>
-              <label className={labelCls}>Email de connexion *</label>
-              <div className="relative">
-                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input required type="email" placeholder="contact@ecole.com" value={data.email}
-                  onChange={e => setData({ ...data, email: e.target.value })} className={inputCls + ' pl-10'} />
-              </div>
-            </div>
-            <div>
-              <label className={labelCls}>Mot de passe *</label>
-              <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input required type={show ? 'text' : 'password'} placeholder="Minimum 8 caractères" value={data.password}
-                  onChange={e => setData({ ...data, password: e.target.value })} className={inputCls + ' pl-10 pr-10'} />
-                <button type="button" onClick={() => setShow(!show)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                  {show ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
-            <div>
-              <label className={labelCls}>Confirmer le mot de passe *</label>
-              <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input required type={show2 ? 'text' : 'password'} placeholder="Répétez le mot de passe" value={data.confirmPassword}
-                  onChange={e => setData({ ...data, confirmPassword: e.target.value })} className={inputCls + ' pl-10 pr-10'} />
-                <button type="button" onClick={() => setShow2(!show2)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                  {show2 ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
-
-            <label className="flex items-start gap-3 cursor-pointer group">
-              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${data.terms ? 'bg-primary-600 border-primary-600' : 'border-slate-300 group-hover:border-primary-400'}`}
-                onClick={() => setData({ ...data, terms: !data.terms })}>
-                {data.terms && <CheckCircle size={12} className="text-white" />}
-              </div>
-              <span className="text-sm text-slate-600 leading-relaxed">
-                J'accepte les{' '}
-                <a href="#" className="text-primary-600 hover:underline font-medium">Conditions d'utilisation</a>{' '}
-                et la{' '}
-                <a href="#" className="text-primary-600 hover:underline font-medium">Politique de confidentialité</a>
-              </span>
-            </label>
-
-            <button type="submit"
-              className="w-full py-3.5 bg-primary-600 text-white rounded-xl font-semibold text-sm hover:bg-primary-700 transition-all flex items-center justify-center gap-2">
-              Continuer <ArrowRight size={16} />
+        <div>
+          <label className={labelCls}>Mot de passe *</label>
+          <div className="relative">
+            <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input required type={show ? 'text' : 'password'} placeholder="Minimum 8 caractères" value={data.password}
+              onChange={e => setData({ ...data, password: e.target.value })} className={inputCls + ' pl-10 pr-10'} />
+            <button type="button" onClick={() => setShow(!show)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              {show ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
-          </form>
+          </div>
         </div>
-      </div>
-    </div>
+        <div>
+          <label className={labelCls}>Confirmer le mot de passe *</label>
+          <div className="relative">
+            <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input required type={show2 ? 'text' : 'password'} placeholder="Répétez le mot de passe" value={data.confirmPassword}
+              onChange={e => setData({ ...data, confirmPassword: e.target.value })} className={inputCls + ' pl-10 pr-10'} />
+            <button type="button" onClick={() => setShow2(!show2)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              {show2 ? <EyeOff size={15} /> : <Eye size={15} />}
+            </button>
+          </div>
+        </div>
+
+        <label className="flex items-start gap-3 cursor-pointer group pt-1">
+          <div
+            className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${data.terms ? 'bg-primary-600 border-primary-600' : 'border-slate-300 group-hover:border-primary-400'}`}
+            onClick={() => setData({ ...data, terms: !data.terms })}>
+            {data.terms && <CheckCircle size={11} className="text-white" />}
+          </div>
+          <span className="text-sm text-slate-500 leading-relaxed">
+            J'accepte les{' '}
+            <a href="#" className="text-primary-600 hover:underline font-semibold">Conditions d'utilisation</a>{' '}
+            et la{' '}
+            <a href="#" className="text-primary-600 hover:underline font-semibold">Politique de confidentialité</a>
+          </span>
+        </label>
+
+        <button type="submit"
+          className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2"
+          style={{ background: 'linear-gradient(135deg, var(--primary-600), var(--primary-700))', boxShadow: '0 4px 14px rgba(var(--primary-600-rgb),0.35)' }}>
+          Continuer <ArrowRight size={15} />
+        </button>
+      </form>
+
+      <p className="text-center text-sm text-slate-400 mt-6">
+        Déjà un compte ?{' '}
+        <button onClick={onLogin} className="text-primary-600 hover:underline font-semibold">Se connecter</button>
+      </p>
+    </AuthPanel>
   );
 }
 
@@ -337,54 +391,50 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!data.schoolName?.trim())    { toast.error('Le nom de l\'école est requis.'); return; }
-    if (!data.country?.trim())       { toast.error('Le pays est requis.'); return; }
-    if (!data.city?.trim())          { toast.error('La ville est requise.'); return; }
-    if (!data.prefecture?.trim())    { toast.error('La préfecture / commune est requise.'); return; }
+    if (!data.schoolName?.trim())    { toast.error("Nom de l'école requis."); return; }
+    if (!data.country?.trim())       { toast.error('Pays requis.'); return; }
+    if (!data.city?.trim())          { toast.error('Ville requise.'); return; }
+    if (!data.prefecture?.trim())    { toast.error('Préfecture / Commune requise.'); return; }
     if (!data.levels?.length)        { toast.error('Sélectionnez au moins un cycle scolaire.'); return; }
-    if (!data.directorName?.trim())  { toast.error('Le nom du responsable est requis.'); return; }
-    if (!data.directorPhone?.trim()) { toast.error('Le téléphone du responsable est requis.'); return; }
+    if (!data.directorName?.trim())  { toast.error('Nom du responsable requis.'); return; }
+    if (!data.directorPhone?.trim()) { toast.error('Téléphone du responsable requis.'); return; }
     onSubmit(e);
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f8fafc' }}>
-      {/* Top bar */}
-      <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-6 py-4 flex items-center gap-4">
-        <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 text-sm font-medium transition-colors">
-          <ArrowLeft size={16} /> Retour
+    <div className="min-h-screen bg-slate-50">
+      {/* Topbar sticky */}
+      <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-6 py-3.5 flex items-center gap-4 shadow-sm">
+        <button onClick={onBack}
+          className="flex items-center gap-2 text-slate-500 hover:text-slate-900 text-sm font-medium transition-colors">
+          <ArrowLeft size={15} /> Retour
         </button>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-primary-600 bg-primary-50 px-2.5 py-1 rounded-full">Étape 2 / 2</span>
-            <span className="text-sm text-slate-500">Informations de l'établissement & responsable</span>
-          </div>
+        <div className="flex-1 flex items-center gap-3">
+          <span className="text-[11px] font-bold text-primary-600 bg-primary-50 px-2.5 py-1 rounded-full border border-primary-100">Étape 2 / 2</span>
+          <span className="text-sm text-slate-400 hidden sm:block">Informations de l'établissement & responsable</span>
         </div>
-        {/* Progress bar */}
-        <div className="hidden md:flex items-center gap-2">
-          <div className="w-4 h-4 rounded-full bg-primary-600 flex items-center justify-center"><CheckCircle size={10} className="text-white" /></div>
-          <div className="w-16 h-1 bg-primary-600 rounded-full" />
-          <div className="w-4 h-4 rounded-full bg-primary-600 flex items-center justify-center text-white text-[10px] font-bold">2</div>
+        <div className="hidden md:flex items-center gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-primary-600" />
+          <div className="w-12 h-1 bg-primary-600 rounded-full" />
+          <div className="w-2.5 h-2.5 rounded-full bg-primary-600" />
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-6 py-8">
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* ── Section 1: École ── */}
-          <div>
-            <div className="flex items-center gap-2 mb-5">
-              <div className="w-7 h-7 rounded-lg bg-primary-600 flex items-center justify-center flex-shrink-0">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* ── École ── */}
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50/60">
+              <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center flex-shrink-0">
                 <Building2 size={14} className="text-white" />
               </div>
-              <h2 className="text-base font-semibold text-slate-900">Informations de l'école</h2>
+              <h2 className="text-sm font-semibold text-slate-800">Informations de l'école</h2>
             </div>
-
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+            <div className="p-6 space-y-4">
               <div>
                 <label className={labelCls}>Nom de l'établissement *</label>
                 <input className={inputCls} value={data.schoolName || ''} onChange={e => set('schoolName', e.target.value)} placeholder="École Excellence 224" />
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={labelCls}>Pays *</label>
@@ -399,74 +449,50 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
                   <input className={inputCls} value={data.prefecture || ''} onChange={e => set('prefecture', e.target.value)} placeholder="RATOMA" />
                 </div>
                 <div>
-                  <label className={labelCls}>Sous-préfecture <span className="text-slate-400 font-normal normal-case">(optionnel)</span></label>
+                  <label className={labelCls}>Sous-préfecture <span className="normal-case font-normal text-slate-400">(optionnel)</span></label>
                   <input className={inputCls} value={data.sousPrefecture || ''} onChange={e => set('sousPrefecture', e.target.value)} placeholder="YATTAYA" />
                 </div>
-                <div>
-                  <label className={labelCls}>District <span className="text-slate-400 font-normal normal-case">(optionnel)</span></label>
-                  <input className={inputCls} value={data.district || ''} onChange={e => set('district', e.target.value)} placeholder="District de Conakry" />
-                </div>
                 <div className="col-span-2">
-                  <label className={labelCls}>Cycles scolaires * <span className="text-slate-400 font-normal normal-case">(un ou plusieurs)</span></label>
-                  <div className="grid grid-cols-2 gap-2 mt-1">
-                    {(['Maternelle','Primaire','Collège','Lycée'] as const).map(lvl => {
-                      const checked = (data.levels || []).includes(lvl)
+                  <label className={labelCls}>Cycles scolaires * <span className="normal-case font-normal text-slate-400">(un ou plusieurs)</span></label>
+                  <div className="grid grid-cols-2 gap-2 mt-1.5">
+                    {(['Maternelle', 'Primaire', 'Collège', 'Lycée'] as const).map(lvl => {
+                      const checked = (data.levels || []).includes(lvl);
                       return (
                         <label key={lvl}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all select-none ${
-                            checked ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-slate-200 hover:border-slate-300 text-slate-700'
-                          }`}
+                          className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 cursor-pointer transition-all select-none ${checked ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-slate-200 hover:border-slate-300 text-slate-600'}`}
                           onClick={() => {
-                            const cur = data.levels || []
-                            setData({ ...data, levels: checked ? cur.filter((l: string) => l !== lvl) : [...cur, lvl] })
-                          }}
-                        >
-                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                            checked ? 'bg-primary-600 border-primary-600' : 'border-slate-300'
-                          }`}>
+                            const cur = data.levels || [];
+                            setData({ ...data, levels: checked ? cur.filter((l: string) => l !== lvl) : [...cur, lvl] });
+                          }}>
+                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${checked ? 'bg-primary-600 border-primary-600' : 'border-slate-300'}`}>
                             {checked && <CheckCircle size={10} className="text-white" />}
                           </div>
                           <span className="text-sm font-medium">{lvl}</span>
                         </label>
-                      )
+                      );
                     })}
                   </div>
                 </div>
               </div>
-
-              <FileUpload
-                label="Logo de l'école"
-                value={data.logoUrl || ''}
-                onChange={v => setData({ ...data, logoUrl: v })}
-                accept="image/*"
-                hint="PNG, JPG, SVG — max 5 Mo"
-              />
-
-              <DocumentUpload
-                label="Document RCCM"
-                value={data.rccmUrl || ''}
-                onChange={v => setData({ ...data, rccmUrl: v })}
-                hint="PDF ou image — max 10 Mo"
-                optional
-              />
+              <FileUpload label="Logo de l'école" value={data.logoUrl || ''} onChange={v => setData({ ...data, logoUrl: v })} accept="image/*" hint="PNG, JPG, SVG — max 5 Mo" />
+              <DocumentUpload label="Document RCCM" value={data.rccmUrl || ''} onChange={v => setData({ ...data, rccmUrl: v })} hint="PDF ou image — max 10 Mo" optional />
             </div>
           </div>
 
-          {/* ── Section 2: Responsable ── */}
-          <div>
-            <div className="flex items-center gap-2 mb-5">
-              <div className="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center flex-shrink-0">
+          {/* ── Responsable ── */}
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50/60">
+              <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center flex-shrink-0">
                 <User size={14} className="text-white" />
               </div>
-              <h2 className="text-base font-semibold text-slate-900">Informations du responsable</h2>
+              <h2 className="text-sm font-semibold text-slate-800">Informations du responsable</h2>
             </div>
-
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+            <div className="p-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={labelCls}>Nom complet *</label>
                   <div className="relative">
-                    <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input className={inputCls + ' pl-10'} value={data.directorName || ''} onChange={e => set('directorName', e.target.value)} placeholder="M. Diallo Mamadou" />
                   </div>
                 </div>
@@ -474,20 +500,20 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
                   <label className={labelCls}>Titre / Fonction *</label>
                   <select className={inputCls} value={data.directorTitle || ''} onChange={e => set('directorTitle', e.target.value)}>
                     <option value="">Sélectionner…</option>
-                    {['Directeur général','Directrice générale','Proviseur','Proviseure','Gérant','Administrateur'].map(t => <option key={t}>{t}</option>)}
+                    {['Directeur général', 'Directrice générale', 'Proviseur', 'Proviseure', 'Gérant', 'Administrateur'].map(t => <option key={t}>{t}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className={labelCls}>Téléphone *</label>
                   <div className="relative">
-                    <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input type="tel" className={inputCls + ' pl-10'} value={data.directorPhone || ''} onChange={e => set('directorPhone', e.target.value)} placeholder="+224 620 00 00 00" />
                   </div>
                 </div>
                 <div>
                   <label className={labelCls}>Email du responsable</label>
                   <div className="relative">
-                    <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input type="email" className={inputCls + ' pl-10'} value={data.directorEmail || ''} onChange={e => set('directorEmail', e.target.value)} placeholder={data.email || 'email@ecole.com'} />
                   </div>
                 </div>
@@ -496,38 +522,37 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
           </div>
 
           <button type="submit" disabled={loading}
-            className="w-full py-4 bg-primary-600 text-white rounded-xl font-semibold text-base hover:bg-primary-700 transition-all disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg shadow-primary-600/20">
+            className="w-full py-4 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            style={{ background: 'linear-gradient(135deg, var(--primary-600), var(--primary-700))', boxShadow: '0 4px 18px rgba(var(--primary-600-rgb),0.35)' }}>
             {loading
               ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Envoi en cours…</>
-              : <><CheckCircle size={18} /> Soumettre ma demande d'inscription</>
-            }
+              : <><CheckCircle size={17} /> Soumettre ma demande d'inscription</>}
           </button>
-
-          <p className="text-center text-xs text-slate-400">
-            Votre demande sera examinée par notre équipe sous 24–48h.
-          </p>
+          <p className="text-center text-xs text-slate-400">Votre demande sera examinée sous 24–48h.</p>
         </form>
       </div>
     </div>
   );
 }
 
-// ─── Success page ─────────────────────────────────────────────
+// ─── Success ──────────────────────────────────────────────────
 function RegisterSuccess({ schoolName, onBack }: { schoolName: string; onBack: () => void }) {
   return (
-    <div className="min-h-screen flex items-center justify-center p-8" style={{ backgroundColor: '#f8fafc' }}>
-      <div className="max-w-md text-center">
-        <div className="w-16 h-16 bg-secondary-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle size={32} className="text-secondary-600" />
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-8">
+      <div className="max-w-sm w-full text-center">
+        <div className="w-16 h-16 bg-secondary-100 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-secondary-200">
+          <CheckCircle size={30} className="text-secondary-600" />
         </div>
         <h1 className="text-2xl font-bold text-slate-900 mb-3">Demande envoyée !</h1>
-        <p className="text-slate-500 leading-relaxed mb-2">
-          Votre dossier pour <span className="font-semibold text-slate-700">"{schoolName}"</span> a bien été reçu.
+        <p className="text-slate-500 text-sm leading-relaxed mb-2">
+          Votre dossier pour <span className="font-semibold text-slate-700">"{schoolName}"</span> a été reçu.
         </p>
         <p className="text-slate-400 text-sm mb-8">
-          Notre équipe va examiner votre demande et vous contactera par email sous <strong>24–48h</strong> pour activation.
+          Notre équipe vous contactera par email sous <strong>24–48h</strong> pour l'activation.
         </p>
-        <button onClick={onBack} className="px-8 py-3 bg-primary-600 text-white rounded-xl font-semibold text-sm hover:bg-primary-700 transition-all">
+        <button onClick={onBack}
+          className="px-8 py-3 text-white rounded-xl font-semibold text-sm transition-all"
+          style={{ background: 'linear-gradient(135deg, var(--primary-600), var(--primary-700))' }}>
           Retour à l'accueil
         </button>
       </div>
@@ -537,7 +562,7 @@ function RegisterSuccess({ schoolName, onBack }: { schoolName: string; onBack: (
 
 // ─── Main Auth component ──────────────────────────────────────
 export const Auth: React.FC<AuthProps> = ({ onBack, onSuccess }) => {
-  const [view, setView]   = useState<'choice' | 'login' | 'register-1' | 'register-2' | 'otp' | 'success'>('choice');
+  const [view, setView]       = useState<'login' | 'register-1' | 'register-2' | 'otp' | 'success'>('login');
   const [loading, setLoading] = useState(false);
   const [otpEmail, setOtpEmail] = useState('');
 
@@ -567,17 +592,14 @@ export const Auth: React.FC<AuthProps> = ({ onBack, onSuccess }) => {
       });
       if (res.data?.step === 'otp') {
         setOtpEmail(res.data.email || regData.email);
-        if (res.data.warning) {
-          toast.warning(res.data.warning);
-        } else {
-          toast.success('Un code de confirmation a été envoyé sur votre email.');
-        }
+        if (res.data.warning) toast.warning(res.data.warning);
+        else toast.success('Code de confirmation envoyé sur votre email.');
         setView('otp');
       } else {
         setView('success');
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de l\'inscription');
+      toast.error(err.response?.data?.message || err.response?.data?.error || "Erreur lors de l'inscription");
     } finally { setLoading(false); }
   };
 
@@ -585,44 +607,9 @@ export const Auth: React.FC<AuthProps> = ({ onBack, onSuccess }) => {
     await apiClient.post('/user/resend-otp', { email: otpEmail });
   };
 
-  if (view === 'login')      return <LoginForm onBack={() => setView('choice')} onSuccess={onSuccess} />;
-  if (view === 'register-1') return <RegisterStep1 onBack={() => setView('choice')} onNext={() => setView('register-2')} data={regData} setData={setRegData} />;
+  if (view === 'login')      return <LoginForm onBack={onBack} onSuccess={onSuccess} onRegister={() => setView('register-1')} />;
+  if (view === 'register-1') return <RegisterStep1 onBack={onBack} onNext={() => setView('register-2')} onLogin={() => setView('login')} data={regData} setData={setRegData} />;
   if (view === 'register-2') return <RegisterStep2 onBack={() => setView('register-1')} onSubmit={handleRegisterSubmit} data={regData} setData={setRegData} loading={loading} />;
   if (view === 'otp')        return <OTPStep email={otpEmail} onBack={() => setView('register-2')} onSuccess={() => setView('success')} onResend={handleResendOtp} />;
-  if (view === 'success')    return <RegisterSuccess schoolName={regData.schoolName} onBack={onBack} />;
-
-  // Choice screen
-  return (
-    <div className="min-h-screen flex items-center justify-center p-8" style={{ backgroundColor: '#f8fafc' }}>
-      <div className="w-full max-w-sm">
-        <button onClick={onBack} className="flex items-center gap-2 text-slate-400 hover:text-slate-700 text-sm font-medium mb-10 transition-colors">
-          <ArrowLeft size={16} /> Retour au site
-        </button>
-
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
-            <BookOpen size={18} className="text-white" />
-          </div>
-          <div>
-            <p className="font-bold text-slate-900">DJOLI</p>
-            <p className="text-xs text-slate-400">Portail établissements</p>
-          </div>
-        </div>
-
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">Bienvenue</h1>
-        <p className="text-slate-500 text-sm mb-8">Connectez-vous ou créez votre espace école.</p>
-
-        <div className="space-y-3">
-          <button onClick={() => setView('login')}
-            className="w-full py-3.5 bg-primary-600 text-white rounded-xl font-semibold text-sm hover:bg-primary-700 transition-all flex items-center justify-center gap-2">
-            Se connecter
-          </button>
-          <button onClick={() => setView('register-1')}
-            className="w-full py-3.5 bg-white text-slate-700 border border-slate-200 rounded-xl font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-2">
-            Créer un compte école
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  return <RegisterSuccess schoolName={regData.schoolName} onBack={onBack} />;
 };

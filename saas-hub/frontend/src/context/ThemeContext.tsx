@@ -6,7 +6,7 @@
  * - Expose useDark() pour le toggle dark mode
  */
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useLayoutEffect, useCallback, type ReactNode } from 'react';
 import { injectTheme } from '../lib/colorSystem';
 
 const DEFAULT_PRIMARY   = '#4f46e5';
@@ -31,9 +31,21 @@ const ThemeContext = createContext<ThemeCtx>({
 });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [primary,   setPrimary]   = useState(DEFAULT_PRIMARY);
-  const [secondary, setSecondary] = useState(DEFAULT_SECONDARY);
-  const [dark,      setDark]      = useState(() => localStorage.getItem(STORAGE_DARK) === '1');
+  const [primary, setPrimary] = useState(() => {
+    try {
+      const s = localStorage.getItem(STORAGE_SITE);
+      if (s) return JSON.parse(s).primaryColor || DEFAULT_PRIMARY;
+    } catch {}
+    return DEFAULT_PRIMARY;
+  });
+  const [secondary, setSecondary] = useState(() => {
+    try {
+      const s = localStorage.getItem(STORAGE_SITE);
+      if (s) return JSON.parse(s).secondaryColor || DEFAULT_SECONDARY;
+    } catch {}
+    return DEFAULT_SECONDARY;
+  });
+  const [dark, setDark] = useState(() => localStorage.getItem(STORAGE_DARK) === '1');
 
   const apply = useCallback((p: string, s: string, d: boolean) => {
     setPrimary(p);
@@ -41,15 +53,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     injectTheme(p, s, d);
   }, []);
 
-  // Charge les couleurs depuis localStorage, sans appel réseau (évite le flash)
-  useEffect(() => {
-    const cached = localStorage.getItem(STORAGE_SITE);
-    const cfg: SiteConfig = cached ? JSON.parse(cached) : {};
-    apply(
-      cfg.primaryColor   || DEFAULT_PRIMARY,
-      cfg.secondaryColor || DEFAULT_SECONDARY,
-      dark,
-    );
+  // Injection synchrone avant le premier paint — évite tout flash de couleurs
+  useLayoutEffect(() => {
+    injectTheme(primary, secondary, dark);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
