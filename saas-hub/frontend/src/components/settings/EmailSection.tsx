@@ -126,131 +126,130 @@ export function EmailSection() {
         </div>
       )}
 
-      {/* Cards providers */}
+      {/* Cards providers — 2 par ligne */}
       <div className="grid grid-cols-2 gap-4">
         {state.providers.map(prov => (
-          <div key={prov.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-            {/* Header card */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 bg-white">
-              <span className={`text-[10px] px-2 py-0.5 rounded-full tracking-wider flex-shrink-0 ${prov.type === 'resend' ? 'bg-primary-100 text-primary-700' : 'bg-sky-100 text-sky-700'}`}>
+          <div key={prov.id} className={`bg-white border rounded-xl overflow-hidden transition-all ${prov.enabled ? 'border-primary-200 shadow-sm' : 'border-slate-200'}`}>
+
+            {/* Header */}
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100">
+              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-widest flex-shrink-0 ${prov.type === 'resend' ? 'bg-primary-100 text-primary-700' : 'bg-sky-100 text-sky-700'}`}>
                 {prov.type === 'resend' ? 'RESEND' : 'SMTP'}
               </span>
               <input type="text" value={prov.name} onChange={e => update(prov.id, { name: e.target.value })}
-                className="flex-1 text-sm text-black bg-transparent border-0 outline-none focus:bg-white focus:border focus:border-slate-200 rounded px-1.5 py-0.5 min-w-0"
+                className="flex-1 text-sm font-semibold text-slate-800 bg-transparent border-0 outline-none focus:bg-slate-50 rounded px-1.5 py-0.5 min-w-0"
                 placeholder="Nom du provider" />
-              <span className={`text-[10px] flex-shrink-0 ${prov.enabled ? 'text-secondary-600' : 'text-slate-400'}`}>
+              <span className={`text-xs font-medium flex-shrink-0 ${prov.enabled ? 'text-secondary-600' : 'text-rose-400'}`}>
                 {prov.enabled ? 'Actif' : 'Inactif'}
               </span>
               <button type="button" onClick={() => update(prov.id, { enabled: !prov.enabled })}
-                className={`relative inline-flex w-9 h-5 flex-shrink-0 rounded-full transition-colors ${prov.enabled ? 'bg-secondary-500' : 'bg-slate-200'}`}>
-                <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${prov.enabled ? 'translate-x-4' : ''}`}/>
+                className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full transition-colors ${prov.enabled ? 'bg-secondary-500' : 'bg-rose-300'}`}>
+                <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${prov.enabled ? 'translate-x-4' : ''}`} />
               </button>
               <button type="button" onClick={() => remove(prov.id)}
                 className="w-7 h-7 flex items-center justify-center text-slate-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-all flex-shrink-0">
-                <Trash2 size={12}/>
+                <Trash2 size={13} />
               </button>
             </div>
 
             {/* Corps credentials */}
-            <div className="px-5 py-4 space-y-4">
+            <div className="p-5">
               {prov.type === 'resend' ? (
-                <>
-                  <div>
-                    <p className="text-xs text-black mb-1">Clé API</p>
-                    <p className="text-xs text-black mb-1.5">
-                      Obtenir sur <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:underline">resend.com/api-keys</a> — commence par <code className="bg-slate-100 px-1 rounded">re_</code>
-                    </p>
+                <div className="grid grid-cols-3 gap-4">
+                  {/* Clé API */}
+                  <div className="col-span-3">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Clé API</p>
                     <div className="flex gap-2">
                       <input type={secrets[prov.id] ? 'text' : 'password'} placeholder="re_xxxxxxxxxxxxxxxxxxxx"
                         value={prov.config.apiKey || ''} onChange={e => updateCfg(prov.id, 'apiKey', e.target.value)}
                         className={inputCls + ' font-mono text-xs'} />
                       <button type="button" onClick={() => setSecrets(p => ({ ...p, [prov.id]: !p[prov.id] }))}
                         className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-400 hover:bg-slate-50 transition-all">
-                        {secrets[prov.id] ? <EyeOff size={14}/> : <Eye size={14}/>}
+                        {secrets[prov.id] ? <EyeOff size={14} /> : <Eye size={14} />}
                       </button>
                     </div>
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      Obtenir sur <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:underline">resend.com/api-keys</a> — commence par <code className="bg-slate-100 px-1 rounded">re_</code>
+                    </p>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <p className="text-xs text-black mb-1">Email d'envoi</p>
-                      <input type="email" placeholder="noreply@tondomaine.com"
-                        value={prov.config.fromEmail || ''} onChange={e => updateCfg(prov.id, 'fromEmail', e.target.value)}
-                        className={inputCls + ' text-xs'} />
-                    </div>
-                    <div>
-                      <p className="text-xs text-black mb-1">Nom d'envoi</p>
-                      <input type="text" placeholder="DJOLI"
-                        value={prov.config.fromName || ''} onChange={e => updateCfg(prov.id, 'fromName', e.target.value)}
-                        className={inputCls + ' text-xs'} />
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="col-span-2">
-                      <p className="text-xs text-black mb-1">Serveur SMTP</p>
-                      <input type="text" placeholder="smtp.votrehebergeur.com"
-                        value={prov.config.host || ''} onChange={e => updateCfg(prov.id, 'host', e.target.value)}
-                        className={inputCls + ' text-xs'} />
-                    </div>
-                    <div>
-                      <p className="text-xs text-black mb-1">Port</p>
-                      <input type="number" placeholder="587"
-                        value={prov.config.port || ''} onChange={e => updateCfg(prov.id, 'port', parseInt(e.target.value) || 587)}
-                        className={inputCls + ' text-xs'} />
-                    </div>
+                  {/* Email + Nom */}
+                  <div className="col-span-2">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Email d'envoi</p>
+                    <input type="email" placeholder="noreply@tondomaine.com"
+                      value={prov.config.fromEmail || ''} onChange={e => updateCfg(prov.id, 'fromEmail', e.target.value)}
+                      className={inputCls + ' text-xs'} />
                   </div>
                   <div>
-                    <p className="text-xs text-black mb-1">Chiffrement</p>
-                    <div className="flex gap-5">
-                      {([['false','TLS / STARTTLS','Port 587'],['true','SSL','Port 465']] as [string,string,string][]).map(([val, label, hint]) => (
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Nom d'envoi</p>
+                    <input type="text" placeholder="DJOLI"
+                      value={prov.config.fromName || ''} onChange={e => updateCfg(prov.id, 'fromName', e.target.value)}
+                      className={inputCls + ' text-xs'} />
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-4">
+                  {/* Serveur + Port */}
+                  <div className="col-span-2">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Serveur SMTP</p>
+                    <input type="text" placeholder="smtp.votrehebergeur.com"
+                      value={prov.config.host || ''} onChange={e => updateCfg(prov.id, 'host', e.target.value)}
+                      className={inputCls + ' text-xs'} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Port</p>
+                    <input type="number" placeholder="587"
+                      value={prov.config.port || ''} onChange={e => updateCfg(prov.id, 'port', parseInt(e.target.value) || 587)}
+                      className={inputCls + ' text-xs'} />
+                  </div>
+                  {/* Chiffrement */}
+                  <div className="col-span-3">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Chiffrement</p>
+                    <div className="flex gap-6">
+                      {([['false', 'TLS / STARTTLS', 'Port 587'], ['true', 'SSL', 'Port 465']] as [string, string, string][]).map(([val, label, hint]) => (
                         <label key={val} className="flex items-center gap-1.5 cursor-pointer">
                           <input type="radio" name={`ssl_${prov.id}`}
                             checked={String(prov.config.secure ?? false) === val}
                             onChange={() => updateCfg(prov.id, 'secure', val === 'true')}
                             className="accent-primary-600 w-3.5 h-3.5" />
-                          <span className="text-xs text-black">{label}</span>
-                          <span className="text-[10px] text-black">{hint}</span>
+                          <span className="text-xs text-slate-700">{label}</span>
+                          <span className="text-[10px] text-slate-400">{hint}</span>
                         </label>
                       ))}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <p className="text-xs text-black mb-1">Utilisateur SMTP</p>
-                      <input type="text" placeholder="contact@votredomaine.com"
-                        value={prov.config.user || ''} onChange={e => updateCfg(prov.id, 'user', e.target.value)}
+                  {/* Utilisateur + Mot de passe */}
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Utilisateur</p>
+                    <input type="text" placeholder="contact@votredomaine.com"
+                      value={prov.config.user || ''} onChange={e => updateCfg(prov.id, 'user', e.target.value)}
+                      className={inputCls + ' text-xs'} />
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Mot de passe</p>
+                    <div className="flex gap-2">
+                      <input type={secrets[prov.id] ? 'text' : 'password'} placeholder="••••••••"
+                        value={prov.config.password || ''} onChange={e => updateCfg(prov.id, 'password', e.target.value)}
                         className={inputCls + ' text-xs'} />
-                    </div>
-                    <div>
-                      <p className="text-xs text-black mb-1">Mot de passe</p>
-                      <div className="flex gap-2">
-                        <input type={secrets[prov.id] ? 'text' : 'password'} placeholder="••••••••"
-                          value={prov.config.password || ''} onChange={e => updateCfg(prov.id, 'password', e.target.value)}
-                          className={inputCls + ' text-xs'} />
-                        <button type="button" onClick={() => setSecrets(p => ({ ...p, [prov.id]: !p[prov.id] }))}
-                          className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-400 hover:bg-slate-50 transition-all">
-                          {secrets[prov.id] ? <EyeOff size={14}/> : <Eye size={14}/>}
-                        </button>
-                      </div>
+                      <button type="button" onClick={() => setSecrets(p => ({ ...p, [prov.id]: !p[prov.id] }))}
+                        className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-400 hover:bg-slate-50 transition-all">
+                        {secrets[prov.id] ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <p className="text-xs text-black mb-1">Email d'envoi</p>
-                      <input type="email" placeholder="noreply@votredomaine.com"
-                        value={prov.config.fromEmail || ''} onChange={e => updateCfg(prov.id, 'fromEmail', e.target.value)}
-                        className={inputCls + ' text-xs'} />
-                    </div>
-                    <div>
-                      <p className="text-xs text-black mb-1">Nom d'envoi</p>
-                      <input type="text" placeholder="DJOLI"
-                        value={prov.config.fromName || ''} onChange={e => updateCfg(prov.id, 'fromName', e.target.value)}
-                        className={inputCls + ' text-xs'} />
-                    </div>
+                  {/* Email + Nom d'envoi */}
+                  <div className="col-span-2">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Email d'envoi</p>
+                    <input type="email" placeholder="noreply@votredomaine.com"
+                      value={prov.config.fromEmail || ''} onChange={e => updateCfg(prov.id, 'fromEmail', e.target.value)}
+                      className={inputCls + ' text-xs'} />
                   </div>
-                </>
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Nom d'envoi</p>
+                    <input type="text" placeholder="DJOLI"
+                      value={prov.config.fromName || ''} onChange={e => updateCfg(prov.id, 'fromName', e.target.value)}
+                      className={inputCls + ' text-xs'} />
+                  </div>
+                </div>
               )}
             </div>
           </div>

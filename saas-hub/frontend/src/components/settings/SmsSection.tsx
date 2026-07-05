@@ -210,17 +210,19 @@ export function SmsSection() {
           <p className="text-sm font-semibold text-slate-800">Templates de messages</p>
           <p className="text-xs text-slate-500 mt-0.5">Personnalisez les messages envoyés pour chaque événement.</p>
         </div>
-        {settings.templates.map(tpl => (
-          <EventTemplateForm
-            key={tpl.event}
-            label={tpl.label}
-            enabled={tpl.enabled}
-            onToggle={v => updateTemplate(tpl.event, { enabled: v })}
-            value={tpl.template}
-            onChange={v => updateTemplate(tpl.event, { template: v })}
-            placeholders={tpl.placeholders}
-          />
-        ))}
+        <div className="grid grid-cols-2 gap-3">
+          {settings.templates.map(tpl => (
+            <EventTemplateForm
+              key={tpl.event}
+              label={tpl.label}
+              enabled={tpl.enabled}
+              onToggle={v => updateTemplate(tpl.event, { enabled: v })}
+              value={tpl.template}
+              onChange={v => updateTemplate(tpl.event, { template: v })}
+              placeholders={tpl.placeholders}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="flex justify-end">

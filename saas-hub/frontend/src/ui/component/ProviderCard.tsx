@@ -32,13 +32,9 @@ export function ProviderCard({
   name, logo, initials, enabled, onToggle, badge, children, footer,
 }: ProviderCardProps) {
   return (
-    <div className={[
-      'bg-white border rounded-xl overflow-hidden transition-all',
-      enabled ? 'border-primary-200 shadow-sm' : 'border-slate-200',
-    ].join(' ')}>
+    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100">
-        {/* Logo */}
         {logo ? (
           <img src={logo} alt={name} className="w-8 h-8 object-contain rounded-lg flex-shrink-0" />
         ) : (
@@ -52,17 +48,16 @@ export function ProviderCard({
           {badge && <div className="mt-0.5">{badge}</div>}
         </div>
 
-        {/* Toggle activé/désactivé */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className={`text-xs font-medium ${enabled ? 'text-secondary-600' : 'text-slate-400'}`}>
+          <span className={`text-xs font-medium ${enabled ? 'text-secondary-600' : 'text-rose-400'}`}>
             {enabled ? 'Actif' : 'Inactif'}
           </span>
           <SwitchToggle checked={enabled} onChange={onToggle} />
         </div>
       </div>
 
-      {/* Credentials — visibles seulement si activé */}
-      {enabled && children && (
+      {/* Credentials — toujours visibles */}
+      {children && (
         <div className="px-4 py-4 space-y-3">
           {children}
         </div>

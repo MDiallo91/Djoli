@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { fetchLatestRelease } from '../lib/githubRelease';
 import type { GithubRelease } from '../lib/githubRelease';
 import { Link, useNavigate } from 'react-router-dom';
@@ -51,7 +51,6 @@ function useSiteConfig() {
         if (!all) throw new Error('no data');
         let merged = { ...DEFAULT_CFG };
         for (const sec of CFG_SECTIONS) {
-          // N'applique que les sections actives (statut === 1)
           if (all[sec]?.statut === 1 && all[sec]?.data) {
             merged = { ...merged, ...all[sec].data };
           }
@@ -59,7 +58,6 @@ function useSiteConfig() {
         applyWithSchools(merged);
       })
       .catch(() => {
-        // Fallback localStorage si API indisponible
         try {
           const s = localStorage.getItem('hub_site_config');
           if (s) applyWithSchools({ ...DEFAULT_CFG, ...JSON.parse(s) });
@@ -239,6 +237,12 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
         .site-highlight { background-color: var(--cp) !important; border-color: var(--cp) !important; }
         .site-logo-badge { background-color: var(--cp) !important; }
         .site-active-dot { background-color: var(--cp); }
+        .site-dark-bg { background-color: color-mix(in srgb, var(--cp) 22%, #000 78%); }
+        .site-dark-border { border-color: color-mix(in srgb, var(--cp) 35%, transparent 65%); }
+        .site-marquee-bg { background: linear-gradient(135deg, color-mix(in srgb, var(--cp) 5%, #f8fafc) 0%, color-mix(in srgb, var(--cp) 3%, #f1f5f9) 100%); }
+        .site-marquee-fade-l { background: linear-gradient(to right, color-mix(in srgb, var(--cp) 5%, #f8fafc), transparent); }
+        .site-marquee-fade-r { background: linear-gradient(to left, color-mix(in srgb, var(--cp) 3%, #f1f5f9), transparent); }
+        .site-section-badge { background-color: color-mix(in srgb, var(--cp) 10%, transparent); color: var(--cp); border: 1px solid color-mix(in srgb, var(--cp) 25%, transparent); }
       `}</style>
 
       {/* ─── VIDEO MODAL ──────────────────────────────────────── */}
@@ -306,13 +310,16 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
 
         {mobileMenu && (
           <div className="md:hidden bg-white border-t border-slate-100 px-6 py-4 space-y-3">
-            {NAV_LINKS.map(l => <a key={l} href={`#${l.toLowerCase()}`} className="block text-sm font-medium text-slate-600 py-2">{l}</a>)}
+            {NAV_LINKS.map(l => <a key={l} href={`#${l.toLowerCase()}`} onClick={() => setMobileMenu(false)} className="block text-sm font-medium text-slate-600 py-2 border-b border-slate-50 last:border-0">{l}</a>)}
             {release && (
-              <a href={release.downloadUrl} download className="w-full flex items-center justify-center gap-2 mt-2 border border-slate-200 text-slate-700 py-3 rounded-xl font-semibold text-sm">
+              <a href={release.downloadUrl} download className="w-full flex items-center justify-center gap-2 border border-slate-200 text-slate-700 py-3 rounded-xl font-semibold text-sm">
                 <Download size={15} /> Télécharger l'application
               </a>
             )}
-            <button onClick={onGetStarted} className="w-full mt-2 site-btn py-3 rounded-xl font-semibold text-sm">Essai gratuit</button>
+            <button onClick={onGetStarted} className="w-full border border-slate-200 text-slate-700 py-3 rounded-xl font-semibold text-sm hover:bg-slate-50 transition-colors">
+              Connexion
+            </button>
+            <button onClick={onGetStarted} className="w-full site-btn py-3 rounded-xl font-semibold text-sm">Essai gratuit</button>
           </div>
         )}
       </nav>
@@ -334,15 +341,6 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
 
         <div className="relative z-10 max-w-5xl mx-auto text-center space-y-8">
 
-          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold ${
-            cfg.heroBgUrl
-              ? 'bg-white/15 border border-white/30 text-white backdrop-blur-sm'
-              : 'bg-primary-50 border border-primary-200 text-primary-700'
-          }`}>
-            <span className="site-active-dot w-2 h-2 rounded-full animate-pulse" />
-            Version 2.0 — Nouveau design & synchronisation cloud
-            <ChevronRight size={13} />
-          </div>
 
           <h1
             className={`text-5xl sm:text-6xl md:text-7xl font-bold leading-[1.05] tracking-tight ${cfg.heroBgUrl ? 'text-white' : 'text-slate-900'}`}
@@ -429,7 +427,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
         const loop = [...padded, ...padded];
 
         return (
-          <section className="py-14 border-y border-slate-100 overflow-hidden" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}>
+          <section className="site-marquee-bg py-14 border-y border-slate-100 overflow-hidden">
             <style>{`
               @keyframes marquee-scroll {
                 from { transform: translateX(0); }
@@ -449,8 +447,8 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
 
             <div className="relative">
               {/* Fade edges */}
-              <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-32 z-10" style={{ background: 'linear-gradient(to right, #f8fafc, transparent)' }} />
-              <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-32 z-10" style={{ background: 'linear-gradient(to left, #f1f5f9, transparent)' }} />
+              <div className="site-marquee-fade-l pointer-events-none absolute left-0 top-0 bottom-0 w-32 z-10" />
+              <div className="site-marquee-fade-r pointer-events-none absolute right-0 top-0 bottom-0 w-32 z-10" />
 
               <div className="overflow-hidden">
                 <div className="marquee-track">
@@ -477,7 +475,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
       <section id="fonctionnalités" className="py-28 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-20 space-y-4">
-            <div className="inline-flex items-center gap-2 bg-primary-50 text-primary-700 border border-primary-200 px-4 py-2 rounded-full text-xs font-semibold">
+            <div className="site-section-badge inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold">
               <Zap size={13} /> Tout ce dont une école a besoin
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
@@ -558,7 +556,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 text-white">
           <div className="space-y-2">
             <h3 className="text-2xl md:text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Prêt à moderniser votre école ?</h3>
-            <p className="text-primary-200 font-medium">Rejoignez 500+ établissements qui gèrent mieux grâce à DJOLI.</p>
+            <p className="text-white/70 font-medium">Rejoignez 500+ établissements qui gèrent mieux grâce à DJOLI.</p>
           </div>
           <button onClick={onGetStarted} className="site-btn-outline flex items-center gap-3 bg-white px-8 py-4 rounded-2xl font-bold text-sm border-2 hover:-translate-y-1 transition-all shadow-2xl whitespace-nowrap">
             Commencer gratuitement <ArrowRight size={16} />
@@ -670,7 +668,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
       </section>
 
       {/* ─── DOWNLOAD ──────────────────────────────────────────── */}
-      <section className="py-20 px-6 bg-slate-900">
+      <section className="site-dark-bg py-20 px-6">
         <div className="max-w-4xl mx-auto text-center text-white space-y-8">
           <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center mx-auto">
             <Download size={32} className="text-white" />
@@ -789,7 +787,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
       </section>
 
       {/* ─── FOOTER ────────────────────────────────────────────── */}
-      <footer className="bg-slate-900 text-white py-12 px-6">
+      <footer className="site-dark-bg text-white py-12 px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start gap-10">
           {/* Brand */}
           <div className="space-y-3 max-w-xs">
@@ -824,7 +822,7 @@ export const LandingPage = (_props?: { onGetStarted?: () => void }) => {
             </div>
           </div>
         </div>
-        <div className="max-w-6xl mx-auto mt-10 pt-6 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500">
+        <div className="max-w-6xl mx-auto mt-10 pt-6 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-white/40">
           <p>© 2026 {cfg.siteName || 'DJOLI'}. Tous droits réservés.</p>
           <p>Conçu avec ❤️ pour l'éducation africaine</p>
         </div>

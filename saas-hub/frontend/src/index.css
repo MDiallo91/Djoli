@@ -21,7 +21,9 @@
   html { scroll-behavior: smooth; }
   body {
     font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-    @apply bg-slate-50 text-gray-900 m-0 p-0 antialiased;
+    @apply m-0 p-0 antialiased;
+    background-color: var(--bg, #f8fafc);
+    color: var(--text-default, #0f172a);
     font-feature-settings: "cv02","cv03","cv04","cv11";
   }
   h1, h2, h3, h4 { font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif; letter-spacing: -0.02em; }
@@ -203,8 +205,8 @@
 
 /* ─── Page patterns ─── */
 .hero-gradient {
-  background: radial-gradient(ellipse 80% 50% at 50% -20%,rgba(79,70,229,.1) 0%,transparent 60%),
-              radial-gradient(ellipse 60% 40% at 80% 50%,rgba(79,70,229,.05) 0%,transparent 50%);
+  background: radial-gradient(ellipse 80% 50% at 50% -20%, color-mix(in srgb, var(--cp, #4f46e5) 12%, transparent) 0%, transparent 60%),
+              radial-gradient(ellipse 60% 40% at 80% 50%, color-mix(in srgb, var(--cp, #4f46e5) 6%, transparent) 0%, transparent 50%);
 }
 .dot-grid {
   background-image: radial-gradient(circle,#e2e8f0 1px,transparent 1px);
@@ -223,4 +225,75 @@
 @media print {
   .no-print { display: none !important; }
   body { background: white !important; }
+}
+
+/* ─── Dark mode — scoped à .admin-shell uniquement ─── */
+/* La landing page ne contient pas .admin-shell → jamais affectée. */
+.dark { color-scheme: dark; }
+
+.dark .admin-shell {
+  background-color: var(--bg);
+  color: var(--text-default);
+}
+
+/* Surfaces — :not(span) préserve le thumb blanc des toggles */
+.dark .admin-shell .bg-white:not(span)    { background-color: var(--surface)   !important; }
+.dark .admin-shell .bg-slate-50:not(span) { background-color: var(--bg)        !important; }
+.dark .admin-shell .bg-slate-100:not(span){ background-color: var(--surface-2) !important; }
+.dark .admin-shell .bg-slate-50\/70       { background-color: var(--surface-2) !important; }
+.dark .admin-shell .bg-slate-800:not(span){ background-color: var(--surface)   !important; }
+
+/* Textes */
+.dark .admin-shell .text-slate-900,
+.dark .admin-shell .text-slate-800 { color: var(--text-default)        !important; }
+.dark .admin-shell .text-slate-700  { color: rgba(226,232,240,0.90)    !important; }
+.dark .admin-shell .text-slate-600  { color: rgba(203,213,225,0.75)    !important; }
+.dark .admin-shell .text-slate-500  { color: var(--text-muted)         !important; }
+.dark .admin-shell .text-slate-400  { color: rgba(148,163,184,0.55)    !important; }
+.dark .admin-shell .text-black       { color: var(--text-default)       !important; }
+
+/* Bordures */
+.dark .admin-shell .border-slate-200  { border-color: var(--border-color)    !important; }
+.dark .admin-shell .border-slate-100  { border-color: rgba(255,255,255,0.07) !important; }
+.dark .admin-shell .divide-slate-100 > * + * { border-color: rgba(255,255,255,0.07) !important; }
+.dark .admin-shell .divide-slate-50  > * + * { border-color: rgba(255,255,255,0.04) !important; }
+
+/* Inputs */
+.dark .admin-shell input:not([type=radio]):not([type=checkbox]):not([type=color]):not([type=range]),
+.dark .admin-shell textarea,
+.dark .admin-shell select {
+  background-color: var(--surface-2) !important;
+  color: var(--text-default)         !important;
+  border-color: var(--border-color)  !important;
+}
+.dark .admin-shell input::placeholder,
+.dark .admin-shell textarea::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.55;
+}
+
+/* Tableaux */
+.dark .admin-shell table tbody tr:hover { background-color: var(--surface-2) !important; }
+
+/* Ombres */
+.dark .admin-shell .shadow-sm { box-shadow: 0 1px 4px  rgba(0,0,0,0.45) !important; }
+.dark .admin-shell .shadow-md { box-shadow: 0 4px 14px rgba(0,0,0,0.55) !important; }
+.dark .admin-shell .shadow-xl { box-shadow: 0 8px 28px rgba(0,0,0,0.65) !important; }
+
+/* Hover */
+.dark .admin-shell .hover\:bg-slate-50:hover  { background-color: var(--surface-2) !important; }
+.dark .admin-shell .hover\:bg-slate-100:hover { background-color: var(--surface-2) !important; }
+
+/* Bannières amber / blue */
+.dark .admin-shell .bg-amber-50     { background-color: rgba(245,158,11,0.10) !important; }
+.dark .admin-shell .border-amber-200{ border-color:     rgba(245,158,11,0.28) !important; }
+.dark .admin-shell .text-amber-700  { color: rgb(251,191,36)  !important; }
+.dark .admin-shell .bg-blue-50      { background-color: rgba(59,130,246,0.10) !important; }
+.dark .admin-shell .border-blue-200 { border-color:     rgba(59,130,246,0.28) !important; }
+.dark .admin-shell .text-blue-700   { color: rgb(147,197,253) !important; }
+
+/* StatutToggle wrapper */
+.dark .admin-shell .bg-slate-50.border-slate-100 {
+  background-color: var(--surface-2) !important;
+  border-color: rgba(255,255,255,0.07) !important;
 }

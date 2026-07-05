@@ -36,18 +36,20 @@ export function EventTemplateForm({
   };
 
   return (
-    <div className={[
-      'border rounded-xl p-4 transition-all',
-      enabled ? 'border-primary-100 bg-primary-50/30' : 'border-slate-100 bg-slate-50/50',
-    ].join(' ')}>
-      {/* Header : label + toggle */}
-      <div className="flex items-center justify-between mb-3">
+    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
         <p className="text-xs font-semibold text-slate-700">{label}</p>
-        <SwitchToggle checked={enabled} onChange={onToggle} />
+        <div className="flex items-center gap-2">
+          <span className={`text-xs font-medium ${enabled ? 'text-secondary-600' : 'text-rose-400'}`}>
+            {enabled ? 'Actif' : 'Inactif'}
+          </span>
+          <SwitchToggle checked={enabled} onChange={onToggle} />
+        </div>
       </div>
 
       {enabled && (
-        <div className="space-y-2">
+        <div className="px-4 py-3 space-y-2">
           {/* Champ titre (push seulement) */}
           {onTitleChange !== undefined && (
             <input

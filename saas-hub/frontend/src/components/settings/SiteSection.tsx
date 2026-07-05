@@ -60,38 +60,44 @@ export function SiteSection() {
     <div className="space-y-4">
       <StatutToggle value={statut} onChange={setStatut} />
 
-      {/* Identité */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-        <div>
-          <label className="block text-xs text-black mb-1.5">Nom du site</label>
-          <input className={inputCls} value={data.siteName} onChange={e => set('siteName', e.target.value)} placeholder="DJOLI" />
-        </div>
-        <FileUpload
-          label="Logo du site"
-          value={data.logoUrl}
-          onChange={v => set('logoUrl', v)}
-          accept="image/*"
-          hint="PNG ou SVG avec fond transparent recommandé"
-        />
-      </div>
+      {/* Identité + Couleurs sur la même ligne */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <div className="grid grid-cols-2 gap-6">
+          {/* Colonne gauche : nom + logo */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs text-black mb-1.5">Nom du site</label>
+              <input className={inputCls} value={data.siteName} onChange={e => set('siteName', e.target.value)} placeholder="DJOLI" />
+            </div>
+            <FileUpload
+              label="Logo du site"
+              value={data.logoUrl}
+              onChange={v => set('logoUrl', v)}
+              accept="image/*"
+              hint="PNG ou SVG avec fond transparent recommandé"
+            />
+          </div>
 
-      {/* Couleurs */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-5">
-        <p className="text-xs text-black">Couleurs</p>
-        <ColorPicker
-          label="Couleur primaire"
-          value={data.primaryColor || '#4f46e5'}
-          onChange={v => set('primaryColor', v)}
-          hint="Boutons, liens actifs, accents principaux"
-        />
-        <ColorPicker
-          label="Couleur secondaire"
-          value={data.secondaryColor || '#10b981'}
-          onChange={v => set('secondaryColor', v)}
-          hint="Dégradés, éléments de succès, highlights"
-        />
-        {/* Aperçu */}
-        <div className="rounded-xl overflow-hidden border border-slate-100">
+          {/* Colonne droite : couleurs */}
+          <div className="space-y-4">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Couleurs</p>
+            <ColorPicker
+              label="Couleur primaire"
+              value={data.primaryColor || '#4f46e5'}
+              onChange={v => set('primaryColor', v)}
+              // hint="Boutons, liens actifs, accents principaux"
+            />
+            <ColorPicker
+              label="Couleur secondaire"
+              value={data.secondaryColor || '#10b981'}
+              onChange={v => set('secondaryColor', v)}
+              // hint="Dégradés, éléments de succès, highlights"
+            />
+          </div>
+        </div>
+
+        {/* Aperçu — pleine largeur sous la grille */}
+        {/* <div className="rounded-xl overflow-hidden border border-slate-100 mt-5">
           <div className="p-3 text-xs text-black bg-slate-50 border-b border-slate-100">Aperçu</div>
           <div className="p-4 bg-white flex items-center gap-3 flex-wrap">
             <button className="px-4 py-2 rounded-lg text-white text-sm shadow-sm" style={{ backgroundColor: data.primaryColor || '#4f46e5' }}>Bouton principal</button>
@@ -99,7 +105,7 @@ export function SiteSection() {
             <span className="text-sm" style={{ color: data.primaryColor || '#4f46e5' }}>Lien / Texte actif</span>
             <div className="h-6 w-24 rounded-full" style={{ background: `linear-gradient(135deg, ${data.primaryColor || '#4f46e5'}, ${data.secondaryColor || '#10b981'})` }} />
           </div>
-        </div>
+        </div> */}
       </div>
 
       <div className="flex justify-end">

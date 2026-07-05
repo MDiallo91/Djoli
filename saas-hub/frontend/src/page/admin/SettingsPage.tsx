@@ -122,7 +122,7 @@ export function SettingsPage() {
     <div className="space-y-0 w-full">
       {/* Titre */}
       <div className="mb-6">
-        <h1 className="text-base text-black">Paramètres Hub</h1>
+        <h1 className="text-base text-slate-900 dark:text-slate-100">Paramètres Hub</h1>
       </div>
 
       {/* Navigation groupes */}
@@ -135,8 +135,8 @@ export function SettingsPage() {
             className={[
               'px-4 py-2 rounded-lg text-xs font-semibold transition-all border',
               g.id === activeGroupId
-                ? 'bg-slate-900 text-white border-slate-900'
-                : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400 hover:text-slate-800',
+                ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
+                : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400 hover:text-slate-800 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 dark:hover:text-slate-200',
             ].join(' ')}
           >
             {g.label}
@@ -146,7 +146,7 @@ export function SettingsPage() {
 
       {/* Sous-onglets du groupe actif */}
       {activeGroup.sections.length > 1 && (
-        <div className="flex border-b border-slate-200 mb-6 overflow-x-auto scrollbar-none">
+        <div className="flex border-b border-slate-200 dark:border-slate-700 mb-6 overflow-x-auto scrollbar-none">
           {activeGroup.sections.map(s => (
             <button
               key={s.id}
@@ -155,8 +155,8 @@ export function SettingsPage() {
               className={[
                 'flex-shrink-0 px-4 py-3 text-sm border-b-2 -mb-px transition-all whitespace-nowrap',
                 section === s.id
-                  ? 'border-slate-900 text-black'
-                  : 'border-transparent text-black/50 hover:text-black',
+                  ? 'border-slate-900 text-slate-900 dark:border-white dark:text-white'
+                  : 'border-transparent text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300',
               ].join(' ')}
             >
               {s.label}
