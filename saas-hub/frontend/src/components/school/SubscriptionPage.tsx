@@ -304,6 +304,7 @@ function PaymentHistory({ history }: { history: HistoryEntry[] }) {
 
 export function SubscriptionPage({ schoolName }: { schoolName: string }) {
   const [info,        setInfo]        = useState<SubscriptionInfo | null>(null);
+  const [error,       setError]       = useState<string | null>(null);
   const [history,     setHistory]     = useState<HistoryEntry[]>([]);
   const [loading,     setLoading]     = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
@@ -313,20 +314,21 @@ export function SubscriptionPage({ schoolName }: { schoolName: string }) {
 
   const load = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const [infoRes, histRes] = await Promise.all([
-        apiClient.get('/subscription/info'),
-        apiClient.get('/subscription/payment/history'),
-      ]);
+      const infoRes = await apiClient.get('/subscription/info', { timeout: 10000 });
       setInfo(infoRes.data);
-      setHistory(histRes.data ?? []);
-      // Pré-sélectionner le plan populaire (90j)
       if (!selectedPlan) setSelectedPlan(90);
-    } catch {
-      toast.error('Impossible de charger les informations d\'abonnement');
+    } catch (err: any) {
+      setError(err?.message || 'Impossible de charger les informations d\'abonnement');
     } finally {
       setLoading(false);
     }
+    // Historique en arrière-plan — ne bloque pas l'affichage
+    try {
+      const histRes = await apiClient.get('/subscription/payment/history', { timeout: 10000 });
+      setHistory(histRes.data ?? []);
+    } catch { /* silencieux */ }
   };
 
   useEffect(() => { load(); }, []);
@@ -355,7 +357,26 @@ export function SubscriptionPage({ schoolName }: { schoolName: string }) {
     );
   }
 
-  if (!info) return null;
+  if (error || !info) {
+    return (
+      <div className="max-w-lg mx-auto mt-12 bg-white rounded-2xl border border-red-100 p-8 text-center space-y-4">
+        <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mx-auto">
+          <AlertTriangle size={22} className="text-red-500" />
+        </div>
+        <div>
+          <p className="font-semibold text-slate-900">Impossible de charger les données</p>
+          {error && <p className="text-xs text-slate-400 mt-1 font-mono bg-slate-50 rounded-lg px-3 py-2 text-left break-all">{error}</p>}
+        </div>
+        <button
+          onClick={load}
+          className="flex items-center gap-2 mx-auto px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+          style={{ background: 'linear-gradient(135deg, var(--primary-600), var(--primary-700))' }}
+        >
+          <RefreshCw size={14} /> Réessayer
+        </button>
+      </div>
+    );
+  }
 
   const hasGateways  = info.gateways.length > 0;
   const selectedPlanObj = info.plans.find(p => p.days === selectedPlan);

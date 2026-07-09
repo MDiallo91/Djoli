@@ -13,7 +13,7 @@ export default function StructureSection() {
 
   const [isClassModal, setIsClassModal]   = useState(false);
   const [isSubjectModal, setIsSubjectModal] = useState(false);
-  const [isYearModal, setIsYearModal]     = useState(false);
+  const [isYearModal, setIsYearModal]   = useState(false);
 
   const [newClass, setNewClass]     = useState({ name: '', level: 'Primaire' });
   const [newSubject, setNewSubject] = useState({ name: '', coefficient: 1 });

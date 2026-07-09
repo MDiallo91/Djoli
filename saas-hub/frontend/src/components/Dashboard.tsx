@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate as useRRNavigate, useParams } from 'react-router-dom';
 import {
   LogOut, Wallet, Download, CheckCircle, AlertCircle,
   Zap, Settings, Bell, BookOpen, Users, Award,
@@ -51,8 +52,19 @@ const NAV_ACCOUNT = [
 ];
 const NAV = [...NAV_SCHOOL, ...NAV_ACCOUNT];
 
+const VALID_TABS = ['overview','students','cards','grades','finance','staff','structure','billing','downloads','settings'] as const;
+type Tab = typeof VALID_TABS[number];
+
 export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
-  const [activeNav, setActiveNav] = useState('overview');
+  const pushTab = useRRNavigate();
+  const { tab } = useParams<{ tab?: string }>();
+  const [activeNav, setActiveNav] = useState<Tab>(
+    VALID_TABS.includes(tab as Tab) ? (tab as Tab) : 'overview'
+  );
+
+  useEffect(() => {
+    setActiveNav(VALID_TABS.includes(tab as Tab) ? (tab as Tab) : 'overview');
+  }, [tab]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [bulletinStudent, setBulletinStudent] = useState<any>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState(user.subscriptionStatus);
@@ -125,9 +137,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     }
   }, [activeNav]);
 
-  // Fermer sidebar mobile quand on change d'onglet
   const navigate = (id: string) => {
-    setActiveNav(id);
+    setActiveNav(id as Tab);
+    pushTab(id === 'overview' ? '/dashboard' : `/dashboard/${id}`, { replace: false });
     setSidebarOpen(false);
     setBulletinStudent(null);
   };

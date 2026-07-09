@@ -4,38 +4,64 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Pass pg directly via dialectModule so Sequelize never does require('pg')
-// dynamically — this is required when bundled with ncc (@vercel/node)
 const sequelize = new Sequelize(process.env.DATABASE_URL!, {
     dialect: 'postgres',
     dialectModule: pg,
     dialectOptions: {
-        ssl: process.env.NODE_ENV === 'production'
-            ? { require: true, rejectUnauthorized: false }
-            : false,
+        ssl: { require: true, rejectUnauthorized: false },
     },
     logging: false,
-    pool: { max: 5, min: 0, acquire: 30_000, idle: 10_000 },
+    pool: { max: 5, min: 1, acquire: 30_000, idle: 45_000 },
 });
 
-let _ready = false;
+let _schemaReady = false;
 
-export const DBconnect = async (): Promise<void> => {
-    if (_ready) return;
-
-    const MAX_ATTEMPTS = 8;
-    const DELAY_MS     = 3_000;
+/** Probe raw pg.Client — réveille Neon sans bloquer le pool Sequelize */
+async function probeNeon(): Promise<void> {
+    const MAX_ATTEMPTS = 12;
+    const DELAY_MS     = 5_000;
+    let lastErr: any;
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        const client = new pg.Client({
+            connectionString: process.env.DATABASE_URL,
+            ssl: { rejectUnauthorized: false },
+            connectionTimeoutMillis: 20_000,
+        } as any);
         try {
-            await sequelize.authenticate();
-            break;
+            await client.connect();
+            await client.query('SELECT 1');
+            await client.end();
+            return;
         } catch (err: any) {
-            const isLastAttempt = attempt === MAX_ATTEMPTS;
-            if (isLastAttempt) throw err;
-            // Neon se réveille en ~2-5 s — on patiente
-            console.log(`DB non disponible (tentative ${attempt}/${MAX_ATTEMPTS}), réessai dans ${DELAY_MS / 1000}s…`);
-            await new Promise(r => setTimeout(r, DELAY_MS));
+            lastErr = err;
+            try { await client.end(); } catch {}
+            if (attempt < MAX_ATTEMPTS) {
+                console.log(`DB non disponible (tentative ${attempt}/${MAX_ATTEMPTS}), réessai dans ${DELAY_MS / 1000}s…`);
+                await new Promise(r => setTimeout(r, DELAY_MS));
+            }
+        }
+    }
+    throw lastErr;
+}
+
+/**
+ * Appelé UNE FOIS au démarrage (dans index.ts).
+ * Les requêtes HTTP n'appellent PAS DBconnect() — le pool min:1 maintient
+ * la connexion, le keepalive empêche Neon d'entrer en veille.
+ */
+export const DBconnect = async (): Promise<void> => {
+    if (_schemaReady) return;
+
+    // Probe + auth avec retry pour couvrir le cold start Neon (~15-30s)
+    await probeNeon();
+
+    for (let i = 1; i <= 5; i++) {
+        try { await sequelize.authenticate(); break; }
+        catch (e: any) {
+            if (i === 5) throw e;
+            console.log(`Sequelize auth échec (tentative ${i}/5), réessai dans 4s…`);
+            await new Promise(r => setTimeout(r, 4_000));
         }
     }
 
@@ -45,7 +71,7 @@ export const DBconnect = async (): Promise<void> => {
     await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "logoUrl" TEXT`).catch(() => {});
     await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_code VARCHAR(8)`).catch(() => {});
     await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_expires_at TEXT`).catch(() => {});
-    // Table payments (créée automatiquement par sync mais on s'assure des colonnes)
+    await sequelize.query(`ALTER TABLE school_records ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`).catch(() => {});
     await sequelize.query(`
         CREATE TABLE IF NOT EXISTS payments (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -61,8 +87,22 @@ export const DBconnect = async (): Promise<void> => {
             "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
     `).catch(() => {});
-    _ready = true;
+    _schemaReady = true;
     console.log('PostgreSQL connecté et synchronisé');
 };
+
+// Keepalive local dev — ping via le pool Sequelize toutes les 45s
+// Empêche Neon d'auto-suspendre (free tier: 1 min d'inactivité) et garde min:1 vivant
+if (!process.env.VERCEL) {
+    setInterval(() => {
+        const t = new Date().toISOString().slice(11, 19);
+        sequelize.query('SELECT 1').then(() => {
+            console.log(`[keepalive ${t}] pool OK`);
+        }).catch((err: any) => {
+            console.log(`[keepalive ${t}] pool mort (${err.message}), probe...`);
+            probeNeon().catch(() => {});
+        });
+    }, 45_000);
+}
 
 export default sequelize;

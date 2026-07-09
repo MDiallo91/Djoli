@@ -108,7 +108,8 @@ function App() {
       <Routes>
         <Route path="/"          element={<LandingRoute />} />
         <Route path="/login"     element={<AuthRoute />} />
-        <Route path="/dashboard" element={<DashboardRoute />} />
+        <Route path="/dashboard"      element={<DashboardRoute />} />
+        <Route path="/dashboard/:tab" element={<DashboardRoute />} />
 
         {/* Routes admin imbriquées — AdminGuard contient AdminLayout + Outlet */}
         <Route path="/admin" element={<AdminGuard />}>

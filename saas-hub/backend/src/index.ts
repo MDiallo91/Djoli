@@ -63,6 +63,7 @@ app.get('/jwtid', requireAuth, (req, res) => {
     res.status(200).json({ id: req.user?.id });
 });
 
+
 app.use('/api/user', authRoute);
 app.use('/api/subscription', subscriptionRoute);
 app.use('/api/admin', adminRoutes);
