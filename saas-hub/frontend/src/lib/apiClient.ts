@@ -38,6 +38,7 @@ apiClient.interceptors.request.use(config => {
 apiClient.interceptors.response.use(
   response => response,
   (error: AxiosError) => {
+    console.error(`[API] ${error.config?.method?.toUpperCase()} ${error.config?.url} →`, error.response?.status ?? '(connexion échouée)', error.response?.data ?? error.message);
     if (error.response?.status === 401) {
       // Session expirée ou token invalide → nettoyage + redirection
       localStorage.removeItem('hub_user');
