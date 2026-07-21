@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import {
-  Mail, Lock, Eye, EyeOff, BookOpen, ArrowLeft, ArrowRight,
+  Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight,
   Upload, FileText, CheckCircle, User, Phone,
-  Building2, X, ShieldCheck,
+  Building2, X, ShieldCheck, RefreshCw, WifiOff,
 } from 'lucide-react';
 import apiClient from '../lib/apiClient';
 import DocumentUpload from './ui/DocumentUpload';
@@ -13,8 +13,67 @@ interface AuthProps {
   onSuccess: (data: any) => void;
 }
 
-const inputCls = 'w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all bg-white placeholder:text-slate-400';
-const labelCls = 'block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider';
+// ─── Design tokens — alignés sur LandingPage.tsx ────────────────
+const NAVY = '#14213D';
+const GOLD = '#C9992F';
+const CREAM = '#FAF6EF';
+
+const inputCls = 'dj-input';
+const labelCls = 'block text-xs font-semibold mb-1.5 uppercase tracking-wider dj-sans';
+
+// ─── Styles globaux partagés avec la landing page ───────────────
+function DjStyles() {
+  return (
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,500;0,600;1,500;1,600&family=Work+Sans:wght@400;500;600;700&display=swap');
+
+      :root { --navy: ${NAVY}; --gold: ${GOLD}; --bg: ${CREAM}; --bdr: rgba(20,33,61,.16); }
+
+      .dj-serif { font-family: 'Source Serif 4', Georgia, serif; }
+      .dj-sans  { font-family: 'Work Sans', system-ui, sans-serif; }
+
+      .dj-btn-navy {
+        display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+        background: var(--navy); color: ${CREAM};
+        font-family: 'Work Sans', sans-serif; font-weight: 700; font-size: 12px;
+        letter-spacing: .08em; text-transform: uppercase;
+        padding: 16px 32px; border: none; cursor: pointer; text-decoration: none;
+        transition: background .25s, transform .25s, box-shadow .25s;
+      }
+      .dj-btn-navy:hover:not(:disabled) { background: var(--gold); color: var(--navy); transform: translateY(-2px); box-shadow: 0 14px 28px rgba(201,153,47,.35); }
+      .dj-btn-navy:disabled { opacity: .5; cursor: not-allowed; }
+
+      .dj-btn-ghost {
+        background: none; border: none; cursor: pointer; text-decoration: none;
+        font-family: 'Work Sans', sans-serif; font-weight: 600; font-size: 13px;
+        color: var(--navy); border-bottom: 1px solid var(--navy); padding-bottom: 3px;
+        transition: color .2s, border-color .2s;
+      }
+      .dj-btn-ghost:hover { color: var(--gold); border-color: var(--gold); }
+      .dj-btn-ghost-light { color: ${CREAM}; border-color: rgba(250,246,239,.5); }
+      .dj-btn-ghost-light:hover { color: var(--gold); border-color: var(--gold); }
+
+      .dj-section-no {
+        font-family: 'Work Sans', sans-serif; font-weight: 600; font-size: 12px;
+        letter-spacing: .16em; text-transform: uppercase; color: var(--gold);
+      }
+
+      .dj-input {
+        width: 100%; border: 1px solid var(--bdr); border-radius: 0;
+        padding: 13px 16px; font-family: 'Work Sans', sans-serif; font-size: 14px;
+        color: var(--navy); background: #fff; outline: none;
+        transition: border-color .2s;
+      }
+      .dj-input:focus { border-color: var(--gold); }
+      .dj-input::placeholder { color: #B4A995; }
+
+      .dj-orb {
+        position: absolute; border-radius: 50%; pointer-events: none;
+        background: radial-gradient(circle, rgba(201,153,47,.22) 0%, rgba(201,153,47,0) 70%);
+      }
+    `}</style>
+  );
+}
 
 // ─── Panneau gauche partagé ────────────────────────────────────
 function AuthPanel({ onBack, step, totalSteps, children }: {
@@ -24,58 +83,44 @@ function AuthPanel({ onBack, step, totalSteps, children }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex">
-      {/* ── Colonne gauche ── */}
-      <div
-        className="hidden lg:flex lg:w-[44%] flex-col relative overflow-hidden"
-        style={{ background: 'linear-gradient(145deg, var(--primary-900) 0%, var(--primary-800) 60%, var(--primary-700) 100%)' }}
-      >
-        {/* Cercles décoratifs */}
-        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full opacity-10"
-          style={{ background: 'radial-gradient(circle, var(--primary-400), transparent 70%)' }} />
-        <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full opacity-10 translate-x-1/3 translate-y-1/3"
-          style={{ background: 'radial-gradient(circle, var(--primary-300), transparent 70%)' }} />
-        <div className="absolute top-1/2 -right-12 w-48 h-48 rounded-full opacity-[0.07]"
-          style={{ background: 'radial-gradient(circle, white, transparent 70%)' }} />
+    <div className="min-h-screen flex dj-sans" style={{ background: CREAM }}>
+      <DjStyles />
 
-        {/* Contenu */}
+      {/* ── Colonne gauche ── */}
+      <div className="hidden lg:flex lg:w-[44%] flex-col relative overflow-hidden" style={{ background: NAVY }}>
+        <div className="dj-orb" style={{ top: -100, left: -100, width: 420, height: 420 }} />
+        <div className="dj-orb" style={{ bottom: -80, right: -80, width: 320, height: 320 }} />
+
         <div className="relative flex flex-col h-full p-10">
           {/* Top */}
-          <button
-            onClick={onBack}
-            className="flex items-center gap-2 text-white/50 hover:text-white text-sm font-medium transition-colors w-fit"
-          >
+          <button onClick={onBack} className="dj-btn-ghost dj-btn-ghost-light flex items-center gap-2 w-fit border-none pb-0">
             <ArrowLeft size={15} /> Retour au site
           </button>
 
           {/* Centre */}
           <div className="flex-1 flex flex-col justify-center">
-            {/* Logo */}
-            <div className="flex items-center gap-3 mb-10">
-              <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20">
-                <BookOpen size={18} className="text-white" />
-              </div>
-              <span className="text-white font-bold text-lg tracking-tight">DJOLI</span>
-            </div>
+            <div className="dj-serif font-semibold text-xl mb-10" style={{ color: CREAM }}>DJOLI</div>
 
-            <h2 className="text-4xl font-bold text-white leading-tight mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            <h2 className="dj-serif font-semibold leading-tight mb-4" style={{ fontSize: 38, color: CREAM }}>
               La gestion scolaire<br />
-              <span className="text-white/60">réinventée.</span>
+              <em style={{ fontStyle: 'italic', color: GOLD }}>réinventée.</em>
             </h2>
-            <p className="text-white/50 text-sm leading-relaxed mb-10 max-w-xs">
+            <p className="text-sm leading-relaxed mb-10 max-w-xs" style={{ color: 'rgba(250,246,239,.55)' }}>
               Pilotez élèves, notes, paiements et personnels depuis une seule plateforme — en ligne ou hors ligne.
             </p>
 
             {/* Feature pills */}
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               {[
-                { icon: '🔄', text: 'Synchronisation cloud automatique' },
-                { icon: '📶', text: 'Mode hors-ligne complet' },
-                { icon: '🔒', text: 'Données sécurisées & chiffrées' },
+                { Icon: RefreshCw, text: 'Synchronisation cloud automatique' },
+                { Icon: WifiOff,   text: 'Mode hors-ligne complet' },
+                { Icon: ShieldCheck, text: 'Données sécurisées & chiffrées' },
               ].map(f => (
                 <div key={f.text} className="flex items-center gap-3">
-                  <span className="text-base">{f.icon}</span>
-                  <span className="text-white/65 text-sm">{f.text}</span>
+                  <span className="w-7 h-7 flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(201,153,47,.15)' }}>
+                    <f.Icon size={14} style={{ color: GOLD }} />
+                  </span>
+                  <span className="text-sm" style={{ color: 'rgba(250,246,239,.7)' }}>{f.text}</span>
                 </div>
               ))}
             </div>
@@ -84,25 +129,21 @@ function AuthPanel({ onBack, step, totalSteps, children }: {
             {step !== undefined && totalSteps !== undefined && (
               <div className="flex items-center gap-2 mt-10">
                 {Array.from({ length: totalSteps }).map((_, i) => (
-                  <div key={i} className={`h-1 rounded-full transition-all ${i < step ? 'flex-1 bg-white' : i === step - 1 ? 'flex-[2] bg-white' : 'flex-1 bg-white/20'}`} />
+                  <div key={i} className="h-[3px] transition-all"
+                    style={{ background: i < step ? GOLD : 'rgba(250,246,239,.2)', flex: i === step - 1 ? 2 : 1 }} />
                 ))}
               </div>
             )}
           </div>
 
-          {/* Bottom */}
-          <p className="text-white/25 text-xs">© 2026 DJOLI — Tous droits réservés</p>
+          <p className="text-xs" style={{ color: 'rgba(250,246,239,.3)' }}>© 2026 DJOLI — Tous droits réservés</p>
         </div>
       </div>
 
       {/* ── Colonne droite ── */}
-      <div className="flex-1 flex items-center justify-center bg-slate-50 p-6 lg:p-10">
+      <div className="flex-1 flex items-center justify-center p-6 lg:p-10">
         <div className="w-full max-w-md">
-          {/* Mobile: bouton retour */}
-          <button
-            onClick={onBack}
-            className="lg:hidden flex items-center gap-2 text-slate-400 hover:text-slate-700 text-sm font-medium mb-8 transition-colors"
-          >
+          <button onClick={onBack} className="lg:hidden dj-btn-ghost flex items-center gap-2 mb-8 border-none pb-0" style={{ color: '#8A7F70' }}>
             <ArrowLeft size={15} /> Retour
           </button>
           {children}
@@ -119,19 +160,19 @@ function FileUpload({ label, value, onChange, accept, hint }: {
   const [fileName, setFileName] = useState('');
   return (
     <div>
-      <label className={labelCls}>{label}</label>
+      <label className={labelCls} style={{ color: '#8A7F70' }}>{label}</label>
       {value ? (
-        <div className="flex items-center gap-3 border border-secondary-200 bg-secondary-50 rounded-xl px-4 py-3">
+        <div className="flex items-center gap-3 px-4 py-3" style={{ border: `1px solid ${GOLD}`, background: 'rgba(201,153,47,.08)' }}>
           {value.startsWith('data:image') ? (
-            <img src={value} alt="" className="w-10 h-10 object-contain rounded-lg border border-secondary-200" />
+            <img src={value} alt="" className="w-10 h-10 object-contain" style={{ border: `1px solid ${GOLD}` }} />
           ) : (
-            <div className="w-10 h-10 bg-secondary-100 rounded-lg flex items-center justify-center"><FileText size={18} className="text-secondary-600" /></div>
+            <div className="w-10 h-10 flex items-center justify-center" style={{ background: 'rgba(201,153,47,.15)' }}><FileText size={18} style={{ color: GOLD }} /></div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-secondary-800 truncate">{fileName || 'Fichier chargé'}</p>
-            <p className="text-xs text-secondary-600">Cliquez pour remplacer</p>
+            <p className="text-sm font-medium truncate dj-sans" style={{ color: NAVY }}>{fileName || 'Fichier chargé'}</p>
+            <p className="text-xs dj-sans" style={{ color: '#8A7F70' }}>Cliquez pour remplacer</p>
           </div>
-          <label className="cursor-pointer p-1 text-secondary-500 hover:text-secondary-700">
+          <label className="cursor-pointer p-1" style={{ color: GOLD }}>
             <Upload size={15} />
             <input type="file" accept={accept} className="hidden" onChange={e => {
               const f = e.target.files?.[0]; if (!f) return;
@@ -141,13 +182,13 @@ function FileUpload({ label, value, onChange, accept, hint }: {
               r.readAsDataURL(f);
             }} />
           </label>
-          <button type="button" onClick={() => { onChange('', ''); setFileName(''); }} className="p-1 text-slate-400 hover:text-red-500"><X size={14} /></button>
+          <button type="button" onClick={() => { onChange('', ''); setFileName(''); }} className="p-1" style={{ color: '#B4A995' }}><X size={14} /></button>
         </div>
       ) : (
-        <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl p-5 cursor-pointer hover:border-primary-400 hover:bg-primary-50/50 transition-all group">
-          <Upload size={20} className="text-slate-400 group-hover:text-primary-500 mb-2 transition-colors" />
-          <p className="text-sm font-medium text-slate-500 group-hover:text-primary-600 transition-colors">Cliquez pour uploader</p>
-          {hint && <p className="text-xs text-slate-400 mt-1">{hint}</p>}
+        <label className="flex flex-col items-center justify-center p-5 cursor-pointer transition-all group" style={{ border: `1px dashed var(--bdr)` }}>
+          <Upload size={20} className="mb-2 transition-colors" style={{ color: '#B4A995' }} />
+          <p className="text-sm font-medium dj-sans" style={{ color: '#8A7F70' }}>Cliquez pour uploader</p>
+          {hint && <p className="text-xs mt-1 dj-sans" style={{ color: '#B4A995' }}>{hint}</p>}
           <input type="file" accept={accept} className="hidden" onChange={e => {
             const f = e.target.files?.[0]; if (!f) return;
             setFileName(f.name);
@@ -202,11 +243,11 @@ function OTPStep({ email, onSuccess, onResend, onBack }: {
   return (
     <AuthPanel onBack={onBack}>
       <div className="text-center mb-8">
-        <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-primary-100">
-          <ShieldCheck size={26} className="text-primary-600" />
+        <div className="w-14 h-14 flex items-center justify-center mx-auto mb-5" style={{ background: 'rgba(201,153,47,.12)', border: `1px solid rgba(201,153,47,.3)` }}>
+          <ShieldCheck size={26} style={{ color: GOLD }} />
         </div>
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">Vérification email</h1>
-        <p className="text-slate-500 text-sm">Code envoyé à <span className="font-semibold text-slate-700">{email}</span></p>
+        <h1 className="dj-serif font-semibold text-2xl mb-2" style={{ color: NAVY }}>Vérification email</h1>
+        <p className="text-sm dj-sans" style={{ color: '#8A7F70' }}>Code envoyé à <span className="font-semibold" style={{ color: NAVY }}>{email}</span></p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="flex gap-2.5 justify-center">
@@ -215,18 +256,17 @@ function OTPStep({ email, onSuccess, onResend, onBack }: {
               type="text" inputMode="numeric" maxLength={1} value={d}
               onChange={e => handleChange(i, e.target.value)}
               onKeyDown={e => handleKey(i, e)}
-              className="w-12 h-14 text-center text-2xl font-bold border-2 border-slate-200 rounded-xl focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all bg-white" />
+              className="w-12 h-14 text-center text-2xl font-bold outline-none transition-all dj-sans"
+              style={{ border: '1px solid var(--bdr)', color: NAVY, background: '#fff' }} />
           ))}
         </div>
-        <button type="submit" disabled={loading || otp.join('').length < 6}
-          className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-          style={{ background: 'linear-gradient(135deg, var(--primary-600), var(--primary-700))' }}>
+        <button type="submit" disabled={loading || otp.join('').length < 6} className="w-full dj-btn-navy">
           {loading ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Vérification…</> : 'Confirmer mon email'}
         </button>
       </form>
-      <p className="text-center text-xs text-slate-400 mt-5">
+      <p className="text-center text-xs mt-5 dj-sans" style={{ color: '#B4A995' }}>
         Code valable 10 minutes.{' '}
-        <button onClick={handleResend} className="text-primary-600 hover:underline font-semibold">Renvoyer</button>
+        <button onClick={handleResend} className="font-semibold" style={{ color: GOLD }}>Renvoyer</button>
       </p>
     </AuthPanel>
   );
@@ -251,45 +291,43 @@ function LoginForm({ onBack, onSuccess, onRegister }: AuthProps & { onRegister: 
   return (
     <AuthPanel onBack={onBack}>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 mb-1.5">Connexion</h1>
-        <p className="text-slate-500 text-sm">Accédez à votre espace établissement.</p>
+        <span className="dj-section-no block mb-2">Espace établissement</span>
+        <h1 className="dj-serif font-semibold text-2xl" style={{ color: NAVY }}>Connexion</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className={labelCls}>Adresse email</label>
+          <label className={labelCls} style={{ color: '#8A7F70' }}>Adresse email</label>
           <div className="relative">
-            <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }} />
             <input required type="email" autoComplete="email" placeholder="contact@ecole.com"
               value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
-              className={inputCls + ' pl-10'} />
+              className={inputCls} style={{ paddingLeft: 40 }} />
           </div>
         </div>
         <div>
-          <label className={labelCls}>Mot de passe</label>
+          <label className={labelCls} style={{ color: '#8A7F70' }}>Mot de passe</label>
           <div className="relative">
-            <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }} />
             <input required type={show ? 'text' : 'password'} autoComplete="current-password" placeholder="••••••••"
               value={form.password} onChange={e => setForm({ ...form, password: e.target.value })}
-              className={inputCls + ' pl-10 pr-10'} />
+              className={inputCls} style={{ paddingLeft: 40, paddingRight: 40 }} />
             <button type="button" onClick={() => setShow(!show)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              className="absolute right-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }}>
               {show ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
         </div>
-        <button type="submit" disabled={loading}
-          className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
-          style={{ background: 'linear-gradient(135deg, var(--primary-600), var(--primary-700))', boxShadow: '0 4px 14px rgba(var(--primary-600-rgb),0.35)' }}>
+        <button type="submit" disabled={loading} className="w-full dj-btn-navy mt-2">
           {loading
             ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Connexion…</>
             : 'Se connecter'}
         </button>
       </form>
 
-      <p className="text-center text-sm text-slate-400 mt-6">
+      <p className="text-center text-sm mt-6 dj-sans" style={{ color: '#8A7F70' }}>
         Pas encore de compte ?{' '}
-        <button onClick={onRegister} className="text-primary-600 hover:underline font-semibold">Créer un compte école</button>
+        <button onClick={onRegister} className="font-semibold" style={{ color: GOLD }}>Créer un compte école</button>
       </p>
     </AuthPanel>
   );
@@ -313,41 +351,39 @@ function RegisterStep1({ onBack, onNext, onLogin, data, setData }: {
 
   return (
     <AuthPanel onBack={onBack} step={1} totalSteps={2}>
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-[11px] font-bold text-primary-600 bg-primary-50 px-2.5 py-1 rounded-full border border-primary-100">Étape 1 / 2</span>
-      </div>
-      <h1 className="text-2xl font-bold text-slate-900 mb-1">Créer un compte</h1>
-      <p className="text-slate-500 text-sm mb-7">Vos identifiants de connexion.</p>
+      <span className="dj-section-no block mb-2">Étape 1 / 2</span>
+      <h1 className="dj-serif font-semibold text-2xl mb-1" style={{ color: NAVY }}>Créer un compte</h1>
+      <p className="text-sm mb-7 dj-sans" style={{ color: '#8A7F70' }}>Vos identifiants de connexion.</p>
 
       <form onSubmit={handleNext} className="space-y-4">
         <div>
-          <label className={labelCls}>Email de connexion *</label>
+          <label className={labelCls} style={{ color: '#8A7F70' }}>Email de connexion *</label>
           <div className="relative">
-            <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }} />
             <input required type="email" placeholder="contact@ecole.com" value={data.email}
-              onChange={e => setData({ ...data, email: e.target.value })} className={inputCls + ' pl-10'} />
+              onChange={e => setData({ ...data, email: e.target.value })} className={inputCls} style={{ paddingLeft: 40 }} />
           </div>
         </div>
         <div>
-          <label className={labelCls}>Mot de passe *</label>
+          <label className={labelCls} style={{ color: '#8A7F70' }}>Mot de passe *</label>
           <div className="relative">
-            <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }} />
             <input required type={show ? 'text' : 'password'} placeholder="Minimum 8 caractères" value={data.password}
-              onChange={e => setData({ ...data, password: e.target.value })} className={inputCls + ' pl-10 pr-10'} />
+              onChange={e => setData({ ...data, password: e.target.value })} className={inputCls} style={{ paddingLeft: 40, paddingRight: 40 }} />
             <button type="button" onClick={() => setShow(!show)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              className="absolute right-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }}>
               {show ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
         </div>
         <div>
-          <label className={labelCls}>Confirmer le mot de passe *</label>
+          <label className={labelCls} style={{ color: '#8A7F70' }}>Confirmer le mot de passe *</label>
           <div className="relative">
-            <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }} />
             <input required type={show2 ? 'text' : 'password'} placeholder="Répétez le mot de passe" value={data.confirmPassword}
-              onChange={e => setData({ ...data, confirmPassword: e.target.value })} className={inputCls + ' pl-10 pr-10'} />
+              onChange={e => setData({ ...data, confirmPassword: e.target.value })} className={inputCls} style={{ paddingLeft: 40, paddingRight: 40 }} />
             <button type="button" onClick={() => setShow2(!show2)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              className="absolute right-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }}>
               {show2 ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
@@ -355,28 +391,27 @@ function RegisterStep1({ onBack, onNext, onLogin, data, setData }: {
 
         <label className="flex items-start gap-3 cursor-pointer group pt-1">
           <div
-            className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${data.terms ? 'bg-primary-600 border-primary-600' : 'border-slate-300 group-hover:border-primary-400'}`}
+            className="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all"
+            style={{ background: data.terms ? NAVY : '#fff', border: `2px solid ${data.terms ? NAVY : 'var(--bdr)'}` }}
             onClick={() => setData({ ...data, terms: !data.terms })}>
-            {data.terms && <CheckCircle size={11} className="text-white" />}
+            {data.terms && <CheckCircle size={11} style={{ color: CREAM }} />}
           </div>
-          <span className="text-sm text-slate-500 leading-relaxed">
+          <span className="text-sm leading-relaxed dj-sans" style={{ color: '#8A7F70' }}>
             J'accepte les{' '}
-            <a href="#" className="text-primary-600 hover:underline font-semibold">Conditions d'utilisation</a>{' '}
+            <a href="#" className="font-semibold" style={{ color: GOLD }}>Conditions d'utilisation</a>{' '}
             et la{' '}
-            <a href="#" className="text-primary-600 hover:underline font-semibold">Politique de confidentialité</a>
+            <a href="#" className="font-semibold" style={{ color: GOLD }}>Politique de confidentialité</a>
           </span>
         </label>
 
-        <button type="submit"
-          className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2"
-          style={{ background: 'linear-gradient(135deg, var(--primary-600), var(--primary-700))', boxShadow: '0 4px 14px rgba(var(--primary-600-rgb),0.35)' }}>
+        <button type="submit" className="w-full dj-btn-navy">
           Continuer <ArrowRight size={15} />
         </button>
       </form>
 
-      <p className="text-center text-sm text-slate-400 mt-6">
+      <p className="text-center text-sm mt-6 dj-sans" style={{ color: '#8A7F70' }}>
         Déjà un compte ?{' '}
-        <button onClick={onLogin} className="text-primary-600 hover:underline font-semibold">Se connecter</button>
+        <button onClick={onLogin} className="font-semibold" style={{ color: GOLD }}>Se connecter</button>
       </p>
     </AuthPanel>
   );
@@ -402,72 +437,74 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen dj-sans" style={{ background: CREAM }}>
+      <DjStyles />
+
       {/* Topbar sticky */}
-      <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-6 py-3.5 flex items-center gap-4 shadow-sm">
-        <button onClick={onBack}
-          className="flex items-center gap-2 text-slate-500 hover:text-slate-900 text-sm font-medium transition-colors">
+      <div className="sticky top-0 z-10 px-6 py-3.5 flex items-center gap-4" style={{ background: '#fff', borderBottom: '1px solid var(--bdr)' }}>
+        <button onClick={onBack} className="dj-btn-ghost flex items-center gap-2 border-none pb-0" style={{ color: '#8A7F70' }}>
           <ArrowLeft size={15} /> Retour
         </button>
         <div className="flex-1 flex items-center gap-3">
-          <span className="text-[11px] font-bold text-primary-600 bg-primary-50 px-2.5 py-1 rounded-full border border-primary-100">Étape 2 / 2</span>
-          <span className="text-sm text-slate-400 hidden sm:block">Informations de l'établissement & responsable</span>
+          <span className="dj-section-no">Étape 2 / 2</span>
+          <span className="text-sm hidden sm:block" style={{ color: '#B4A995' }}>Informations de l'établissement & responsable</span>
         </div>
         <div className="hidden md:flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-primary-600" />
-          <div className="w-12 h-1 bg-primary-600 rounded-full" />
-          <div className="w-2.5 h-2.5 rounded-full bg-primary-600" />
+          <div className="w-2.5 h-2.5 rounded-full" style={{ background: GOLD }} />
+          <div className="w-12 h-[3px]" style={{ background: GOLD }} />
+          <div className="w-2.5 h-2.5 rounded-full" style={{ background: GOLD }} />
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-6 py-8">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* ── École ── */}
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-            <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50/60">
-              <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center flex-shrink-0">
-                <Building2 size={14} className="text-white" />
+          <div style={{ background: '#fff', border: '1px solid var(--bdr)' }}>
+            <div className="flex items-center gap-3 px-6 py-4" style={{ borderBottom: '1px solid var(--bdr)', background: 'rgba(20,33,61,.02)' }}>
+              <div className="w-8 h-8 flex items-center justify-center flex-shrink-0" style={{ background: NAVY }}>
+                <Building2 size={14} style={{ color: CREAM }} />
               </div>
-              <h2 className="text-sm font-semibold text-slate-800">Informations de l'école</h2>
+              <h2 className="text-sm font-semibold dj-sans" style={{ color: NAVY }}>Informations de l'école</h2>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className={labelCls}>Nom de l'établissement *</label>
+                <label className={labelCls} style={{ color: '#8A7F70' }}>Nom de l'établissement *</label>
                 <input className={inputCls} value={data.schoolName || ''} onChange={e => set('schoolName', e.target.value)} placeholder="École Excellence 224" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className={labelCls}>Pays *</label>
+                  <label className={labelCls} style={{ color: '#8A7F70' }}>Pays *</label>
                   <input className={inputCls} value={data.country || ''} onChange={e => set('country', e.target.value)} placeholder="Guinée" />
                 </div>
                 <div>
-                  <label className={labelCls}>Ville *</label>
+                  <label className={labelCls} style={{ color: '#8A7F70' }}>Ville *</label>
                   <input className={inputCls} value={data.city || ''} onChange={e => set('city', e.target.value)} placeholder="Conakry" />
                 </div>
                 <div>
-                  <label className={labelCls}>Préfecture / Commune *</label>
+                  <label className={labelCls} style={{ color: '#8A7F70' }}>Préfecture / Commune *</label>
                   <input className={inputCls} value={data.prefecture || ''} onChange={e => set('prefecture', e.target.value)} placeholder="RATOMA" />
                 </div>
                 <div>
-                  <label className={labelCls}>Sous-préfecture <span className="normal-case font-normal text-slate-400">(optionnel)</span></label>
+                  <label className={labelCls} style={{ color: '#8A7F70' }}>Sous-préfecture <span className="normal-case font-normal" style={{ color: '#B4A995' }}>(optionnel)</span></label>
                   <input className={inputCls} value={data.sousPrefecture || ''} onChange={e => set('sousPrefecture', e.target.value)} placeholder="YATTAYA" />
                 </div>
                 <div className="col-span-2">
-                  <label className={labelCls}>Cycles scolaires * <span className="normal-case font-normal text-slate-400">(un ou plusieurs)</span></label>
+                  <label className={labelCls} style={{ color: '#8A7F70' }}>Cycles scolaires * <span className="normal-case font-normal" style={{ color: '#B4A995' }}>(un ou plusieurs)</span></label>
                   <div className="grid grid-cols-2 gap-2 mt-1.5">
                     {(['Maternelle', 'Primaire', 'Collège', 'Lycée'] as const).map(lvl => {
                       const checked = (data.levels || []).includes(lvl);
                       return (
                         <label key={lvl}
-                          className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 cursor-pointer transition-all select-none ${checked ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-slate-200 hover:border-slate-300 text-slate-600'}`}
+                          className="flex items-center gap-3 px-4 py-2.5 cursor-pointer select-none transition-all"
+                          style={{ border: `1px solid ${checked ? NAVY : 'var(--bdr)'}`, background: checked ? 'rgba(20,33,61,.04)' : 'transparent', color: checked ? NAVY : '#6B6258' }}
                           onClick={() => {
                             const cur = data.levels || [];
                             setData({ ...data, levels: checked ? cur.filter((l: string) => l !== lvl) : [...cur, lvl] });
                           }}>
-                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${checked ? 'bg-primary-600 border-primary-600' : 'border-slate-300'}`}>
-                            {checked && <CheckCircle size={10} className="text-white" />}
+                          <div className="w-4 h-4 flex items-center justify-center flex-shrink-0 transition-all" style={{ background: checked ? NAVY : '#fff', border: `2px solid ${checked ? NAVY : 'var(--bdr)'}` }}>
+                            {checked && <CheckCircle size={10} style={{ color: CREAM }} />}
                           </div>
-                          <span className="text-sm font-medium">{lvl}</span>
+                          <span className="text-sm font-medium dj-sans">{lvl}</span>
                         </label>
                       );
                     })}
@@ -480,55 +517,53 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
           </div>
 
           {/* ── Responsable ── */}
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-            <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50/60">
-              <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center flex-shrink-0">
-                <User size={14} className="text-white" />
+          <div style={{ background: '#fff', border: '1px solid var(--bdr)' }}>
+            <div className="flex items-center gap-3 px-6 py-4" style={{ borderBottom: '1px solid var(--bdr)', background: 'rgba(20,33,61,.02)' }}>
+              <div className="w-8 h-8 flex items-center justify-center flex-shrink-0" style={{ background: GOLD }}>
+                <User size={14} style={{ color: NAVY }} />
               </div>
-              <h2 className="text-sm font-semibold text-slate-800">Informations du responsable</h2>
+              <h2 className="text-sm font-semibold dj-sans" style={{ color: NAVY }}>Informations du responsable</h2>
             </div>
             <div className="p-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className={labelCls}>Nom complet *</label>
+                  <label className={labelCls} style={{ color: '#8A7F70' }}>Nom complet *</label>
                   <div className="relative">
-                    <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input className={inputCls + ' pl-10'} value={data.directorName || ''} onChange={e => set('directorName', e.target.value)} placeholder="M. Diallo Mamadou" />
+                    <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }} />
+                    <input className={inputCls} style={{ paddingLeft: 40 }} value={data.directorName || ''} onChange={e => set('directorName', e.target.value)} placeholder="M. Diallo Mamadou" />
                   </div>
                 </div>
                 <div>
-                  <label className={labelCls}>Titre / Fonction *</label>
+                  <label className={labelCls} style={{ color: '#8A7F70' }}>Titre / Fonction *</label>
                   <select className={inputCls} value={data.directorTitle || ''} onChange={e => set('directorTitle', e.target.value)}>
                     <option value="">Sélectionner…</option>
                     {['Directeur général', 'Directrice générale', 'Proviseur', 'Proviseure', 'Gérant', 'Administrateur'].map(t => <option key={t}>{t}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className={labelCls}>Téléphone *</label>
+                  <label className={labelCls} style={{ color: '#8A7F70' }}>Téléphone *</label>
                   <div className="relative">
-                    <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input type="tel" className={inputCls + ' pl-10'} value={data.directorPhone || ''} onChange={e => set('directorPhone', e.target.value)} placeholder="+224 620 00 00 00" />
+                    <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }} />
+                    <input type="tel" className={inputCls} style={{ paddingLeft: 40 }} value={data.directorPhone || ''} onChange={e => set('directorPhone', e.target.value)} placeholder="+224 620 00 00 00" />
                   </div>
                 </div>
                 <div>
-                  <label className={labelCls}>Email du responsable</label>
+                  <label className={labelCls} style={{ color: '#8A7F70' }}>Email du responsable</label>
                   <div className="relative">
-                    <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input type="email" className={inputCls + ' pl-10'} value={data.directorEmail || ''} onChange={e => set('directorEmail', e.target.value)} placeholder={data.email || 'email@ecole.com'} />
+                    <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }} />
+                    <input type="email" className={inputCls} style={{ paddingLeft: 40 }} value={data.directorEmail || ''} onChange={e => set('directorEmail', e.target.value)} placeholder={data.email || 'email@ecole.com'} />
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <button type="submit" disabled={loading}
-            className="w-full py-4 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-            style={{ background: 'linear-gradient(135deg, var(--primary-600), var(--primary-700))', boxShadow: '0 4px 18px rgba(var(--primary-600-rgb),0.35)' }}>
+          <button type="submit" disabled={loading} className="w-full dj-btn-navy" style={{ padding: '18px 32px' }}>
             {loading
               ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Envoi en cours…</>
               : <><CheckCircle size={17} /> Soumettre ma demande d'inscription</>}
           </button>
-          <p className="text-center text-xs text-slate-400">Votre demande sera examinée sous 24–48h.</p>
+          <p className="text-center text-xs dj-sans" style={{ color: '#B4A995' }}>Votre demande sera examinée sous 24–48h.</p>
         </form>
       </div>
     </div>
@@ -538,21 +573,20 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
 // ─── Success ──────────────────────────────────────────────────
 function RegisterSuccess({ schoolName, onBack }: { schoolName: string; onBack: () => void }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-8">
+    <div className="min-h-screen flex items-center justify-center p-8 dj-sans" style={{ background: CREAM }}>
+      <DjStyles />
       <div className="max-w-sm w-full text-center">
-        <div className="w-16 h-16 bg-secondary-100 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-secondary-200">
-          <CheckCircle size={30} className="text-secondary-600" />
+        <div className="w-16 h-16 flex items-center justify-center mx-auto mb-6" style={{ background: 'rgba(201,153,47,.12)', border: `1px solid rgba(201,153,47,.3)` }}>
+          <CheckCircle size={30} style={{ color: GOLD }} />
         </div>
-        <h1 className="text-2xl font-bold text-slate-900 mb-3">Demande envoyée !</h1>
-        <p className="text-slate-500 text-sm leading-relaxed mb-2">
-          Votre dossier pour <span className="font-semibold text-slate-700">"{schoolName}"</span> a été reçu.
+        <h1 className="dj-serif font-semibold text-2xl mb-3" style={{ color: NAVY }}>Demande envoyée !</h1>
+        <p className="text-sm leading-relaxed mb-2" style={{ color: '#6B6258' }}>
+          Votre dossier pour <span className="font-semibold" style={{ color: NAVY }}>"{schoolName}"</span> a été reçu.
         </p>
-        <p className="text-slate-400 text-sm mb-8">
+        <p className="text-sm mb-8" style={{ color: '#8A7F70' }}>
           Notre équipe vous contactera par email sous <strong>24–48h</strong> pour l'activation.
         </p>
-        <button onClick={onBack}
-          className="px-8 py-3 text-white rounded-xl font-semibold text-sm transition-all"
-          style={{ background: 'linear-gradient(135deg, var(--primary-600), var(--primary-700))' }}>
+        <button onClick={onBack} className="dj-btn-navy" style={{ padding: '14px 32px' }}>
           Retour à l'accueil
         </button>
       </div>
