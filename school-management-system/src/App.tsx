@@ -3,11 +3,11 @@ import {
     Users, UserRound, GraduationCap, Calendar, Wallet, BarChart3,
     Settings as SettingsIcon, Bell, Search, Award, Layers,
     ArrowUpRight, TrendingUp, UserCircle, ChevronRight,
-    Activity, BookOpen, LogOut
+    Activity, BookOpen, LogOut, Landmark, ArrowDownRight
 } from 'lucide-react'
 import {
-    ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid,
-    Tooltip, PieChart, Pie, Cell, Legend
+    ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid,
+    Tooltip, PieChart, Pie, Cell
 } from 'recharts'
 import { useAppStore } from './stores/useAppStore'
 import { useSyncStore } from './stores/useSyncStore'
@@ -65,7 +65,7 @@ function App() {
     const {
         user, phase, licenseStatus, daysLeft, accounts, loading,
         activeTab, staffSubTab, activeStudentSubTab,
-        stats, genderData, enrollmentData, refreshKey,
+        stats, dashStats, refreshKey,
         dashboardYearId, setDashboardYear,
         setActiveTab, setStaffSubTab, setActiveStudentSubTab,
         logout, triggerRefresh, initSession,
@@ -369,10 +369,10 @@ function App() {
                             {/* Stat Cards */}
                             <div className="grid grid-cols-4 gap-5">
                                 {[
-                                    { label: 'Total Élèves',     value: stats.studentCount, accent: '#2563eb', icon: GraduationCap, trend: '+8%' },
-                                    { label: 'Enseignants',      value: stats.staffCount,   accent: '#10b981', icon: Users,         trend: '+2%' },
-                                    { label: 'Classes Actives',  value: stats.classCount,   accent: '#7c3aed', icon: BookOpen,      trend: 'Stable' },
-                                    { label: 'Taux de Présence', value: '98%',              accent: '#d97706', icon: Activity,      trend: '+1%' },
+                                    { label: 'Élèves inscrits', value: dashStats.totalStudents,                accent: '#7c3aed', icon: GraduationCap, trend: null },
+                                    { label: 'Total encaissé',  value: `${dashStats.totalIn.toLocaleString('fr')} GNF`, accent: '#10b981', icon: Wallet,   trend: null },
+                                    { label: 'Personnel',       value: stats.staffCount,                       accent: '#2563eb', icon: Users,         trend: null },
+                                    { label: 'Solde caisse',    value: `${dashStats.balance.toLocaleString('fr')} GNF`, accent: dashStats.balance < 0 ? '#dc2626' : '#7c3aed', icon: Landmark, trend: null },
                                 ].map((stat, i) => (
                                     <div key={i} className="rounded-xl p-5 transition-all duration-200 hover:shadow-md"
                                         style={{ backgroundColor: 'var(--bg-card)', border: `1px solid var(--border-light)`, borderLeft: `4px solid ${stat.accent}` }}>
@@ -380,9 +380,11 @@ function App() {
                                             <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${stat.accent}15`, color: stat.accent }}>
                                                 <stat.icon size={18} />
                                             </div>
-                                            <span className="text-xs px-2 py-0.5 rounded" style={{ backgroundColor: `${stat.accent}12`, color: stat.accent }}>
-                                                {stat.trend}
-                                            </span>
+                                            {stat.trend && (
+                                                <span className="text-xs px-2 py-0.5 rounded" style={{ backgroundColor: `${stat.accent}12`, color: stat.accent }}>
+                                                    {stat.trend}
+                                                </span>
+                                            )}
                                         </div>
                                         <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>{stat.label}</p>
                                         <p className="text-2xl font-semibold" style={{ color: 'var(--text-main)' }}>{stat.value.toString()}</p>
@@ -390,65 +392,73 @@ function App() {
                                 ))}
                             </div>
 
-                            {/* Charts Row */}
+                            {/* Charts Row — mêmes graphiques que le tableau de bord web (Dashboard.tsx) */}
                             <div className="grid grid-cols-3 gap-6">
-                                {/* Area Chart */}
+                                {/* Bar Chart — Flux de Trésorerie */}
                                 <div className="col-span-2 bg-white rounded-2xl border border-gray-100 p-7 shadow-sm">
                                     <div className="flex items-center justify-between mb-6">
                                         <div>
                                             <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
                                                 <TrendingUp size={18} className="accent-text" />
-                                                Historique des Effectifs
+                                                Flux de Trésorerie
                                             </h3>
-                                            <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mt-1">Évolution par année scolaire</p>
+                                            <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mt-1">Entrées / Sorties — 6 derniers mois</p>
                                         </div>
                                     </div>
                                     <div className="h-64">
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <AreaChart data={enrollmentData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                                                <defs>
-                                                    <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="5%" stopColor="#2563eb" stopOpacity={0.15} />
-                                                        <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
-                                                    </linearGradient>
-                                                </defs>
+                                            <BarChart data={dashStats.monthlyData.map(m => ({
+                                                label: ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'][Number(m.month.slice(5, 7)) - 1],
+                                                totalIn: m.total_in, totalOut: m.total_out,
+                                            }))} margin={{ top: 5, right: 10, left: -20, bottom: 0 }} barGap={3}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                                <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 700 }} dy={8} />
+                                                <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 700 }} dy={8} />
                                                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 700 }} />
-                                                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', padding: '12px 16px' }} labelStyle={{ fontWeight: 700 }} itemStyle={{ fontWeight: 700, color: '#2563eb' }} />
-                                                <Area type="monotone" dataKey="count" stroke="#2563eb" strokeWidth={2.5} fill="url(#grad)" dot={{ fill: '#2563eb', strokeWidth: 0, r: 4 }} activeDot={{ r: 6, strokeWidth: 0 }} />
-                                            </AreaChart>
+                                                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', padding: '12px 16px' }} labelStyle={{ fontWeight: 700 }} />
+                                                <Bar dataKey="totalIn" name="Entrées" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={24} />
+                                                <Bar dataKey="totalOut" name="Sorties" fill="#f87171" radius={[4, 4, 0, 0]} maxBarSize={24} />
+                                            </BarChart>
                                         </ResponsiveContainer>
                                     </div>
                                 </div>
 
-                                {/* Pie Chart */}
+                                {/* Pie Chart — Recouvrement */}
                                 <div className="bg-white rounded-2xl border border-gray-100 p-7 shadow-sm flex flex-col">
                                     <div className="mb-4">
-                                        <h3 className="text-lg font-black text-gray-900">Répartition G/F</h3>
-                                        <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mt-1">Genre des élèves</p>
+                                        <h3 className="text-lg font-black text-gray-900">Recouvrement</h3>
+                                        <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mt-1">{dashStats.currentMonth || 'Mois en cours'}</p>
                                     </div>
-                                    <div className="flex-1 min-h-0">
+                                    <div className="relative flex-1 min-h-0 flex items-center justify-center">
                                         <ResponsiveContainer width="100%" height={200}>
                                             <PieChart>
-                                                <Pie data={genderData} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={6} dataKey="value" strokeWidth={0}>
-                                                    <Cell fill="#2563eb" />
-                                                    <Cell fill="#ec4899" />
+                                                <Pie
+                                                    data={[
+                                                        { name: 'Ont payé', value: dashStats.paidStudents },
+                                                        { name: 'Non payé', value: Math.max(dashStats.totalStudents - dashStats.paidStudents, 0) },
+                                                    ]}
+                                                    cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={6} dataKey="value" strokeWidth={0}
+                                                    startAngle={90} endAngle={-270}
+                                                >
+                                                    <Cell fill={dashStats.recoveryRate >= 70 ? '#10b981' : dashStats.recoveryRate >= 40 ? '#f59e0b' : '#ef4444'} />
+                                                    <Cell fill="#f1f5f9" />
                                                 </Pie>
                                                 <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
-                                                <Legend verticalAlign="bottom" height={30} formatter={(v) => <span className="text-xs font-bold text-gray-500">{v}</span>} />
                                             </PieChart>
                                         </ResponsiveContainer>
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                            <span className="text-2xl font-black text-gray-900">{dashStats.recoveryRate}%</span>
+                                            <span className="text-[10px] font-semibold text-gray-400 mt-0.5">payé ce mois</span>
+                                        </div>
                                     </div>
                                     <div className="flex justify-around pt-3 border-t border-gray-50">
                                         <div className="text-center">
-                                            <p className="text-[10px] font-black text-gray-400 uppercase">Garçons</p>
-                                            <p className="text-xl font-black text-blue-600">{genderData.find(d => d.name === 'Garçons')?.value || 0}</p>
+                                            <p className="text-[10px] font-black text-gray-400 uppercase flex items-center gap-1 justify-center"><ArrowUpRight size={11} className="text-emerald-500" /> Ont payé</p>
+                                            <p className="text-xl font-black text-emerald-600">{dashStats.paidStudents}</p>
                                         </div>
                                         <div className="w-px bg-gray-100" />
                                         <div className="text-center">
-                                            <p className="text-[10px] font-black text-gray-400 uppercase">Filles</p>
-                                            <p className="text-xl font-black text-pink-500">{genderData.find(d => d.name === 'Filles')?.value || 0}</p>
+                                            <p className="text-[10px] font-black text-gray-400 uppercase flex items-center gap-1 justify-center"><ArrowDownRight size={11} className="text-red-500" /> Non payé</p>
+                                            <p className="text-xl font-black text-red-500">{Math.max(dashStats.totalStudents - dashStats.paidStudents, 0)}</p>
                                         </div>
                                     </div>
                                 </div>

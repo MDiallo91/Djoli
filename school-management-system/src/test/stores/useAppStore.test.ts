@@ -7,6 +7,10 @@ vi.mock('../../services/db', () => ({
         getStats:             vi.fn().mockResolvedValue({ studentCount: 120, staffCount: 15, classCount: 8 }),
         getStudentGenderStats: vi.fn().mockResolvedValue([{ gender: 'M', count: 70 }, { gender: 'F', count: 50 }]),
         getEnrollmentStats:   vi.fn().mockResolvedValue([{ year: '2024-2025', count: 100 }, { year: '2025-2026', count: 120 }]),
+        getDashboardStats:    vi.fn().mockResolvedValue({
+            totalIn: 500000, totalOut: 100000, balance: 400000, monthlyData: [],
+            totalStudents: 120, paidStudents: 90, recoveryRate: 75, currentMonth: 'Juillet',
+        }),
         getSubscription:      vi.fn().mockResolvedValue({ status: 'ACTIVE', expires_at: new Date(Date.now() + 86400000 * 30).toISOString() }),
         checkLicense:         vi.fn().mockResolvedValue({ status: 'valid', daysLeft: 30 }),
         getAccounts:          vi.fn().mockResolvedValue([]),
@@ -77,6 +81,8 @@ describe('useAppStore', () => {
         expect(state.stats.staffCount).toBe(15)
         expect(state.genderData).toHaveLength(2)
         expect(state.enrollmentData).toHaveLength(2)
+        expect(state.dashStats.totalStudents).toBe(120)
+        expect(state.dashStats.recoveryRate).toBe(75)
     })
 
     it('checkSubscription sets licenseStatus=valid for active subscription', async () => {

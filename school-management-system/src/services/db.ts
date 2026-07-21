@@ -23,6 +23,10 @@ export const dbService = {
         return await window.ipcRenderer.invoke('get-stats', yearId)
     },
 
+    getDashboardStats: async (yearId?: string) => {
+        return await window.ipcRenderer.invoke('get-dashboard-stats', yearId)
+    },
+
     getStudents: async (schoolYearId?: string): Promise<Student[]> => {
         return await window.ipcRenderer.invoke('get-students', schoolYearId)
     },

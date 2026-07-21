@@ -32,6 +32,21 @@ interface Account {
 type AppPhase = 'loading' | 'account-selector' | 'login' | 'blocked' | 'change-password' | 'app'
 export type { AppPhase }
 
+interface DashStats {
+    totalIn: number
+    totalOut: number
+    balance: number
+    monthlyData: { month: string; total_in: number; total_out: number }[]
+    totalStudents: number
+    paidStudents: number
+    recoveryRate: number
+    currentMonth: string
+}
+const EMPTY_DASH_STATS: DashStats = {
+    totalIn: 0, totalOut: 0, balance: 0, monthlyData: [],
+    totalStudents: 0, paidStudents: 0, recoveryRate: 0, currentMonth: '',
+}
+
 interface AppState {
     user:         User | null
     accounts:     Account[]
@@ -45,6 +60,7 @@ interface AppState {
     stats:        Stats
     genderData:   { name: string; value: number }[]
     enrollmentData: any[]
+    dashStats:    DashStats
     refreshKey:   number
     dashboardYearId: string | null
 
@@ -81,6 +97,7 @@ export const useAppStore = create<AppState>()(
             stats:              { studentCount: 0, staffCount: 0, classCount: 0 },
             genderData:         [],
             enrollmentData:     [],
+            dashStats:          EMPTY_DASH_STATS,
             refreshKey:         0,
             dashboardYearId:    null,
 
@@ -156,10 +173,11 @@ export const useAppStore = create<AppState>()(
             loadDashboardData: async () => {
                 try {
                     const yearId = get().dashboardYearId || undefined
-                    const [data, gender, enrollment] = await Promise.all([
+                    const [data, gender, enrollment, dash] = await Promise.all([
                         dbService.getStats(yearId),
                         dbService.getStudentGenderStats(yearId),
-                        dbService.getEnrollmentStats()
+                        dbService.getEnrollmentStats(),
+                        dbService.getDashboardStats(yearId),
                     ])
                     set({
                         stats: data || { studentCount: 0, staffCount: 0, classCount: 0 },
@@ -167,10 +185,11 @@ export const useAppStore = create<AppState>()(
                             name:  g.gender === 'M' ? 'Garçons' : 'Filles',
                             value: g.count
                         })),
-                        enrollmentData: Array.isArray(enrollment) ? enrollment : []
+                        enrollmentData: Array.isArray(enrollment) ? enrollment : [],
+                        dashStats: dash || EMPTY_DASH_STATS,
                     })
                 } catch {
-                    set({ stats: { studentCount: 0, staffCount: 0, classCount: 0 } })
+                    set({ stats: { studentCount: 0, staffCount: 0, classCount: 0 }, dashStats: EMPTY_DASH_STATS })
                 }
             },
 
