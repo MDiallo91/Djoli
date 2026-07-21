@@ -760,8 +760,6 @@ function BackupTab() {
     const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info'; msg: string } | null>(null)
     const [busy, setBusy] = useState(false)
 
-    const ipc = (window as any).ipcRenderer
-
     const notify = (type: 'success' | 'error' | 'info', msg: string) => {
         setStatus({ type, msg })
         setTimeout(() => setStatus(null), 5000)
@@ -770,7 +768,7 @@ function BackupTab() {
     const handleExport = async () => {
         setBusy(true)
         try {
-            const res = await ipc.invoke('export-school-db')
+            const res = await dbService.exportSchoolDb()
             if (res?.success)  notify('success', `Exporté : ${res.filePath}`)
             else if (!res?.canceled) notify('error', res?.error || 'Erreur export')
         } catch { notify('error', 'Erreur inattendue') }
@@ -781,7 +779,7 @@ function BackupTab() {
         if (!confirm('Importer une sauvegarde va remplacer les données actuelles. Une copie de secours sera créée automatiquement. Continuer ?')) return
         setBusy(true)
         try {
-            const res = await ipc.invoke('import-school-db')
+            const res = await dbService.importSchoolDb()
             if (res?.success)  notify('success', 'Base importée avec succès. Les données sont rechargées.')
             else if (!res?.canceled) notify('error', res?.error || 'Erreur import')
         } catch { notify('error', 'Erreur inattendue') }
@@ -880,7 +878,7 @@ function BackupTab() {
                         setBusy(true)
                         notify('info', 'Envoi en cours…')
                         try {
-                            const res = await ipc.invoke('force-full-sync')
+                            const res = await dbService.forceFullSync()
                             notify('success', `Synchronisation complète : ${res.queued} enregistrement(s) envoyés.`)
                         } catch (e: any) {
                             notify('error', 'Erreur : ' + (e?.message || e))

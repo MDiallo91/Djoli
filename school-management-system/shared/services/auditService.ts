@@ -1,9 +1,8 @@
-import { ipcMain } from 'electron'
-import db, { getCurrentSchoolId } from '../db'
+import db, { getCurrentSchoolId } from '../db/core'
 
-export function registerAuditHandlers() {
+export const auditHandlers: Record<string, (...args: any[]) => any> = {
 
-    ipcMain.handle('get-audit-logs', (_event, filters: {
+    'get-audit-logs': (filters: {
         search?:  string
         action?:  string
         userId?:  string
@@ -47,19 +46,19 @@ export function registerAuditHandlers() {
         params.push(limit)
 
         return db.prepare(query).all(...params)
-    })
+    },
 
     // Distinct action types present in the log (for filter dropdown)
-    ipcMain.handle('get-audit-action-types', () => {
+    'get-audit-action-types': () => {
         const schoolId = getCurrentSchoolId()
         if (!schoolId) return []
         return db.prepare(
             `SELECT DISTINCT action FROM audit_log WHERE school_id = ? OR school_id IS NULL ORDER BY action ASC`
         ).all(schoolId).map((r: any) => r.action)
-    })
+    },
 
     // Export as CSV string — renderer triggers download
-    ipcMain.handle('export-audit-csv', (_event, filters: any = {}) => {
+    'export-audit-csv': (filters: any = {}) => {
         const logs = db.prepare(`SELECT * FROM audit_log WHERE 1=1 ORDER BY created_at DESC LIMIT 5000`).all() as any[]
 
         const header = ['Date', 'Utilisateur', 'Action', 'Type entité', 'Entité', 'Ancienne valeur', 'Nouvelle valeur', 'Appareil']
@@ -75,5 +74,5 @@ export function registerAuditHandlers() {
         ].map(v => `"${v}"`).join(','))
 
         return [header.map(h => `"${h}"`).join(','), ...rows].join('\n')
-    })
+    },
 }

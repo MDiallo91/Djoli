@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
         globals: true,
         environment: 'jsdom',
         setupFiles: ['./src/test/setup.ts'],
-        include: ['src/**/*.{test,spec}.{ts,tsx}'],
+        include: ['src/**/*.{test,spec}.{ts,tsx}', 'shared/**/*.{test,spec}.{ts,tsx}'],
         exclude: ['node_modules', 'dist', 'dist-electron'],
         coverage: {
           reporter: ['text', 'lcov'],

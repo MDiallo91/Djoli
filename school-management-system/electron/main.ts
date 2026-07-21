@@ -2,17 +2,21 @@ import { app, BrowserWindow, nativeImage, shell, ipcMain } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { initDatabase } from './db'
-import { registerStudentHandlers } from './services/studentService'
-import { registerFinanceHandlers } from './services/financeService'
-import { registerGradeHandlers } from './services/gradeService'
-import { registerStaffHandlers } from './services/staffService'
-import { registerAttendanceHandlers } from './services/attendanceService'
-import { registerSchoolHandlers } from './services/schoolService'
+import { registerHandlers } from './ipcAdapter'
+import { studentHandlers } from '../shared/services/studentService'
+import { financeHandlers } from '../shared/services/financeService'
+import { gradeHandlers } from '../shared/services/gradeService'
+import { staffHandlers } from '../shared/services/staffService'
+import { attendanceHandlers } from '../shared/services/attendanceService'
+import { createSchoolHandlers } from '../shared/services/schoolService'
+import { userHandlers } from '../shared/services/userService'
+import { auditHandlers } from '../shared/services/auditService'
+import { setThresholdCallback } from '../shared/syncTracker'
 import { registerAuthHandlers } from './services/authService'
-import { registerSyncHandlers, startupSync, syncOnQuit } from './services/syncService'
-import { registerUserHandlers } from './services/userService'
-import { registerAuditHandlers } from './services/auditService'
+import { registerSyncHandlers, startupSync, syncOnQuit, checkThresholdSync } from './services/syncService'
 import { registerBackupHandlers } from './services/backupService'
+
+setThresholdCallback(checkThresholdSync)
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -108,14 +112,14 @@ app.whenReady().then(async () => {
 
     // Enregistrement de tous les handlers IPC
     registerAuthHandlers()
-    registerUserHandlers()
-    registerAuditHandlers()
-    registerStudentHandlers()
-    registerFinanceHandlers()
-    registerGradeHandlers()
-    registerStaffHandlers()
-    registerAttendanceHandlers()
-    registerSchoolHandlers()
+    registerHandlers(userHandlers)
+    registerHandlers(auditHandlers)
+    registerHandlers(studentHandlers)
+    registerHandlers(financeHandlers)
+    registerHandlers(gradeHandlers)
+    registerHandlers(staffHandlers)
+    registerHandlers(attendanceHandlers)
+    registerHandlers(createSchoolHandlers({ reinitDatabase: initDatabase }))
     registerBackupHandlers()
 
     // Ouvre la page de renouvellement d'abonnement dans le navigateur par défaut

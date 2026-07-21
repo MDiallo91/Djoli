@@ -1,5 +1,6 @@
-// Stores the currently authenticated user in the main process.
-// Written by authService after login; read by auditLogger.
+// Stores the currently authenticated user in the main process (Electron) or
+// the Worker realm (navigateur). Written by authService after login; read by
+// auditLogger.
 
 export interface SessionUser {
     id:           string

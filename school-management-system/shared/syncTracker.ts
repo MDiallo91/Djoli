@@ -1,9 +1,16 @@
-import crypto from 'node:crypto';
-import db, { getCurrentSchoolId } from './db';
+import db, { getCurrentSchoolId } from './db/core';
 import { getDeviceId } from './deviceId';
-import { checkThresholdSync } from './services/syncService';
 
 export { getDeviceId } from './deviceId';
+
+// Injecté par la plateforme (electron/main.ts ou src/worker/index.ts) pour
+// éviter un import direct de syncService, dont l'implémentation diverge
+// (webContents.send côté Electron vs postMessage côté Worker — cf. Phase 5).
+let onThreshold: (() => void) | null = null;
+
+export function setThresholdCallback(cb: (() => void) | null): void {
+    onThreshold = cb;
+}
 
 export function trackChange(
     operation: 'INSERT' | 'UPDATE' | 'DELETE',
@@ -25,5 +32,5 @@ export function trackChange(
         schoolId,
         new Date().toISOString()
     );
-    checkThresholdSync();
+    onThreshold?.();
 }

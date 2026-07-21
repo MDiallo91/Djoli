@@ -1,7 +1,6 @@
-import crypto from 'node:crypto'
-import db, { getCurrentSchoolId } from './db'
-import { getDeviceId } from './syncTracker'
-import { currentUser } from './currentSession'
+import db, { getCurrentSchoolId } from './db/core'
+import { getDeviceId } from './deviceId'
+import { currentUser } from './state/currentSession'
 
 export interface AuditEntry {
     action:       string

@@ -6,24 +6,25 @@ vi.mock('electron', () => ({
     BrowserWindow: vi.fn(),
 }))
 
-vi.mock('../../../electron/syncState', () => ({
+vi.mock('../../../shared/state/syncState', () => ({
     currentSyncSession: { schoolId: 'school-abc', licenseKey: 'license-xyz' },
     setSyncSession:     vi.fn(),
 }))
 
-vi.mock('../../../electron/deviceId', () => ({
+vi.mock('../../../shared/deviceId', () => ({
     getDeviceId: vi.fn().mockReturnValue('device-B'),
 }))
 
-vi.mock('../../../electron/syncTracker', () => ({
+vi.mock('../../../shared/syncTracker', () => ({
     trackChange: vi.fn(),
     getDeviceId: vi.fn().mockReturnValue('device-B'),
+    setThresholdCallback: vi.fn(),
 }))
 
-vi.mock('../../../electron/auditLogger', () => ({ logAction: vi.fn() }))
+vi.mock('../../../shared/auditLogger', () => ({ logAction: vi.fn() }))
 
 // ── Mock DB avec des fonctions capturables ─────────────────────────────────────
-vi.mock('../../../electron/db', () => {
+vi.mock('../../../shared/db/core', () => {
     const runFn = vi.fn()
     const getFn = vi.fn().mockReturnValue(null)
     const allFn = vi.fn().mockReturnValue([])
@@ -35,8 +36,8 @@ vi.mock('../../../electron/db', () => {
 })
 
 // ── Import après mocks ─────────────────────────────────────────────────────────
-import { _testPullChanges, _testTABLE_MAP } from '../../../electron/services/syncService'
-import db from '../../../electron/db'
+import { _testPullChanges, TABLE_MAP as _testTABLE_MAP } from '../../../shared/services/syncServiceCore'
+import db from '../../../shared/db/core'
 
 // ── Helper ─────────────────────────────────────────────────────────────────────
 function makeFetch(records: any[], serverTime = '2026-06-05T12:00:00.000Z') {

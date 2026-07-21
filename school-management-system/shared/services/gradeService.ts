@@ -1,12 +1,10 @@
-import { ipcMain } from 'electron'
-import crypto from 'node:crypto'
-import db from '../db'
+import db from '../db/core'
 import { trackChange } from '../syncTracker'
 import { logAction } from '../auditLogger'
 
-export function registerGradeHandlers() {
+export const gradeHandlers: Record<string, (...args: any[]) => any> = {
 
-    ipcMain.handle('add-grade', (_event, grade: any) => {
+    'add-grade': (grade: any) => {
         const { student_id, subject_id, score, exam_type, term, school_year_id } = grade
 
         // Determine the max score from the student's class level (Primaire = /10, others = /20)
@@ -28,9 +26,9 @@ export function registerGradeHandlers() {
         const subjectRow = db.prepare('SELECT name FROM subjects WHERE id = ?').get(subject_id) as any
         logAction({ action: 'add_grade', entityType: 'grade', entityId: id, entityLabel: `${subjectRow?.name ?? subject_id} — ${score}/${maxScore} (${term})`, newValue: { student_id, subject_id, score, exam_type, term } })
         return { success: true, id }
-    })
+    },
 
-    ipcMain.handle('get-student-grades', (_event, data: string | { studentId: string, yearId?: string }) => {
+    'get-student-grades': (data: string | { studentId: string, yearId?: string }) => {
         const studentId = typeof data === 'string' ? data : data.studentId
         const yearId = typeof data === 'object' ? data.yearId : undefined
         if (yearId) {
@@ -47,9 +45,9 @@ export function registerGradeHandlers() {
             JOIN subjects s ON g.subject_id = s.id
             WHERE g.student_id = ?
         `).all(studentId)
-    })
+    },
 
-    ipcMain.handle('get-class-grades', (_event, data: { classId: number, subjectId: number, term: string, yearId?: string }) => {
+    'get-class-grades': (data: { classId: number, subjectId: number, term: string, yearId?: string }) => {
         const { classId, subjectId, term, yearId } = data
         if (yearId) {
             return db.prepare(`
@@ -75,9 +73,9 @@ export function registerGradeHandlers() {
             GROUP BY s.id
             ORDER BY s.last_name ASC, s.first_name ASC
         `).all(subjectId, term, classId)
-    })
+    },
 
-    ipcMain.handle('save-class-grades-bulk', (_event, data: { grades: any[], subjectId: string, term: string, yearId?: string, classId?: string }) => {
+    'save-class-grades-bulk': (data: { grades: any[], subjectId: string, term: string, yearId?: string, classId?: string }) => {
         const { grades, subjectId, term, yearId, classId } = data
 
         // Determine max score from class level
@@ -117,9 +115,9 @@ export function registerGradeHandlers() {
             logAction({ action: 'bulk_grades', entityType: 'grade', entityLabel: `${saved.length} note(s) — ${term}`, newValue: { count: saved.length, subject_id: subjectId, term } })
         }
         return { success: true }
-    })
+    },
 
-    ipcMain.handle('get-class-rankings', (_event, classId: number, term: string) => {
+    'get-class-rankings': (classId: number, term: string) => {
         return db.prepare(`
             WITH ActiveSubjects AS (
                 SELECT s.id, s.coefficient
@@ -150,24 +148,24 @@ export function registerGradeHandlers() {
             JOIN students st ON sa.student_id = st.id
             ORDER BY average DESC
         `).all(classId, classId, term, classId)
-    })
+    },
 
-    ipcMain.handle('get-class-subjects', (_event, classId: number) => {
+    'get-class-subjects': (classId: number) => {
         return db.prepare(`
             SELECT cs.id, s.name, cs.coefficient, cs.subject_id
             FROM class_subjects cs
             JOIN subjects s ON cs.subject_id = s.id
             WHERE cs.class_id = ?
         `).all(classId)
-    })
+    },
 
-    ipcMain.handle('add-class-subject', (_event, data: { classId: string, subjectId: string, coefficient: number }) => {
+    'add-class-subject': (data: { classId: string, subjectId: string, coefficient: number }) => {
         const { classId, subjectId, coefficient } = data
         const id = crypto.randomUUID()
         return db.prepare('INSERT INTO class_subjects (id, class_id, subject_id, coefficient) VALUES (?, ?, ?, ?)').run(id, classId, subjectId, coefficient)
-    })
+    },
 
-    ipcMain.handle('remove-class-subject', (_event, id: string) => {
+    'remove-class-subject': (id: string) => {
         return db.prepare('DELETE FROM class_subjects WHERE id = ?').run(id)
-    })
+    },
 }

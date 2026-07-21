@@ -1,14 +1,12 @@
-import { ipcMain } from 'electron'
-import crypto from 'node:crypto'
-import db from '../db'
+import db from '../db/core'
 import { studentSchema } from '../validation'
 import { trackChange } from '../syncTracker'
 import { logAction } from '../auditLogger'
-import { currentUser } from '../currentSession'
+import { currentUser } from '../state/currentSession'
 
-export function registerStudentHandlers() {
+export const studentHandlers: Record<string, (...args: any[]) => any> = {
 
-    ipcMain.handle('get-stats', (_event, yearId?: string) => {
+    'get-stats': (yearId?: string) => {
         const resolvedYearId = yearId || (db.prepare('SELECT id FROM school_years WHERE is_active = 1 LIMIT 1').get() as any)?.id
         const studentCount = resolvedYearId
             ? (db.prepare(`
@@ -28,9 +26,9 @@ export function registerStudentHandlers() {
               `).get(resolvedYearId) as any)?.count || 0
             : (db.prepare('SELECT COUNT(*) as count FROM classes').get() as any)?.count || 0
         return { studentCount, staffCount, classCount }
-    })
+    },
 
-    ipcMain.handle('get-students', (_event, schoolYearId?: number) => {
+    'get-students': (schoolYearId?: number) => {
         const base = `
             SELECT
                 s.*,
@@ -62,9 +60,9 @@ export function registerStudentHandlers() {
 
         const query = conditions.length > 0 ? base + ' WHERE ' + conditions.join(' AND ') : base
         return db.prepare(query).all(...params)
-    })
+    },
 
-    ipcMain.handle('search-students', (_event, searchTerm: string) => {
+    'search-students': (searchTerm: string) => {
         if (!searchTerm || searchTerm.length < 2) return []
         const query = `
             SELECT s.*, p.first_name as parent_first_name, p.last_name as parent_last_name,
@@ -76,9 +74,9 @@ export function registerStudentHandlers() {
         `
         const pattern = `%${searchTerm}%`
         return db.prepare(query).all(pattern, pattern, pattern, pattern)
-    })
+    },
 
-    ipcMain.handle('add-student', (_event, data: any) => {
+    'add-student': (data: any) => {
         const parsed = studentSchema.safeParse(data)
         if (!parsed.success) {
             throw new Error(parsed.error.issues.map((e: any) => e.message).join(', '))
@@ -105,13 +103,13 @@ export function registerStudentHandlers() {
         if (finalStudentId) {
             const oldRow = db.prepare('SELECT * FROM students WHERE id = ?').get(finalStudentId)
             db.prepare(`UPDATE students SET matricule=?, first_name=?, last_name=?, gender=?, birth_date=?, address=?, pere=?, mere=?, phone=?, parent_id=?, updated_at=? WHERE id=?`)
-                .run(student.matricule || null, student.first_name, student.last_name, student.gender, student.birth_date, student.address, student.pere || null, student.mere || null, student.phone || null, parentId, now, finalStudentId)
+                .run(student.matricule || null, student.first_name, student.last_name, student.gender, student.birth_date || null, student.address || null, student.pere || null, student.mere || null, student.phone || null, parentId ?? null, now, finalStudentId)
             trackChange('UPDATE', 'student', finalStudentId, { ...student, parent_id: parentId, updated_at: now })
             logAction({ action: 'edit_student', entityType: 'student', entityId: finalStudentId, entityLabel: fullName, oldValue: oldRow, newValue: { ...student, parent_id: parentId } })
         } else {
             finalStudentId = crypto.randomUUID()
             db.prepare(`INSERT INTO students (id, matricule, first_name, last_name, gender, birth_date, address, pere, mere, phone, parent_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-                .run(finalStudentId, student.matricule || null, student.first_name, student.last_name, student.gender || 'M', student.birth_date || null, student.address || null, student.pere || null, student.mere || null, student.phone || null, parentId, now, now)
+                .run(finalStudentId, student.matricule || null, student.first_name, student.last_name, student.gender || 'M', student.birth_date || null, student.address || null, student.pere || null, student.mere || null, student.phone || null, parentId ?? null, now, now)
             trackChange('INSERT', 'student', finalStudentId, { ...student, id: finalStudentId, parent_id: parentId, created_at: now, updated_at: now })
             logAction({ action: 'add_student', entityType: 'student', entityId: finalStudentId, entityLabel: fullName, newValue: { ...student, parent_id: parentId } })
         }
@@ -134,9 +132,9 @@ export function registerStudentHandlers() {
         }
 
         return { studentId: finalStudentId, parentId }
-    })
+    },
 
-    ipcMain.handle('delete-student', (_event, id: string) => {
+    'delete-student': (id: string) => {
         if (!id) throw new Error('ID étudiant requis')
         const enrollments = db.prepare('SELECT id FROM enrollments WHERE student_id = ?').all(id) as any[]
         db.prepare('DELETE FROM enrollments WHERE student_id = ?').run(id)
@@ -146,9 +144,9 @@ export function registerStudentHandlers() {
         trackChange('DELETE', 'student', id, null)
         logAction({ action: 'delete_student', entityType: 'student', entityId: id, entityLabel: studentRow ? `${studentRow.first_name} ${studentRow.last_name}` : id })
         return result
-    })
+    },
 
-    ipcMain.handle('get-student-gender-stats', (_event, yearId?: string) => {
+    'get-student-gender-stats': (yearId?: string) => {
         const resolvedYearId = yearId || (db.prepare('SELECT id FROM school_years WHERE is_active = 1 LIMIT 1').get() as any)?.id
         if (resolvedYearId) {
             return db.prepare(`
@@ -160,9 +158,9 @@ export function registerStudentHandlers() {
             `).all(resolvedYearId)
         }
         return db.prepare('SELECT gender, COUNT(*) as count FROM students GROUP BY gender').all()
-    })
+    },
 
-    ipcMain.handle('get-enrollment-stats', () => {
+    'get-enrollment-stats': () => {
         return db.prepare(`
             SELECT sy.name as year, COUNT(e.id) as count
             FROM school_years sy
@@ -170,9 +168,9 @@ export function registerStudentHandlers() {
             GROUP BY sy.id
             ORDER BY sy.start_date ASC
         `).all()
-    })
+    },
 
-    ipcMain.handle('get-class-enrollment-stats', () => {
+    'get-class-enrollment-stats': () => {
         const stats = db.prepare(`
             SELECT c.name as class_name, COUNT(e.id) as count
             FROM classes c
@@ -185,10 +183,10 @@ export function registerStudentHandlers() {
             byClass: stats,
             total: stats.reduce((acc, s) => acc + s.count, 0)
         }
-    })
+    },
 
-    ipcMain.handle('export-class-excel', async (_event, data: { students: any[], className: string }) => {
-        const { students, className } = data
+    'export-class-excel': async (data: { students: any[], className: string }) => {
+        const { students } = data
         const XLSX = await import('xlsx')
         const exportData = students.map(s => ({
             'Matricule': s.matricule || '',
@@ -204,12 +202,12 @@ export function registerStudentHandlers() {
         const worksheet = XLSX.utils.json_to_sheet(exportData)
         const workbook = XLSX.utils.book_new()
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Liste Élèves')
-        return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
-    })
+        return XLSX.write(workbook, { type: 'array', bookType: 'xlsx' }) as Uint8Array
+    },
 
-    ipcMain.handle('import-class-excel', async (_event, { buffer, classId, schoolYearId }: { buffer: Uint8Array, classId: string, schoolYearId: string }) => {
+    'import-class-excel': async ({ buffer, classId, schoolYearId }: { buffer: Uint8Array, classId: string, schoolYearId: string }) => {
         const XLSX = await import('xlsx')
-        const workbook = XLSX.read(Buffer.from(buffer), { type: 'buffer' })
+        const workbook = XLSX.read(buffer, { type: 'array' })
         const sheet = workbook.Sheets[workbook.SheetNames[0]]
         const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: '' })
 
@@ -233,5 +231,5 @@ export function registerStudentHandlers() {
             count++
         }
         return { count }
-    })
+    },
 }

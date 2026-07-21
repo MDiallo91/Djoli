@@ -1,13 +1,11 @@
-import { ipcMain } from 'electron'
-import crypto from 'node:crypto'
-import db from '../db'
+import db from '../db/core'
 import { staffSchema } from '../validation'
 import { trackChange } from '../syncTracker'
 import { logAction } from '../auditLogger'
 
-export function registerStaffHandlers() {
+export const staffHandlers: Record<string, (...args: any[]) => any> = {
 
-    ipcMain.handle('get-staff', () => {
+    'get-staff': () => {
         return db.prepare(`
             SELECT s.*,
                 (SELECT GROUP_CONCAT(DISTINCT sub.name)
@@ -18,9 +16,9 @@ export function registerStaffHandlers() {
             WHERE s.deleted_at IS NULL
             ORDER BY s.last_name ASC
         `).all()
-    })
+    },
 
-    ipcMain.handle('add-staff', (_event, staffMember: any) => {
+    'add-staff': (staffMember: any) => {
         const parsed = staffSchema.safeParse(staffMember)
         if (!parsed.success) throw new Error(parsed.error.issues.map((e: any) => e.message).join(', '))
 
@@ -32,9 +30,9 @@ export function registerStaffHandlers() {
         trackChange('INSERT', 'staff', id, { id, first_name, last_name, role, phone: phone || null, email: email || null, address: address || null, salary_base: salary_base || 0, hire_date: hire_date || null, created_at: now, updated_at: now })
         logAction({ action: 'add_staff', entityType: 'staff', entityId: id, entityLabel: `${first_name} ${last_name}`, newValue: parsed.data })
         return { success: true, id }
-    })
+    },
 
-    ipcMain.handle('update-staff', (_event, staffMember: any) => {
+    'update-staff': (staffMember: any) => {
         const { id, first_name, last_name, role, phone, email, address, salary_base, hire_date } = staffMember
         const now = new Date().toISOString()
         const oldRow = db.prepare('SELECT * FROM staff WHERE id = ?').get(id)
@@ -44,9 +42,9 @@ export function registerStaffHandlers() {
         trackChange('UPDATE', 'staff', id, updated)
         logAction({ action: 'edit_staff', entityType: 'staff', entityId: id, entityLabel: `${first_name} ${last_name}`, oldValue: oldRow, newValue: updated })
         return { success: true }
-    })
+    },
 
-    ipcMain.handle('delete-staff', (_event, id: string) => {
+    'delete-staff': (id: string) => {
         if (!id) throw new Error('ID requis')
         const staffRow = db.prepare('SELECT first_name, last_name FROM staff WHERE id = ?').get(id) as any
         const now = new Date().toISOString()
@@ -54,18 +52,18 @@ export function registerStaffHandlers() {
         trackChange('DELETE', 'staff', id, null)
         logAction({ action: 'delete_staff', entityType: 'staff', entityId: id, entityLabel: staffRow ? `${staffRow.first_name} ${staffRow.last_name}` : id })
         return { success: true }
-    })
+    },
 
-    ipcMain.handle('get-salaries', (_event, month: string) => {
+    'get-salaries': (month: string) => {
         return db.prepare(`
             SELECT s.*, st.first_name, st.last_name, st.role, st.salary_base
             FROM salaries s
             JOIN staff st ON s.staff_id = st.id
             WHERE s.month = ?
         `).all(month)
-    })
+    },
 
-    ipcMain.handle('pay-salary', (_event, data: any) => {
+    'pay-salary': (data: any) => {
         const { staff_id, month, year, base_salary, net_salary, bonus } = data
         const monthStr = `${year}-${month}`
         const id  = crypto.randomUUID()
@@ -81,5 +79,5 @@ export function registerStaffHandlers() {
         trackChange('INSERT', 'cash_transaction', cashId, { id: cashId, type: 'OUT', amount: net_salary, reason, reference_id: id, created_at: now, updated_at: now })
 
         return { success: true, id }
-    })
+    },
 }

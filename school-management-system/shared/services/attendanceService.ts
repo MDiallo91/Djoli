@@ -1,10 +1,8 @@
-import { ipcMain } from 'electron'
-import crypto from 'node:crypto'
-import db from '../db'
+import db from '../db/core'
 
-export function registerAttendanceHandlers() {
+export const attendanceHandlers: Record<string, (...args: any[]) => any> = {
 
-    ipcMain.handle('get-student-attendance', (_event, classId: number, date: string) => {
+    'get-student-attendance': (classId: number, date: string) => {
         return db.prepare(`
             SELECT s.id as student_id, s.first_name, s.last_name, sa.status
             FROM students s
@@ -12,9 +10,9 @@ export function registerAttendanceHandlers() {
             LEFT JOIN student_attendance sa ON s.id = sa.student_id AND sa.date = ?
             WHERE e.class_id = ?
         `).all(date, classId)
-    })
+    },
 
-    ipcMain.handle('add-student-attendance', (_event, attendanceRecords: any[]) => {
+    'add-student-attendance': (attendanceRecords: any[]) => {
         for (const record of attendanceRecords) {
             const existing = db.prepare('SELECT id FROM student_attendance WHERE student_id = ? AND date = ?').get(record.student_id, record.date)
             if (existing) {
@@ -24,13 +22,13 @@ export function registerAttendanceHandlers() {
             }
         }
         return { success: true }
-    })
+    },
 
-    ipcMain.handle('get-teacher-attendance', (_event, month: string) => {
+    'get-teacher-attendance': (month: string) => {
         return db.prepare("SELECT * FROM teacher_attendance WHERE strftime('%Y-%m', date) = ?").all(month)
-    })
+    },
 
-    ipcMain.handle('add-teacher-attendance', (_event, attendance: any) => {
+    'add-teacher-attendance': (attendance: any) => {
         const { teacher_id, date, status, hours_worked } = attendance
         const existing = db.prepare('SELECT id FROM teacher_attendance WHERE staff_id = ? AND date = ?').get(teacher_id, date) as any
         if (existing) {
@@ -40,5 +38,5 @@ export function registerAttendanceHandlers() {
         const id = crypto.randomUUID()
         db.prepare('INSERT INTO teacher_attendance (id, staff_id, date, status, hours_worked) VALUES (?, ?, ?, ?, ?)').run(id, teacher_id, date, status, hours_worked || 0)
         return { success: true, id }
-    })
+    },
 }

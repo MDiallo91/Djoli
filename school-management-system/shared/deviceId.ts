@@ -1,5 +1,4 @@
-import crypto from 'node:crypto';
-import db from './db';
+import db from './db/core'
 
 export function getDeviceId(): string {
     const row = db.prepare('SELECT value FROM global_config WHERE key = ?').get('device_id') as any;
