@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import UserModel from '../models/userModel';
+import Administrateur from '../models/administrateurModel';
+import Role from '../models/roleModel';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { generateLicenseKey } from '../services/licenseService';
@@ -7,10 +9,14 @@ import { sendOTPEmail } from '../services/emailService';
 
 const TOKEN_MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
 
-const createToken = (id: string): string => {
+// `type` distingue un token admin (table `admins`) d'un token école (table
+// `users`) — les deux partagent le même cookie `jwt` et le même endpoint de
+// login (voir signIn ci-dessous), donc requireAdminAuth s'appuie sur ce
+// claim pour savoir dans quelle table recharger l'utilisateur.
+const createToken = (id: string, type: 'school' | 'admin' = 'school'): string => {
     const secret = process.env.JWT_SECRET;
     if (!secret) throw new Error('JWT_SECRET non configuré');
-    return jwt.sign({ id }, secret, { expiresIn: TOKEN_MAX_AGE_MS / 1000 });
+    return jwt.sign({ id, type }, secret, { expiresIn: TOKEN_MAX_AGE_MS / 1000 });
 };
 
 export const signUp = async (req: Request, res: Response): Promise<void> => {
@@ -68,7 +74,6 @@ function buildUserResponse(user: UserModel, token: string) {
 }
 
 function checkAccountStatus(user: UserModel): string | null {
-    if (user.role === 'super_admin') return null;
     if (user.approvalStatus === 'email_verification') return 'Veuillez confirmer votre email avant de vous connecter.';
     if (user.approvalStatus === 'pending')            return 'Votre compte est en attente d\'approbation par l\'administrateur.';
     if (user.approvalStatus === 'rejected')           return 'Votre demande d\'inscription a été refusée. Contactez le support.';
@@ -76,10 +81,35 @@ function checkAccountStatus(user: UserModel): string | null {
     return null;
 }
 
-// Connexion simple email + mot de passe
+// `role: 'super_admin'` est un champ de compatibilité — le frontend ne fait
+// aujourd'hui qu'un contrôle binaire (`data.role === 'super_admin'` → accès
+// à /admin). Tout administrateur authentifié l'obtient ; la distinction fine
+// par Role/permissions est disponible côté backend pour un contrôle plus
+// granulaire plus tard, sans changement frontend nécessaire d'ici là.
+async function buildAdminResponse(admin: Administrateur, token: string) {
+    const role = admin.role_id ? await Role.findByPk(admin.role_id) : null;
+    return {
+        id: admin.id, schoolName: admin.name, email: admin.email,
+        role: 'super_admin', adminRole: role?.name ?? 'Super Admin',
+        permissions: role ? JSON.parse(role.permissions || '[]') : null,
+        createdAt: admin.createdAt, access_token: token,
+    };
+}
+
+// Connexion simple email + mot de passe — sert à la fois les comptes école
+// (table `users`) et les comptes admin plateforme (table `admins`), pour
+// garder un seul endpoint/formulaire de connexion côté frontend.
 export const signIn = async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
     try {
+        const admin = await Administrateur.findOne({ where: { email } });
+        if (admin && await bcrypt.compare(password, admin.password)) {
+            const token = createToken(admin.id, 'admin');
+            res.cookie('jwt', token, { httpOnly: true, maxAge: TOKEN_MAX_AGE_MS });
+            res.status(200).json(await buildAdminResponse(admin, token));
+            return;
+        }
+
         const user = await UserModel.findOne({ where: { email } });
         if (!user || !(await bcrypt.compare(password, user.password))) {
             res.status(401).json({ message: 'Email ou mot de passe incorrect' });
@@ -88,7 +118,7 @@ export const signIn = async (req: Request, res: Response): Promise<void> => {
         const statusError = checkAccountStatus(user);
         if (statusError) { res.status(403).json({ message: statusError }); return; }
 
-        const token = createToken(user.id);
+        const token = createToken(user.id, 'school');
         res.cookie('jwt', token, { httpOnly: true, maxAge: TOKEN_MAX_AGE_MS });
         res.status(200).json(buildUserResponse(user, token));
     } catch {

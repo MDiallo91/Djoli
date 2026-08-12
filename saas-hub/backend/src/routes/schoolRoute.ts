@@ -1,19 +1,15 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/authMiddleware';
-import {
-    getProfile, updateProfile, changePassword, getSchoolStats, getDashboardStats,
-    getStudents, createStudent, updateStudent, deleteStudent, getStudentsDetailed,
-    getSchoolYears, createSchoolYear, updateSchoolYear, deleteSchoolYear,
-    getClasses, createClass, updateClass, deleteClass,
-    getSubjects, createSubject, deleteSubject,
-    getClassSubjects, createClassSubject, deleteClassSubject,
-    getStaff, createStaff, updateStaff, deleteStaff,
-    getEnrollments, createEnrollment, deleteEnrollment,
-    getGrades, saveGradesBulk, deleteGrade,
-    getPayments, createPayment, deletePayment,
-    getTransactions, createTransaction, deleteTransaction,
-    getStudentBulletin,
-} from '../controllers/schoolController';
+import { getProfile, updateProfile, changePassword, getSchoolStats } from '../controllers/school/schoolProfileController';
+import { getDashboardStats } from '../controllers/school/dashboardController';
+import { getStudents, createStudent, updateStudent, deleteStudent, getStudentsDetailed, getStudentBulletin } from '../controllers/school/elevesController';
+import { getSchoolYears, createSchoolYear, updateSchoolYear, deleteSchoolYear } from '../controllers/school/anneesScolairesController';
+import { getClasses, createClass, updateClass, deleteClass } from '../controllers/school/classesController';
+import { getSubjects, createSubject, deleteSubject, getClassSubjects, createClassSubject, deleteClassSubject } from '../controllers/school/matieresController';
+import { getStaff, createStaff, updateStaff, deleteStaff } from '../controllers/school/personnelController';
+import { getEnrollments, createEnrollment, deleteEnrollment } from '../controllers/school/inscriptionsController';
+import { getGrades, saveGradesBulk, deleteGrade } from '../controllers/school/notesController';
+import { getPayments, createPayment, deletePayment, getTransactions, createTransaction, deleteTransaction } from '../controllers/school/financeController';
 
 const router = Router();
 

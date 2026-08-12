@@ -1,9 +1,53 @@
 import { Request, Response } from 'express';
-import { Op } from 'sequelize';
+import { Op, Transaction } from 'sequelize';
 import SchoolRecord from '../models/schoolRecordModel';
+import { entityRegistry, getRegistryEntry, CRITICAL_ENTITY_TYPES } from '../sync/entityRegistry';
 import sequelize from '../config/db';
 
-const CRITICAL_ENTITIES = new Set(['grade', 'payment']);
+// ── Miroir typé (reporting) ──────────────────────────────────────────────────
+// `school_records` (JSON libre) reste la seule source de vérité pour la sync
+// elle-même. Toute entité présente dans `entityRegistry` est en plus
+// recopiée dans une table typée, pour permettre des requêtes SQL cloud
+// directes (API web, reporting) sans devoir charger/parser du JSON.
+// Best-effort : toute erreur ici est loggée et avalée, jamais propagée —
+// un souci sur le miroir ne doit jamais faire échouer la sync principale.
+const parsePayload = (payload: any): Record<string, any> => {
+    if (payload == null) return {};
+    if (typeof payload === 'string') {
+        try { return JSON.parse(payload); } catch { return {}; }
+    }
+    return payload;
+};
+
+async function mirrorTypedEntity(
+    entityType: string,
+    entityId:   string,
+    schoolId:   string,
+    operation:  string,
+    payload:    any,
+    deviceId:   string | null,
+    t:          Transaction,
+): Promise<void> {
+    const entry = getRegistryEntry(entityType);
+    if (!entry) return; // entité pas (encore) dans le registre — school_records reste seule source
+
+    if (operation === 'DELETE') {
+        await entry.model.update(
+            { deleted_at: new Date() },
+            { where: { id: entityId, school_id: schoolId }, transaction: t },
+        );
+        return;
+    }
+
+    const p = parsePayload(payload);
+    await entry.model.upsert({
+        id:         entityId,
+        school_id:  schoolId,
+        device_id:  deviceId ?? null,
+        deleted_at: null,
+        ...entry.mapPayload(p),
+    }, { transaction: t });
+}
 
 // ── POST /api/sync/push ──────────────────────────────────────────────────────
 // Receives changes from the desktop, upserts them into school_records.
@@ -25,7 +69,7 @@ export const pushChanges = async (req: Request, res: Response): Promise<void> =>
 
     // Pre-fetch existing records for conflict detection (one query instead of N)
     const entityKeys = changes
-        .filter(c => c.entity_type && c.entity_id && CRITICAL_ENTITIES.has(c.entity_type))
+        .filter(c => c.entity_type && c.entity_id && CRITICAL_ENTITY_TYPES.has(c.entity_type))
         .map(c => ({ entity_type: c.entity_type, entity_id: c.entity_id }));
 
     const existingCritical = entityKeys.length > 0
@@ -47,7 +91,7 @@ export const pushChanges = async (req: Request, res: Response): Promise<void> =>
             try {
                 const existing = existingMap.get(`${entity_type}:${entity_id}`);
 
-                if (existing && CRITICAL_ENTITIES.has(entity_type) && existing.device_id !== device_id) {
+                if (existing && CRITICAL_ENTITY_TYPES.has(entity_type) && existing.device_id !== device_id) {
                     conflicts.push({
                         entity_type,
                         entity_id,
@@ -70,6 +114,14 @@ export const pushChanges = async (req: Request, res: Response): Promise<void> =>
                     operation:  operation ?? 'UPDATE',
                     deleted_at: operation === 'DELETE' ? new Date() : null,
                 }, { transaction: t, conflictFields: ['school_id', 'entity_type', 'entity_id'] } as any);
+
+                if (getRegistryEntry(entity_type)) {
+                    try {
+                        await mirrorTypedEntity(entity_type, entity_id, schoolId, operation ?? 'UPDATE', payload, device_id, t);
+                    } catch (mirrorErr) {
+                        console.error(`[syncController push] Miroir typé échoué pour ${entity_type}/${entity_id}:`, mirrorErr);
+                    }
+                }
 
                 applied++;
             } catch (err) {
@@ -139,6 +191,17 @@ export const resetSchoolRecords = async (req: Request, res: Response): Promise<v
             where.entity_type = entity_types;
         }
         const deleted = await SchoolRecord.destroy({ where });
+
+        // Les tables miroir typées sont repeuplées au prochain push complet —
+        // on les vide en cohérence avec school_records pour ne pas garder de
+        // lignes orphelines pour cette école (ou cette entité si ciblée).
+        const targets = Array.isArray(entity_types) && entity_types.length > 0
+            ? entityRegistry.filter(e => entity_types.includes(e.entityType))
+            : entityRegistry;
+        for (const entry of targets) {
+            await entry.model.destroy({ where: { school_id: schoolId } });
+        }
+
         console.log(`[Sync] RESET school=${schoolId} — deleted ${deleted} records` + (entity_types ? ` (${entity_types.join(',')})` : ''));
         res.status(200).json({ deleted, school_id: schoolId });
     } catch (err) {

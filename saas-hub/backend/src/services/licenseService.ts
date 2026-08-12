@@ -4,7 +4,15 @@ import UserModel from '../models/userModel';
 // For production: switch to RS256 (asymmetric).
 // Private key stays on server; embed public key in Electron app.
 // For now: HS256 with LICENSE_SECRET shared secret.
-const LICENSE_SECRET = process.env.LICENSE_SECRET || 'sms-pro-dev-license-secret-change-in-prod';
+//
+// No hardcoded fallback — a hardcoded dev secret in a public repo lets anyone
+// forge a valid license. Same convention as JWT_SECRET in authController.ts:
+// fail loudly at call time rather than silently signing with a known secret.
+const getLicenseSecret = (): string => {
+    const secret = process.env.LICENSE_SECRET;
+    if (!secret) throw new Error('LICENSE_SECRET non configuré');
+    return secret;
+};
 
 export interface LicensePayload {
     school_id: string;
@@ -41,9 +49,9 @@ export function generateLicenseKey(user: UserModel): string {
     };
 
     // License token valid for 400 days — renewed on each successful login
-    return jwt.sign(payload, LICENSE_SECRET, { expiresIn: '400d' });
+    return jwt.sign(payload, getLicenseSecret(), { expiresIn: '400d' });
 }
 
 export function verifyLicenseKey(token: string): LicensePayload {
-    return jwt.verify(token, LICENSE_SECRET) as LicensePayload;
+    return jwt.verify(token, getLicenseSecret()) as LicensePayload;
 }

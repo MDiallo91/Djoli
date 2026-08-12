@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import Setting from '../models/settingModel';
+import { requireAdminAuth } from '../middleware/adminAuth';
 
 const router = Router();
 
@@ -36,8 +37,9 @@ router.get('/:key', async (req, res) => {
     }
 });
 
-// PUT (upsert) une setting
-router.put('/:key', async (req, res) => {
+// PUT (upsert) une setting — écriture réservée aux admins (n'importe qui
+// pouvait auparavant réécrire tarifs/gateways/contact sans authentification).
+router.put('/:key', requireAdminAuth, async (req, res) => {
     try {
         const { statut, data } = req.body;
         const [row, created] = await Setting.findOrCreate({
