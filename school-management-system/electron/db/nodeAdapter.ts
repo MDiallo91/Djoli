@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { app } from 'electron'
-import { fileURLToPath } from 'node:url'
 import type { DbPersistenceAdapter } from '../../shared/db/types'
 
 const userDataPath = app.getPath('userData')
@@ -33,7 +32,10 @@ export const nodeAdapter: DbPersistenceAdapter = {
   },
 
   locateSqlWasmFile(file) {
-    const currentPath = path.dirname(fileURLToPath(import.meta.url))
-    return path.join(currentPath, '..', '..', 'node_modules', 'sql.js', 'dist', file)
+    // app.getAppPath() est le dossier du projet (package.json) en dev comme en asar
+    // packagé — plus fiable qu'un chemin relatif à import.meta.url, qui dépend de la
+    // profondeur du bundle produit par vite-plugin-electron (dist-electron/main.js
+    // est un fichier unique, pas un miroir de l'arborescence electron/db/).
+    return path.join(app.getAppPath(), 'node_modules', 'sql.js', 'dist', file)
   },
 }

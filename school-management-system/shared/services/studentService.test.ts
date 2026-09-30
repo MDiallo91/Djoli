@@ -27,7 +27,11 @@ describe('shared/services/studentService', () => {
 
         studentHandlers = (await import('./studentService')).studentHandlers
         const { createSchoolHandlers } = await import('./schoolService')
-        schoolHandlers = createSchoolHandlers({ reinitDatabase: async () => {} })
+        schoolHandlers = createSchoolHandlers({
+            reinitDatabase: async () => {},
+            requestLevels: async () => ({ levels: [], pendingLevels: [] }),
+            refreshAccessToken: async () => null,
+        })
     })
 
     it('add-student crée un élève et son inscription', () => {

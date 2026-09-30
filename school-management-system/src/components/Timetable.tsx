@@ -574,10 +574,10 @@ export function Timetable() {
                 <div className="bg-white rounded-xl border border-gray-200 overflow-auto">
                     <table className="w-full border-collapse text-sm" style={{ minWidth: 700 }}>
                         <thead>
-                            <tr style={{ backgroundColor: HDR }}>
-                                <th className="p-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ width: '10%', color: '#fff' }}>Horaire</th>
+                            <tr className="timetable-header-row" style={{ backgroundColor: HDR }}>
+                                <th className="timetable-header-cell p-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ width: '10%', color: '#fff' }}>Horaire</th>
                                 {DAYS.map(d => (
-                                    <th key={d} className="p-3 text-center text-xs font-semibold uppercase tracking-wide" style={{ color: '#fff' }}>{d}</th>
+                                    <th key={d} className="timetable-header-cell p-3 text-center text-xs font-semibold uppercase tracking-wide" style={{ color: '#fff' }}>{d}</th>
                                 ))}
                             </tr>
                         </thead>
@@ -688,10 +688,10 @@ export function Timetable() {
                         <div className="bg-white rounded-xl border border-gray-200 overflow-auto">
                             <table className="w-full border-collapse text-sm" style={{ minWidth: 700 }}>
                                 <thead>
-                                    <tr style={{ backgroundColor: HDR }}>
-                                        <th className="p-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ width: '10%', color: '#fff' }}>Horaire</th>
+                                    <tr className="timetable-header-row" style={{ backgroundColor: HDR }}>
+                                        <th className="timetable-header-cell p-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ width: '10%', color: '#fff' }}>Horaire</th>
                                         {DAYS.map(d => (
-                                            <th key={d} className="p-3 text-center text-xs font-semibold uppercase tracking-wide" style={{ color: '#fff' }}>{d}</th>
+                                            <th key={d} className="timetable-header-cell p-3 text-center text-xs font-semibold uppercase tracking-wide" style={{ color: '#fff' }}>{d}</th>
                                         ))}
                                     </tr>
                                 </thead>

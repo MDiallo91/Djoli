@@ -1,4 +1,4 @@
-import db from '../db/core'
+import db, { getCurrentSchoolId } from '../db/core'
 import { currentUser } from '../state/currentSession'
 import { trackChange } from '../syncTracker'
 
@@ -7,6 +7,16 @@ export interface SchoolServiceDeps {
     // (fs+nodeAdapter vs IndexedDB) diverge par plateforme, cf. electron/db.ts
     // et src/worker/index.ts.
     reinitDatabase: () => Promise<void>
+    // Demande de changement de cycles — appelle PUT /school/levels (nécessite
+    // une connexion réseau et le token de session obtenu à l'activation cloud).
+    // Un ajout de cycle reste en attente d'approbation admin côté backend ;
+    // un retrait s'applique immédiatement.
+    requestLevels: (levels: string[], accessToken: string) => Promise<{ levels: string[]; pendingLevels: string[] }>
+    // Obtient un access_token frais à partir de la clé de licence (POST /license/refresh-by-key) —
+    // utilisé quand aucun token n'est encore en cache (ex: session locale ouverte avant
+    // l'ajout de cette fonctionnalité, ou token expiré), pour éviter d'exiger une reconnexion
+    // manuelle par "Activation Cloud".
+    refreshAccessToken: (licenseKey: string) => Promise<{ access_token: string | null; levels: string[]; pendingLevels: string[] } | null>
 }
 
 const DEFAULT_GRADING_CONFIGS: Record<string, { scale: number; config: any[] }> = {
@@ -146,17 +156,43 @@ export function createSchoolHandlers(deps: SchoolServiceDeps): Record<string, (.
             return db.prepare('SELECT * FROM school_info WHERE id = 1').get()
         },
 
+        // `levels` n'est volontairement PAS géré ici — un ajout de cycle doit
+        // passer par 'request-school-levels' (validation admin), voir plus bas.
         'update-school-info': (info: any) => {
-            const { name, address, phone, email, logo_url, motto, city, region, commune, sous_prefecture, director_name, color_sidebar, color_accent, levels } = info
-            const levelsJson = JSON.stringify(Array.isArray(levels) ? levels : [])
+            const { name, address, phone, email, logo_url, motto, city, region, commune, sous_prefecture, director_name, color_sidebar, color_accent } = info
             return db.prepare(`UPDATE school_info SET
                 name=?, address=?, phone=?, email=?, logo_url=?, motto=?,
                 city=?, region=?, commune=?, sous_prefecture=?,
-                director_name=?, color_sidebar=?, color_accent=?, levels=?
+                director_name=?, color_sidebar=?, color_accent=?
                 WHERE id=1`
             ).run(name, address, phone, email, logo_url, motto,
                   city ?? null, region ?? null, commune ?? null, sous_prefecture ?? null,
-                  director_name ?? null, color_sidebar ?? '#1a2f6e', color_accent ?? '#2563eb', levelsJson)
+                  director_name ?? null, color_sidebar ?? '#1a2f6e', color_accent ?? '#2563eb')
+        },
+
+        // Demande de changement de cycles — retrait immédiat, ajout en attente
+        // d'approbation admin (voir SchoolServiceDeps.requestLevels ci-dessus).
+        'request-school-levels': async (levels: string[]) => {
+            const schoolId = getCurrentSchoolId()
+            if (!schoolId) throw new Error('Aucune école active')
+            let row = db.prepare('SELECT access_token, license_key FROM local_license WHERE school_id = ?').get(schoolId) as any
+
+            // Pas de token en cache (ex: session locale jamais repassée par l'activation
+            // cloud depuis l'ajout de cette fonctionnalité) — on en obtient un via la
+            // clé de licence déjà présente, sans exiger de reconnexion manuelle.
+            if (!row?.access_token) {
+                if (!row?.license_key) throw new Error('Reconnexion requise (Activation Cloud) pour modifier les cycles.')
+                const refreshed = await deps.refreshAccessToken(row.license_key).catch(() => null)
+                if (!refreshed?.access_token) throw new Error('Connexion internet requise pour modifier les cycles.')
+                db.prepare('UPDATE local_license SET access_token = ? WHERE school_id = ?').run(refreshed.access_token, schoolId)
+                row = { ...row, access_token: refreshed.access_token }
+            }
+
+            const result = await deps.requestLevels(Array.isArray(levels) ? levels : [], row.access_token)
+            const levelsJson = JSON.stringify(result.levels ?? [])
+            const pendingJson = JSON.stringify(result.pendingLevels ?? [])
+            db.prepare('UPDATE school_info SET levels = ?, pending_levels = ? WHERE id = 1').run(levelsJson, pendingJson)
+            return result
         },
 
         'get-timetable': (classId: number) => {

@@ -98,19 +98,26 @@ export const studentHandlers: Record<string, (...args: any[]) => any> = {
         }
 
         const now = new Date().toISOString()
+        // Tuteur (enregistrement `parents`) joint à la synchro de l'élève : seul parent_id est
+        // stocké côté élève, mais le cloud en a besoin tel quel (cartes scolaires).
+        const tutorRow = parentId ? db.prepare('SELECT first_name, last_name, phone FROM parents WHERE id = ?').get(parentId) as any : null
+        const tutor = {
+            tutor_name:  tutorRow ? `${tutorRow.first_name || ''} ${tutorRow.last_name || ''}`.trim() : '',
+            tutor_phone: tutorRow?.phone || '',
+        }
         let finalStudentId = student.id
         const fullName = `${student.first_name} ${student.last_name}`
         if (finalStudentId) {
             const oldRow = db.prepare('SELECT * FROM students WHERE id = ?').get(finalStudentId)
-            db.prepare(`UPDATE students SET matricule=?, first_name=?, last_name=?, gender=?, birth_date=?, address=?, pere=?, mere=?, phone=?, parent_id=?, updated_at=? WHERE id=?`)
-                .run(student.matricule || null, student.first_name, student.last_name, student.gender, student.birth_date || null, student.address || null, student.pere || null, student.mere || null, student.phone || null, parentId ?? null, now, finalStudentId)
-            trackChange('UPDATE', 'student', finalStudentId, { ...student, parent_id: parentId, updated_at: now })
+            db.prepare(`UPDATE students SET matricule=?, first_name=?, last_name=?, gender=?, birth_date=?, birth_place=?, address=?, pere=?, mere=?, phone=?, parent_id=?, updated_at=? WHERE id=?`)
+                .run(student.matricule || null, student.first_name, student.last_name, student.gender, student.birth_date || null, student.birth_place || null, student.address || null, student.pere || null, student.mere || null, student.phone || null, parentId ?? null, now, finalStudentId)
+            trackChange('UPDATE', 'student', finalStudentId, { ...student, ...tutor, parent_id: parentId, updated_at: now })
             logAction({ action: 'edit_student', entityType: 'student', entityId: finalStudentId, entityLabel: fullName, oldValue: oldRow, newValue: { ...student, parent_id: parentId } })
         } else {
             finalStudentId = crypto.randomUUID()
-            db.prepare(`INSERT INTO students (id, matricule, first_name, last_name, gender, birth_date, address, pere, mere, phone, parent_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-                .run(finalStudentId, student.matricule || null, student.first_name, student.last_name, student.gender || 'M', student.birth_date || null, student.address || null, student.pere || null, student.mere || null, student.phone || null, parentId ?? null, now, now)
-            trackChange('INSERT', 'student', finalStudentId, { ...student, id: finalStudentId, parent_id: parentId, created_at: now, updated_at: now })
+            db.prepare(`INSERT INTO students (id, matricule, first_name, last_name, gender, birth_date, birth_place, address, pere, mere, phone, parent_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+                .run(finalStudentId, student.matricule || null, student.first_name, student.last_name, student.gender || 'M', student.birth_date || null, student.birth_place || null, student.address || null, student.pere || null, student.mere || null, student.phone || null, parentId ?? null, now, now)
+            trackChange('INSERT', 'student', finalStudentId, { ...student, ...tutor, id: finalStudentId, parent_id: parentId, created_at: now, updated_at: now })
             logAction({ action: 'add_student', entityType: 'student', entityId: finalStudentId, entityLabel: fullName, newValue: { ...student, parent_id: parentId } })
         }
 

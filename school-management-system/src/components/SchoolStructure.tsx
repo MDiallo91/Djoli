@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { dbService } from '../services/db';
 import { useSchoolStore } from '../stores/useSchoolStore';
-import { Layout, BookOpen, Plus, Trash2, Hash, GraduationCap, Layers, Calendar, Wallet, Settings, CheckSquare, Check } from 'lucide-react';
+import { Layout, BookOpen, Plus, Trash2, Hash, GraduationCap, Layers, Calendar, Wallet, Settings, CheckSquare, Check, Pencil } from 'lucide-react';
 
 const ALL_CLASS_LEVELS = ['Maternelle', 'Primaire', 'Collège', 'Lycée'] as const;
 
@@ -26,6 +26,8 @@ export function SchoolStructure() {
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
     const [showSubjectAdd, setShowSubjectAdd] = useState(false);
     const [checkedSubjectIds, setCheckedSubjectIds] = useState<Set<string>>(new Set());
+    const [editingCoeffId, setEditingCoeffId] = useState<string | null>(null);
+    const [editingCoeffValue, setEditingCoeffValue] = useState<number>(1);
     const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
     const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
@@ -199,6 +201,26 @@ export function SchoolStructure() {
         await dbService.removeClassSubject(id);
         const updated = await dbService.getClassSubjects(selectedClass.id);
         setClassSubjects(updated);
+    };
+
+    const startEditCoeff = (cs: any) => {
+        setEditingCoeffId(cs.id);
+        setEditingCoeffValue(cs.coefficient);
+    };
+
+    const saveEditCoeff = async (id: string) => {
+        if (!editingCoeffValue || editingCoeffValue <= 0) { setEditingCoeffId(null); return; }
+        try {
+            await dbService.updateClassSubject(id, editingCoeffValue);
+            const updated = await dbService.getClassSubjects(selectedClass.id);
+            setClassSubjects(updated);
+            showNotification('Coefficient mis à jour !');
+        } catch (error) {
+            console.error(error);
+            showNotification('Erreur lors de la mise à jour du coefficient.', 'error');
+        } finally {
+            setEditingCoeffId(null);
+        }
     };
 
     return (
@@ -651,9 +673,30 @@ export function SchoolStructure() {
                                 <div className="grid grid-cols-2 gap-4">
                                     {classSubjects.map(cs => (
                                         <div key={cs.id} className="bg-white border-2 border-gray-50 p-4 rounded-3xl flex justify-between items-center group/item hover:border-primary/20 transition-all">
-                                            <div>
+                                            <div className="flex-1 min-w-0">
                                                 <p className="font-black text-gray-900">{cs.name}</p>
-                                                <p className="text-[10px] font-black text-primary uppercase tracking-widest">Coefficient: {cs.coefficient}</p>
+                                                {editingCoeffId === cs.id ? (
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <input
+                                                            type="number" min={1} step={1} autoFocus
+                                                            value={editingCoeffValue}
+                                                            onChange={e => setEditingCoeffValue(parseInt(e.target.value) || 1)}
+                                                            onKeyDown={e => {
+                                                                if (e.key === 'Enter') saveEditCoeff(cs.id)
+                                                                if (e.key === 'Escape') setEditingCoeffId(null)
+                                                            }}
+                                                            className="w-16 px-2 py-1 text-xs font-bold border-2 border-primary/30 rounded-lg outline-none focus:border-primary"
+                                                        />
+                                                        <button onClick={() => saveEditCoeff(cs.id)} className="text-[10px] font-black text-primary uppercase hover:underline">OK</button>
+                                                        <button onClick={() => setEditingCoeffId(null)} className="text-[10px] font-black text-gray-400 uppercase hover:underline">Annuler</button>
+                                                    </div>
+                                                ) : (
+                                                    <button onClick={() => startEditCoeff(cs)}
+                                                        className="flex items-center gap-1.5 text-[10px] font-black text-primary uppercase tracking-widest hover:underline">
+                                                        Coefficient: {cs.coefficient}
+                                                        <Pencil size={10} className="opacity-0 group-hover/item:opacity-100 transition-opacity" />
+                                                    </button>
+                                                )}
                                             </div>
                                             <button
                                                 onClick={() => handleRemoveSubjectFromClass(cs.id)}

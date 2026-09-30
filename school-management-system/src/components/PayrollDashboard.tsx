@@ -3,6 +3,7 @@ import { dbService } from '../services/db';
 import { Wallet, CheckCircle, Clock, FileText, X } from 'lucide-react';
 import { PrintPreview } from './PrintPreview';
 import { PaySlipPrint } from './PaySlipPrint';
+import { ipcErrorMessage } from '../utils/ipcError';
 
 export function PayrollDashboard() {
     const [staff, setStaff] = useState<any[]>([]);
@@ -61,7 +62,7 @@ export function PayrollDashboard() {
             loadData();
         } catch (error: any) {
             console.error('Payment failed', error);
-            alert(`Erreur: ${error.message}`);
+            alert(ipcErrorMessage(error, 'Paiement du salaire impossible'));
         }
     };
 
@@ -191,7 +192,7 @@ export function PayrollDashboard() {
 
                             <h3 className="text-2xl font-black text-gray-900 mb-2">Confirmer le Paiement</h3>
                             <p className="text-gray-500 font-medium mb-8">
-                                Vous êtes sur le point de valider le salaire de <span className="text-gray-900 font-bold">{payingStaff.first_name} {payingStaff.last_name}</span> pour le mois de {currentMonth}.
+                                Vous êtes sur le point de valider le salaire de <span className="text-gray-900">{payingStaff.first_name} {payingStaff.last_name}</span> pour le mois de {currentMonth}.
                             </p>
 
                             <div className="space-y-6 bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100 mb-8">

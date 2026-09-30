@@ -1,6 +1,10 @@
 import bcrypt from 'bcryptjs'
 import db, { getCurrentSchoolId } from '../db/core'
 import { logAction } from '../auditLogger'
+import { trackChange } from '../syncTracker'
+
+// Colonnes synchronisées vers le backend — password_hash/must_change_pwd ne quittent jamais l'appareil.
+const SCHOOL_USER_SYNC_COLUMNS = 'id, school_id, name, email, username, role, permissions, scope_levels, photo_url, is_active, created_at, updated_at'
 
 export const userHandlers: Record<string, (...args: any[]) => any> = {
 
@@ -39,6 +43,8 @@ export const userHandlers: Record<string, (...args: any[]) => any> = {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?)
         `).run(id, schoolId, name, email, username, hash, role, JSON.stringify(permissions), JSON.stringify(scope_levels ?? []), photo_url ?? null, now, now)
 
+        const synced = db.prepare(`SELECT ${SCHOOL_USER_SYNC_COLUMNS} FROM school_users WHERE id = ?`).get(id)
+        trackChange('INSERT', 'school_user', id, synced as Record<string, any>)
         logAction({ action: 'create_user', entityType: 'user', entityId: id, entityLabel: name, newValue: { name, email, username, role, permissions, scope_levels } })
         return { success: true, id, username, password_plain: password }
     },
@@ -53,6 +59,9 @@ export const userHandlers: Record<string, (...args: any[]) => any> = {
             UPDATE school_users SET name = ?, role = ?, permissions = ?, scope_levels = ?, photo_url = ?, is_active = ?, updated_at = ?
             WHERE id = ?
         `).run(name, role, JSON.stringify(permissions), JSON.stringify(scope_levels ?? []), photo_url ?? null, is_active ?? 1, new Date().toISOString(), id)
+
+        const synced = db.prepare(`SELECT ${SCHOOL_USER_SYNC_COLUMNS} FROM school_users WHERE id = ?`).get(id)
+        trackChange('UPDATE', 'school_user', id, synced as Record<string, any>)
         logAction({ action: 'update_user', entityType: 'user', entityId: id, entityLabel: name, oldValue: oldUser, newValue: { name, role, permissions, scope_levels } })
         return { success: true }
     },
@@ -62,6 +71,7 @@ export const userHandlers: Record<string, (...args: any[]) => any> = {
         const userRow = db.prepare('SELECT name FROM school_users WHERE id = ?').get(id) as any
         db.prepare(`UPDATE school_users SET deleted_at = ?, is_active = 0, updated_at = ? WHERE id = ?`)
             .run(new Date().toISOString(), new Date().toISOString(), id)
+        trackChange('DELETE', 'school_user', id, null)
         logAction({ action: 'delete_user', entityType: 'user', entityId: id, entityLabel: userRow?.name ?? id })
         return { success: true }
     },

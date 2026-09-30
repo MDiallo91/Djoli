@@ -12,7 +12,7 @@ import { createSchoolHandlers } from '../shared/services/schoolService'
 import { userHandlers } from '../shared/services/userService'
 import { auditHandlers } from '../shared/services/auditService'
 import { setThresholdCallback } from '../shared/syncTracker'
-import { registerAuthHandlers } from './services/authService'
+import { registerAuthHandlers, apiUrl, refreshLicenseByKey } from './services/authService'
 import { registerSyncHandlers, startupSync, syncOnQuit, checkThresholdSync } from './services/syncService'
 import { registerBackupHandlers } from './services/backupService'
 
@@ -119,7 +119,25 @@ app.whenReady().then(async () => {
     registerHandlers(gradeHandlers)
     registerHandlers(staffHandlers)
     registerHandlers(attendanceHandlers)
-    registerHandlers(createSchoolHandlers({ reinitDatabase: initDatabase }))
+    registerHandlers(createSchoolHandlers({
+        reinitDatabase: initDatabase,
+        requestLevels: async (levels, accessToken) => {
+            const response = await fetch(`${apiUrl()}/api/school/levels`, {
+                method:  'PUT',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+                body:    JSON.stringify({ levels }),
+            })
+            const data: any = await response.json()
+            if (!response.ok) throw new Error(data.message || data.error || 'Erreur lors de la demande de changement de cycles')
+            return { levels: data.levels ?? [], pendingLevels: data.pendingLevels ?? [] }
+        },
+        refreshAccessToken: async (licenseKey) => {
+            const refreshed = await refreshLicenseByKey(licenseKey)
+            return refreshed
+                ? { access_token: refreshed.access_token ?? null, levels: refreshed.levels ?? [], pendingLevels: refreshed.pendingLevels ?? [] }
+                : null
+        },
+    }))
     registerBackupHandlers()
 
     // Ouvre la page de renouvellement d'abonnement dans le navigateur par défaut

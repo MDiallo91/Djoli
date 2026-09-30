@@ -77,8 +77,8 @@ describe('StudentList Component', () => {
     it('calls onAddStudent when inscription button is clicked', async () => {
         const user = userEvent.setup()
         render(<StudentList onAddStudent={mockOnAddStudent} />)
-        expect(await screen.findByText('Inscrire un élève', {}, { timeout: 5000 })).toBeInTheDocument()
-        await user.click(screen.getByText('Inscrire un élève'))
+        expect(await screen.findByText('Inscrire', {}, { timeout: 5000 })).toBeInTheDocument()
+        await user.click(screen.getByText('Inscrire'))
         expect(mockOnAddStudent).toHaveBeenCalledTimes(1)
     })
 

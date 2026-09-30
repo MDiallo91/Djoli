@@ -8,6 +8,7 @@ vi.mock('../../services/db', () => ({
     dbService: {
         login: vi.fn(),
         cloudActivate: vi.fn(),
+        getSchoolInfo: vi.fn().mockResolvedValue(null),
     }
 }))
 
@@ -20,24 +21,13 @@ describe('Login Component', () => {
         vi.clearAllMocks()
     })
 
-    it('renders correctly with both mode buttons', () => {
+    it('renders a single login form with no mode selector', () => {
         render(<Login onLogin={mockOnLogin} />)
-        expect(screen.getByText('Bienvenue')).toBeInTheDocument()
-        expect(screen.getByText('Connexion Locale')).toBeInTheDocument()
-        expect(screen.getByText('Activation Cloud')).toBeInTheDocument()
-    })
-
-    it('shows local login form by default', () => {
-        render(<Login onLogin={mockOnLogin} />)
-        expect(screen.getByPlaceholderText('admin')).toBeInTheDocument()
-    })
-
-    it('switches to cloud mode when button clicked', async () => {
-        const user = userEvent.setup()
-        render(<Login onLogin={mockOnLogin} />)
-
-        await user.click(screen.getByText('Activation Cloud'))
-        expect(screen.getByPlaceholderText('votre@email.com')).toBeInTheDocument()
+        expect(screen.getByText('Connexion')).toBeInTheDocument()
+        expect(screen.getByPlaceholderText(/620000000/i)).toBeInTheDocument()
+        expect(screen.getByText('Se connecter')).toBeInTheDocument()
+        expect(screen.queryByText('Connexion Locale')).not.toBeInTheDocument()
+        expect(screen.queryByText('Activation Cloud')).not.toBeInTheDocument()
     })
 
     it('shows error when fields are empty and form is submitted', async () => {
@@ -59,7 +49,7 @@ describe('Login Component', () => {
         const user = userEvent.setup()
         render(<Login onLogin={mockOnLogin} />)
 
-        await user.type(screen.getByPlaceholderText('admin'), 'admin')
+        await user.type(screen.getByPlaceholderText(/620000000/i), 'admin')
         await user.type(screen.getByPlaceholderText('••••••••'), 'password123')
         await user.click(screen.getByText('Se connecter'))
 
@@ -69,18 +59,72 @@ describe('Login Component', () => {
         })
     })
 
-    it('shows error message on failed login', async () => {
+    it('falls back to cloudActivate when no local account matches', async () => {
+        const mockCloudUser = { id: '1', username: 'test@ecole.com', name: 'École Test', licenseStatus: 'active' }
         vi.mocked(dbService.login).mockRejectedValue(new Error('Identifiants incorrects'))
+        vi.mocked(dbService.cloudActivate).mockResolvedValue(mockCloudUser)
 
         const user = userEvent.setup()
         render(<Login onLogin={mockOnLogin} />)
 
-        await user.type(screen.getByPlaceholderText('admin'), 'wrong')
+        await user.type(screen.getByPlaceholderText(/620000000/i), 'test@ecole.com')
+        await user.type(screen.getByPlaceholderText('••••••••'), 'test1234')
+        await user.click(screen.getByText('Se connecter'))
+
+        await waitFor(() => {
+            expect(dbService.cloudActivate).toHaveBeenCalledWith({ username: 'test@ecole.com', password: 'test1234' })
+            expect(mockOnLogin).toHaveBeenCalledWith(mockCloudUser)
+        })
+    })
+
+    it('shows error message when both local login and cloud activation fail', async () => {
+        vi.mocked(dbService.login).mockRejectedValue(new Error('Identifiants incorrects'))
+        vi.mocked(dbService.cloudActivate).mockRejectedValue(new Error('Email ou mot de passe incorrect'))
+
+        const user = userEvent.setup()
+        render(<Login onLogin={mockOnLogin} />)
+
+        await user.type(screen.getByPlaceholderText(/620000000/i), 'wrong')
+        await user.type(screen.getByPlaceholderText('••••••••'), 'wrong')
+        await user.click(screen.getByText('Se connecter'))
+
+        await waitFor(() => {
+            expect(screen.getByText('Email ou mot de passe incorrect')).toBeInTheDocument()
+        })
+    })
+
+    it('shows the local error when offline (cloud fallback is a network error)', async () => {
+        vi.mocked(dbService.login).mockRejectedValue(new Error('Identifiants incorrects'))
+        vi.mocked(dbService.cloudActivate).mockRejectedValue(new Error('fetch failed'))
+
+        const user = userEvent.setup()
+        render(<Login onLogin={mockOnLogin} />)
+
+        await user.type(screen.getByPlaceholderText(/620000000/i), 'wrong')
         await user.type(screen.getByPlaceholderText('••••••••'), 'wrong')
         await user.click(screen.getByText('Se connecter'))
 
         await waitFor(() => {
             expect(screen.getByText('Identifiants incorrects')).toBeInTheDocument()
+        })
+    })
+
+    it('strips the Electron IPC wrapper prefix from error messages', async () => {
+        vi.mocked(dbService.login).mockRejectedValue(new Error('Identifiants incorrects'))
+        vi.mocked(dbService.cloudActivate).mockRejectedValue(
+            new Error("Error invoking remote method 'cloud-activate': Error: Licence invalide reçue du serveur")
+        )
+
+        const user = userEvent.setup()
+        render(<Login onLogin={mockOnLogin} />)
+
+        await user.type(screen.getByPlaceholderText(/620000000/i), 'wrong')
+        await user.type(screen.getByPlaceholderText('••••••••'), 'wrong')
+        await user.click(screen.getByText('Se connecter'))
+
+        await waitFor(() => {
+            expect(screen.getByText('Licence invalide reçue du serveur')).toBeInTheDocument()
+            expect(screen.queryByText(/Error invoking remote method/i)).not.toBeInTheDocument()
         })
     })
 

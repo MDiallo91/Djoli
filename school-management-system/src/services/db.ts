@@ -137,6 +137,9 @@ export const dbService = {
     getSchoolInfo: async () => {
         return await (window as any).ipcRenderer.invoke('get-school-info')
     },
+    requestSchoolLevels: async (levels: string[]) => {
+        return await (window as any).ipcRenderer.invoke('request-school-levels', levels)
+    },
     exportSchoolDb: async () => {
         return await (window as any).ipcRenderer.invoke('export-school-db')
     },
@@ -158,6 +161,9 @@ export const dbService = {
     },
     removeClassSubject: async (id: string) => {
         return await (window as any).ipcRenderer.invoke('remove-class-subject', id)
+    },
+    updateClassSubject: async (id: string, coefficient: number) => {
+        return await (window as any).ipcRenderer.invoke('update-class-subject', { id, coefficient })
     },
     updateClassTuition: async (classId: string, tuitionFee: number) => {
         return await (window as any).ipcRenderer.invoke('update-class-tuition', { classId, tuitionFee })

@@ -2,6 +2,7 @@ import db from '../db/core'
 import { paymentSchema, cashTransactionSchema } from '../validation'
 import { trackChange } from '../syncTracker'
 import { logAction } from '../auditLogger'
+import { assertCashAvailable, activeSchoolYearId } from '../cashBalance'
 
 export const financeHandlers: Record<string, (...args: any[]) => any> = {
 
@@ -98,7 +99,8 @@ export const financeHandlers: Record<string, (...args: any[]) => any> = {
         const parsed = cashTransactionSchema.safeParse(transaction)
         if (!parsed.success) throw new Error(parsed.error.issues.map((e: any) => e.message).join(', '))
         const { type, amount, reason } = parsed.data
-        const yearId = transaction.yearId || null
+        const yearId = transaction.yearId || activeSchoolYearId()
+        if (type === 'OUT') assertCashAvailable(amount, yearId)
         const id = crypto.randomUUID()
         const now = new Date().toISOString()
         db.prepare('INSERT INTO cash_transactions (id, type, amount, reason, school_year_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(id, type, amount, reason, yearId, now, now)

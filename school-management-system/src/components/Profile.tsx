@@ -9,7 +9,7 @@ export function Profile({ user }: { user: any }) {
 
             {/* Avatar + nom */}
             <div className="flex items-center gap-4 pb-5 border-b border-gray-200">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-base font-bold flex-shrink-0" style={{ backgroundColor: 'var(--sidebar-bg)' }}>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-base font-bold flex-shrink-0" style={{ backgroundColor: 'var(--accent)' }}>
                     {user.name ? user.name[0].toUpperCase() : 'U'}
                 </div>
                 <div>

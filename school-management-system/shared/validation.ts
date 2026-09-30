@@ -7,6 +7,7 @@ export const studentSchema = z.object({
         last_name:  z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
         gender:     z.enum(['M', 'F'] as const, { error: 'Le sexe doit être M (Masculin) ou F (Féminin)' }),
         birth_date: z.string().optional(),
+        birth_place: z.string().optional(),
         matricule:  z.string().optional(),
         address:    z.string().optional(),
         pere:       z.string().optional(),

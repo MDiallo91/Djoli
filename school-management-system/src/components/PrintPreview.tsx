@@ -7,6 +7,11 @@ interface PrintPreviewProps {
     children: React.ReactNode
 }
 
+// Couleur fixe, volontairement indépendante de --sidebar-bg (qui est blanche par
+// design depuis la refonte de la sidebar) — cette barre doit rester lisible
+// (texte blanc) quelle que soit la couleur de marque de l'école.
+const BAR_BG = '#1a2f6e'
+
 export const PrintPreview: React.FC<PrintPreviewProps> = ({ title, onClose, children }) => (
     <div className="print-overlay" style={{ position: 'fixed', inset: 0, zIndex: 60, backgroundColor: '#f8fafc', overflowY: 'auto' }}>
         {/* Controls bar — fixed so it never gets clipped by horizontal overflow */}
@@ -14,7 +19,7 @@ export const PrintPreview: React.FC<PrintPreviewProps> = ({ title, onClose, chil
             className="no-print"
             style={{
                 position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10,
-                backgroundColor: 'var(--sidebar-bg, #1a2f6e)',
+                backgroundColor: BAR_BG,
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 padding: '10px 24px 10px 24px', paddingRight: '160px', gap: 12,
                 boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
@@ -38,7 +43,7 @@ export const PrintPreview: React.FC<PrintPreviewProps> = ({ title, onClose, chil
                 onClick={() => window.print()}
                 style={{
                     display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
-                    background: '#fff', color: 'var(--sidebar-bg, #1a2f6e)', border: 'none',
+                    background: '#fff', color: BAR_BG, border: 'none',
                     padding: '7px 20px', borderRadius: 8, cursor: 'pointer',
                     fontWeight: 700, fontSize: 13,
                     boxShadow: '0 2px 8px rgba(0,0,0,0.15)',

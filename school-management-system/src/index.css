@@ -4,10 +4,10 @@
 
 /* ── École color variables ──────────────────────────────────────────────────── */
 :root {
-  --sidebar-bg:    #1a2f6e;
-  --sidebar-hover: rgba(255,255,255,0.08);
-  --sidebar-text:  #ffffff;
-  --sidebar-muted: rgba(255,255,255,0.55);
+  --sidebar-bg:    #ffffff;
+  --sidebar-hover: #f8fafc;
+  --sidebar-text:  #374151;
+  --sidebar-muted: #9ca3af;
   --accent:        #2563eb;
   --accent-dark:   #1d4ed8;
   --accent-glow:   rgba(37,99,235,0.25);
@@ -125,6 +125,11 @@
   /* ── Tables ── */
   table thead tr { background-color: #eeeeee !important; }
   .bg-gray-50.sticky { background-color: #eeeeee !important; }
+  /* Échappatoire pour les en-têtes de tableau volontairement sombres (ex: Timetable.tsx)
+     — la règle générique ci-dessus écraserait sinon le fond en gris clair, rendant le
+     texte blanc illisible. */
+  tr.timetable-header-row  { background-color: var(--timetable-hdr, #111827) !important; }
+  th.timetable-header-cell { color: #fff !important; }
 
   /* ── Shadows ── */
   .shadow-sm  { box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important; }
@@ -138,11 +143,15 @@
 ::-webkit-scrollbar-thumb { background: #c8c8c8; border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-/* ── Sidebar ────────────────────────────────────────────────────────────────── */
-.school-sidebar { background-color: var(--sidebar-bg); color: var(--sidebar-text); }
-.school-sidebar .nav-item { color: var(--sidebar-muted); border-radius: 0.75rem; transition: all 0.15s; }
-.school-sidebar .nav-item:hover { background-color: var(--sidebar-hover); color: var(--sidebar-text); }
-.school-sidebar .nav-item.active { background-color: var(--accent); color: #fff; box-shadow: 0 4px 14px var(--accent-glow); }
+/* ── Sidebar (fond clair fixe, quel que soit color_sidebar — cf. App.tsx) ────── */
+.school-sidebar { background-color: var(--sidebar-bg); color: var(--sidebar-text); border-right: 1px solid var(--border-light); }
+.school-sidebar .nav-item { color: var(--sidebar-text); border-radius: 0.75rem; transition: all 0.15s; }
+.school-sidebar .nav-item:hover { background-color: var(--sidebar-hover); }
+.school-sidebar .nav-item.active { background-color: var(--accent-light); color: var(--accent); box-shadow: none; }
+
+/* ── Boutons d'action icône (listes façon tableau — édition/suppression) ─────── */
+.icon-btn-edit   { @apply p-2 rounded-lg bg-amber-100 text-amber-600 hover:bg-amber-200 transition-colors; }
+.icon-btn-danger { @apply p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors; }
 
 /* ── Accent utilities ───────────────────────────────────────────────────────── */
 .accent-bg       { background-color: var(--accent) !important; }

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Wallet, ArrowUpCircle, ArrowDownCircle, Plus, Filter, Printer, Calendar, CheckSquare, Square, MoreVertical, Eye, Pencil, Trash2 } from 'lucide-react'
 import { PrintHeader } from './PrintHeader'
-import { PrintPreviewBar } from './PrintPreviewBar'
 import { PrintPreview } from './PrintPreview'
 import { SchoolPaymentReceiptPrint } from './SchoolPaymentReceiptPrint'
 import { TransactionSlipPrint } from './TransactionSlipPrint'
 import { FullPageView, SectionTitle, formInputCls, formLabelCls } from './FullPageView'
 import { dbService } from '../services/db'
 import { useSchoolStore } from '../stores/useSchoolStore'
+import { ipcErrorMessage } from '../utils/ipcError';
 
 const ALL_MONTHS = [
     'Septembre', 'Octobre', 'Novembre', 'Décembre',
@@ -205,7 +205,13 @@ export const FinanceManagement: React.FC = () => {
 
     const handleSaveGeneral = async (e: React.FormEvent) => {
         e.preventDefault();
-        await dbService.addCashTransaction(generalData.type, generalData.amount, generalData.reason, selectedYear || undefined);
+        try {
+            await dbService.addCashTransaction(generalData.type, generalData.amount, generalData.reason, selectedYear || undefined);
+        } catch (error: any) {
+            // ex. sortie supérieure au solde de caisse de l'année (shared/cashBalance.ts)
+            alert(ipcErrorMessage(error, "Impossible d'enregistrer l'opération"));
+            return;
+        }
 
         setIsGeneralModalOpen(false);
         setGeneralData({ type: 'OUT', amount: 0, reason: '' });
@@ -236,9 +242,8 @@ export const FinanceManagement: React.FC = () => {
     });
 
     return (
+        <>
         <div className="space-y-6 animate-in fade-in duration-500">
-            {printPreview && <PrintPreviewBar title={printPreview} onClose={() => setPrintPreview(null)} />}
-            <PrintHeader />
             <div className="grid grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                     <div className="flex items-center gap-4 mb-4">
@@ -276,7 +281,7 @@ export const FinanceManagement: React.FC = () => {
             </div>
 
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-black text-gray-900">{viewMode === 'transactions' ? 'Flux de Trésorerie' : 'Suivi des Paiements par Classe'}</h2>
+                <h2 className="text-lg font-bold normal-case text-gray-900">{viewMode === 'transactions' ? 'Flux de Trésorerie' : 'Suivi des Paiements par Classe'}</h2>
                 <button
                     onClick={() => setViewMode(viewMode === 'transactions' ? 'reports' : 'transactions')}
                     className="btn-primary flex items-center gap-2"
@@ -364,7 +369,7 @@ export const FinanceManagement: React.FC = () => {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-gray-900 font-medium">
-                        <div>{t.student_first_name ? <span className="text-xs font-bold text-indigo-600 mr-2">👤 {t.student_first_name} {t.student_last_name}</span> : null}</div>
+                        <div>{t.student_first_name ? <span className="text-xs text-indigo-600 mr-2">👤 {t.student_first_name} {t.student_last_name}</span> : null}</div>
                         <span className="text-gray-500">{t.reason}</span>
                     </td>
                                     <td className={`px-6 py-4 text-right font-bold ${t.type === 'IN' ? 'text-green-600' : 'text-red-600'}`}>
@@ -769,5 +774,65 @@ export const FinanceManagement: React.FC = () => {
                 </FullPageView>
             )}
         </div>
+
+        {/* Impression — overlay isolé (page blanche, sans le reste de l'app) */}
+        {printPreview === 'Journal de caisse' && (
+            <PrintPreview title="Journal de caisse" onClose={() => setPrintPreview(null)}>
+                <PrintHeader alwaysVisible docTitle="Journal de Caisse" />
+                <table className="w-full border-collapse border border-gray-900 mt-4">
+                    <thead>
+                        <tr className="bg-gray-100 border-b border-gray-900">
+                            <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase">Date</th>
+                            <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase">Type</th>
+                            <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase">Raison / Référence</th>
+                            <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase text-right">Montant</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredTransactions.map((t) => (
+                            <tr key={t.id} className="border-b border-gray-900">
+                                <td className="border border-gray-900 px-3 py-2 text-[10px] font-bold">
+                                    {new Date(t.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                </td>
+                                <td className="border border-gray-900 px-3 py-2 text-[10px] font-bold">{t.type === 'IN' ? 'Entrée' : 'Sortie'}</td>
+                                <td className="border border-gray-900 px-3 py-2 text-[10px] font-bold">
+                                    {t.student_first_name ? `${t.student_first_name} ${t.student_last_name} — ` : ''}{t.reason}
+                                </td>
+                                <td className="border border-gray-900 px-3 py-2 text-[10px] font-bold text-right">
+                                    {t.type === 'IN' ? '+' : '-'}{t.amount.toLocaleString()} FG
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </PrintPreview>
+        )}
+
+        {printPreview === 'Rapport de paiements' && (
+            <PrintPreview title="Rapport de paiements" onClose={() => setPrintPreview(null)}>
+                <PrintHeader alwaysVisible docTitle={`Suivi des Paiements — ${reportConfig.month}`} />
+                <table className="w-full border-collapse border border-gray-900 mt-4">
+                    <thead>
+                        <tr className="bg-gray-100 border-b border-gray-900">
+                            <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase">Élève</th>
+                            <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase">Contact Parent</th>
+                            <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase">Statut ({reportConfig.month})</th>
+                            <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase text-right">Montant Payé</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredReportData.map((s) => (
+                            <tr key={s.id} className="border-b border-gray-900">
+                                <td className="border border-gray-900 px-3 py-2 text-[10px]">{s.first_name} {s.last_name}</td>
+                                <td className="border border-gray-900 px-3 py-2 text-[10px] font-bold">{s.parent_phone || 'N/A'}</td>
+                                <td className="border border-gray-900 px-3 py-2 text-[10px] font-bold">{s.has_paid ? 'Payé' : 'Non Payé'}</td>
+                                <td className="border border-gray-900 px-3 py-2 text-[10px] font-bold text-right">{s.payment_amount.toLocaleString()} FG</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </PrintPreview>
+        )}
+        </>
     );
 }

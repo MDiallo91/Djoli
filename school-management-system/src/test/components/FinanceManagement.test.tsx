@@ -69,7 +69,7 @@ describe('FinanceManagement Component', () => {
         render(<FinanceManagement />)
         await waitFor(() => screen.getByText('Encaisser Scolarité'))
         await user.click(screen.getByText('Encaisser Scolarité'))
-        expect(screen.getByText('Encaisser un Paiement')).toBeInTheDocument()
+        expect(screen.getByText('ENCAISSER UN PAIEMENT')).toBeInTheDocument()
     })
 
     it('switches to report view on button click', async () => {

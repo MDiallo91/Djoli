@@ -166,7 +166,7 @@ function App() {
         dbService.getSchoolInfo().then((info: any) => {
             if (!info) return
             const root = document.documentElement
-            if (info.color_sidebar) root.style.setProperty('--sidebar-bg', info.color_sidebar)
+            // Sidebar toujours claire (design fixe) — color_sidebar ne s'applique plus qu'en fallback historique.
             if (info.color_accent)  root.style.setProperty('--accent',     info.color_accent)
             if (info.color_accent)  root.style.setProperty('--accent-dark', adjustColor(info.color_accent, -20))
             if (info.color_accent)  root.style.setProperty('--accent-glow', hexToRgba(info.color_accent, 0.25))
@@ -243,10 +243,10 @@ function App() {
         <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
 
             {/* ─── SIDEBAR ─────────────────────────────────────── */}
-            <aside className="school-sidebar w-64 flex flex-col no-print shadow-lg">
+            <aside className="school-sidebar w-64 flex flex-col no-print">
                 {/* Logo */}
-                <div className="px-6 py-5 flex items-center gap-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden" style={{ backgroundColor: 'var(--accent)', boxShadow: '0 4px 14px var(--accent-glow)' }}>
+                <div className="px-5 py-5 flex items-center gap-3 border-b" style={{ borderColor: 'var(--border-light)' }}>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: 'var(--accent)', boxShadow: '0 4px 14px var(--accent-glow)' }}>
                         <img
                             src={schoolLogo || '/logo.png'}
                             alt="DJOLI"
@@ -254,52 +254,52 @@ function App() {
                             onError={(e) => { (e.target as HTMLImageElement).src = '/logo.png' }}
                         />
                     </div>
-                    <div>
-                        <span className="font-black text-lg leading-none block text-white">DJOLI</span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--sidebar-muted)' }}>Gestion Scolaire</span>
-                    </div>
+                    <span className="font-black text-lg leading-none normal-case" style={{ color: 'var(--text-main)' }}>DJOLI</span>
                 </div>
 
                 {/* Nav */}
-                <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-                    {MENU_ITEMS.map((item) => {
-                        const isActive = activeTab === item.id
-                        return (
-                            <button
-                                key={item.id}
-                                onClick={() => setActiveTab(item.id)}
-                                className={`nav-item w-full flex items-center gap-3 px-4 py-2.5 ${isActive ? 'active' : ''}`}
-                            >
-                                <item.icon size={18} style={{ color: isActive ? '#fff' : 'var(--sidebar-muted)' }} />
-                                <span className="font-semibold text-sm" style={{ color: isActive ? '#fff' : 'var(--sidebar-text)' }}>
-                                    {item.label}
-                                </span>
-                                {isActive && <ChevronRight size={14} className="ml-auto" style={{ color: 'rgba(255,255,255,0.5)' }} />}
-                            </button>
-                        )
-                    })}
+                <nav className="flex-1 px-3 py-4 overflow-y-auto">
+                    <p className="px-4 mb-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--sidebar-muted)' }}>Menu Principal</p>
+                    <div className="space-y-0.5">
+                        {MENU_ITEMS.map((item) => {
+                            const isActive = activeTab === item.id
+                            return (
+                                <button
+                                    key={item.id}
+                                    onClick={() => setActiveTab(item.id)}
+                                    className={`nav-item w-full flex items-center gap-3 px-4 py-2.5 ${isActive ? 'active' : ''}`}
+                                >
+                                    <item.icon size={18} style={{ color: isActive ? 'var(--accent)' : 'var(--sidebar-muted)' }} />
+                                    <span className="font-semibold text-sm normal-case" style={{ color: isActive ? 'var(--accent)' : 'var(--sidebar-text)' }}>
+                                        {item.label}
+                                    </span>
+                                    <ChevronRight size={14} className="ml-auto" style={{ color: 'var(--sidebar-muted)' }} />
+                                </button>
+                            )
+                        })}
+                    </div>
                 </nav>
 
                 {/* Bottom user section */}
-                <div className="p-4 space-y-3" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                    <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}>
+                <div className="p-4 space-y-3 border-t" style={{ borderColor: 'var(--border-light)' }}>
+                    <div className="rounded-xl p-3" style={{ backgroundColor: 'var(--bg-page)' }}>
                         <p className="text-[10px] font-black uppercase tracking-wider leading-none" style={{ color: 'var(--sidebar-muted)' }}>Session Active</p>
-                        <p className="text-sm font-bold mt-1 text-white">{activeYear?.name || '—'}</p>
+                        <p className="text-sm font-bold mt-1 normal-case" style={{ color: 'var(--text-main)' }}>{activeYear?.name || '—'}</p>
                         <div className="flex items-center gap-1.5 mt-2">
-                            <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                            <span className="text-[10px] font-bold text-emerald-400">En ligne</span>
+                            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                            <span className="text-[10px] font-bold text-emerald-600">En ligne</span>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-3 px-2">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs text-white" style={{ backgroundColor: 'var(--accent)' }}>
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs text-white flex-shrink-0" style={{ backgroundColor: 'var(--accent)' }}>
                             {user?.username?.slice(0, 2).toUpperCase() || 'U'}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-white truncate">{user?.name || 'Utilisateur'}</p>
-                            <p className="text-[10px]" style={{ color: 'var(--sidebar-muted)' }}>{user?.role}</p>
+                            <p className="text-xs font-bold truncate normal-case" style={{ color: 'var(--text-main)' }}>{user?.name || 'Utilisateur'}</p>
+                            <p className="text-[10px] normal-case" style={{ color: 'var(--sidebar-muted)' }}>{user?.role}</p>
                         </div>
-                        <button onClick={logout} className="p-1.5 rounded-lg transition-all hover:bg-red-500/20" style={{ color: 'var(--sidebar-muted)' }} title="Déconnexion">
+                        <button onClick={logout} className="p-1.5 rounded-lg transition-all hover:bg-red-50 hover:text-red-600" style={{ color: 'var(--sidebar-muted)' }} title="Déconnexion">
                             <LogOut size={15} />
                         </button>
                     </div>
@@ -462,23 +462,6 @@ function App() {
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-
-                            {/* Quick actions */}
-                            <div className="grid grid-cols-4 gap-4">
-                                {[
-                                    { label: 'Inscrire un Élève',  icon: GraduationCap, color: 'bg-indigo-600', action: () => { setActiveTab('students'); setActiveStudentSubTab('list'); setIsFormOpen(true) } },
-                                    { label: 'Encaisser Scolarité', icon: Wallet,        color: 'bg-emerald-600', action: () => setActiveTab('finance') },
-                                    { label: 'Saisir les Notes',    icon: Award,         color: 'bg-purple-600', action: () => setActiveTab('grades') },
-                                    { label: 'Voir Emploi du Temps',icon: Calendar,      color: 'bg-sky-600',    action: () => setActiveTab('schedule') },
-                                ].map((q, i) => (
-                                    <button key={i} onClick={q.action}
-                                        className="btn-primary p-5 rounded-2xl font-bold text-sm flex items-center gap-3 hover:-translate-y-1 transition-all"
-                                    >
-                                        <q.icon size={20} />
-                                        {q.label}
-                                    </button>
-                                ))}
                             </div>
                         </div>
                     )}

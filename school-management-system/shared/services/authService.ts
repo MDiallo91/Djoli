@@ -16,15 +16,21 @@ export interface CloudLoginResult {
     schoolName: string
     country?: string | null
     levels?: string[]
+    pendingLevels?: string[]
     subscriptionStatus: string
     subscriptionExpiry: string
     license_key: string | null
+    // JWT court (session web) — nécessaire pour les endpoints self-service
+    // gated par `requireAuth` côté backend (ex: demande de changement de cycles).
+    access_token?: string | null
 }
 
 export interface RefreshedLicense {
     license_key: string
     subscriptionStatus: string
     levels?: string[]
+    pendingLevels?: string[]
+    access_token?: string | null
 }
 
 export interface AuthServiceDeps {
@@ -127,11 +133,13 @@ export function createAuthHandlers(deps: AuthServiceDeps): Record<string, (...ar
             const now = new Date().toISOString()
             const levelsFromCloud: string[] = Array.isArray(data.levels) ? data.levels : (licenseData?.levels ?? [])
             const levelsJson = JSON.stringify(levelsFromCloud)
+            const pendingLevelsFromCloud: string[] = Array.isArray(data.pendingLevels) ? data.pendingLevels : []
+            const pendingLevelsJson = JSON.stringify(pendingLevelsFromCloud)
 
             db.prepare(`INSERT OR REPLACE INTO local_license
                 (school_id, email, school_name, country, levels, subscription_status,
-                 trial_end_date, subscription_end_date, license_key, last_verified_at, cached_until)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 trial_end_date, subscription_end_date, license_key, last_verified_at, cached_until, access_token)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).run(
                 data.id,
                 username,
@@ -143,7 +151,8 @@ export function createAuthHandlers(deps: AuthServiceDeps): Record<string, (...ar
                 licenseData?.subscription_end_date ?? null,
                 data.license_key ?? null,
                 now,
-                cachedUntil()
+                cachedUntil(),
+                data.access_token ?? null
             )
 
             db.prepare(`INSERT OR REPLACE INTO local_accounts
@@ -169,7 +178,7 @@ export function createAuthHandlers(deps: AuthServiceDeps): Record<string, (...ar
 
             await switchSchoolDatabase(data.id)
 
-            db.prepare(`UPDATE school_info SET levels = ? WHERE id = 1`).run(levelsJson)
+            db.prepare(`UPDATE school_info SET levels = ?, pending_levels = ? WHERE id = 1`).run(levelsJson, pendingLevelsJson)
 
             if (data.license_key) { setSyncSession(data.id, data.license_key); triggerSyncNow() }
             setCurrentUser({ id: data.id, name: data.schoolName, username, role: 'SUPER_ADMIN', scope_levels: [] })
@@ -189,6 +198,7 @@ export function createAuthHandlers(deps: AuthServiceDeps): Record<string, (...ar
                 daysLeft,
                 scopeLevels:    [],
                 levels:         levelsFromCloud,
+                pendingLevels:  pendingLevelsFromCloud,
                 subscription: {
                     status: data.subscriptionStatus,
                     expiry: data.subscriptionExpiry
@@ -287,10 +297,13 @@ export function createAuthHandlers(deps: AuthServiceDeps): Record<string, (...ar
 
                 const refreshedLevels: string[] = Array.isArray(refreshed.levels) ? refreshed.levels : (licenseData.levels ?? [])
                 const refreshedLevelsJson = JSON.stringify(refreshedLevels)
+                const refreshedPending: string[] = Array.isArray(refreshed.pendingLevels) ? refreshed.pendingLevels : []
+                const refreshedPendingJson = JSON.stringify(refreshedPending)
 
                 db.prepare(`UPDATE local_license SET
                     license_key = ?, subscription_status = ?, subscription_end_date = ?,
-                    trial_end_date = ?, last_verified_at = ?, cached_until = ?, levels = ?
+                    trial_end_date = ?, last_verified_at = ?, cached_until = ?, levels = ?,
+                    access_token = COALESCE(?, access_token)
                     WHERE school_id = ?
                 `).run(
                     refreshed.license_key,
@@ -300,12 +313,13 @@ export function createAuthHandlers(deps: AuthServiceDeps): Record<string, (...ar
                     now,
                     cachedUntil(),
                     refreshedLevelsJson,
+                    refreshed.access_token ?? null,
                     schoolId
                 )
 
                 db.prepare('UPDATE local_accounts SET subscription_status = ?, levels = ? WHERE school_id = ?')
                     .run(refreshed.subscriptionStatus, refreshedLevelsJson, schoolId)
-                db.prepare('UPDATE school_info SET levels = ? WHERE id = 1').run(refreshedLevelsJson)
+                db.prepare('UPDATE school_info SET levels = ?, pending_levels = ? WHERE id = 1').run(refreshedLevelsJson, refreshedPendingJson)
 
                 return { status: computeLicenseStatus(licenseData), daysLeft: getDaysRemaining(licenseData.subscription_end_date ?? licenseData.trial_end_date) }
             } catch {

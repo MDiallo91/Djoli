@@ -80,6 +80,26 @@ export function StudentAttendance() {
                 </div>
             </div>
 
+            {/* Récapitulatif de l'appel pour la date choisie */}
+            {!loading && students.length > 0 && (() => {
+                const count = (st: string | null) => students.filter(s => (s.status ?? null) === st).length;
+                const unmarked = count(null);
+                const isToday = selectedDate === new Date().toISOString().split('T')[0];
+                const dateLabel = new Date(selectedDate + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                return (
+                    <div className="flex flex-wrap items-center gap-3 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                        <p className="text-sm font-bold text-gray-700 mr-auto">
+                            {isToday ? "Appel d'aujourd'hui" : 'Appel du'} <span className="capitalize">{isToday ? '' : dateLabel}</span>
+                            {unmarked === students.length && <span className="ml-2 text-xs font-medium text-gray-400 italic">— appel non fait ce jour-là</span>}
+                        </p>
+                        <span className="px-3 py-1 rounded-full text-xs font-black bg-green-50 text-green-700">{count('Présent')} présent(s)</span>
+                        <span className="px-3 py-1 rounded-full text-xs font-black bg-orange-50 text-orange-700">{count('En retard')} en retard</span>
+                        <span className="px-3 py-1 rounded-full text-xs font-black bg-red-50 text-red-700">{count('Absent')} absent(s)</span>
+                        {unmarked > 0 && <span className="px-3 py-1 rounded-full text-xs font-black bg-gray-100 text-gray-500">{unmarked} non marqué(s)</span>}
+                    </div>
+                );
+            })()}
+
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <table className="w-full text-left border-collapse">
                     <thead>
@@ -102,8 +122,8 @@ export function StudentAttendance() {
                                             {s.first_name[0]}{s.last_name[0]}
                                         </div>
                                         <div>
-                                            <p className="font-bold text-gray-900">{s.first_name} {s.last_name}</p>
-                                            <p className="text-xs text-gray-500">ID: #{s.student_id}</p>
+                                            <p className="text-gray-900">{s.last_name} {s.first_name}</p>
+                                            <p className="text-xs text-gray-500">{s.matricule || 'Sans matricule'}</p>
                                         </div>
                                     </div>
                                 </td>

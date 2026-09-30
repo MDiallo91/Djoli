@@ -66,7 +66,7 @@ export function TeacherAttendance() {
                                     {teacher.first_name[0]}{teacher.last_name[0]}
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-gray-900">{teacher.first_name} {teacher.last_name}</h3>
+                                    <h3 className="font-normal text-gray-900">{teacher.first_name} {teacher.last_name}</h3>
                                     <p className="text-xs text-gray-500 mt-1">Base: {teacher.salary_base} GNF</p>
                                 </div>
                             </div>

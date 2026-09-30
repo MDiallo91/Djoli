@@ -168,4 +168,10 @@ export const gradeHandlers: Record<string, (...args: any[]) => any> = {
     'remove-class-subject': (id: string) => {
         return db.prepare('DELETE FROM class_subjects WHERE id = ?').run(id)
     },
+
+    'update-class-subject': (data: { id: string, coefficient: number }) => {
+        const { id, coefficient } = data
+        if (!coefficient || coefficient <= 0) throw new Error('Coefficient invalide')
+        return db.prepare('UPDATE class_subjects SET coefficient = ? WHERE id = ?').run(coefficient, id)
+    },
 }

@@ -5,9 +5,10 @@
 import db from '../db/core'
 import { getDeviceId } from '../deviceId'
 import { currentSyncSession } from '../state/syncState'
+import { trackChange } from '../syncTracker'
 
 export const SYNC_THRESHOLD = 10 // déclenche un sync après N modifications locales
-export const CRITICAL_ENTITIES = new Set(['grade', 'payment'])
+export const CRITICAL_ENTITIES = new Set(['grade', 'payment', 'school_user'])
 
 export type Notify = (channel: string, payload: any) => void
 
@@ -57,11 +58,33 @@ export const TABLE_MAP: Record<string, string> = {
     class:            'classes',
     subject:          'subjects',
     school_year:      'school_years',
+    school_user:      'school_users',
+}
+
+// school_user est un cas particulier : password_hash/must_change_pwd ne sont jamais
+// envoyés au backend, donc un INSERT OR REPLACE générique (TABLE_MAP) écraserait ces
+// colonnes locales avec NULL. On ne met à jour que les colonnes réellement synchronisées.
+function applyPulledSchoolUser(entityId: string, data: any): void {
+    const exists = db.prepare('SELECT id FROM school_users WHERE id = ?').get(entityId)
+    if (!exists) return // compte créé sur un autre poste : pas de mot de passe local, ignoré tant qu'il n'est pas créé ici
+    db.prepare(`
+        UPDATE school_users SET name = ?, email = ?, username = ?, role = ?, permissions = ?, scope_levels = ?, photo_url = ?, is_active = ?, updated_at = ?
+        WHERE id = ?
+    `).run(data.name, data.email, data.username, data.role, data.permissions, data.scope_levels, data.photo_url ?? null, data.is_active, data.updated_at, entityId)
 }
 
 function applyPulledRecord(entityType: string, entityId: string, data: any): void {
+    if (!data) return
+    if (entityType === 'school_user') {
+        try {
+            applyPulledSchoolUser(entityId, data)
+        } catch (e) {
+            console.error(`[Sync] applyPulledRecord ${entityType}/${entityId}:`, e)
+        }
+        return
+    }
     const table = TABLE_MAP[entityType]
-    if (!table || !data) return
+    if (!table) return
     try {
         const cols   = Object.keys(data)
         const values = cols.map((k) => data[k])
@@ -214,6 +237,8 @@ async function syncCycle(): Promise<void> {
     const session = currentSyncSession
     if (!session) return
 
+    try { backfillSchoolUsers(session.schoolId) } catch (e) { console.error('[Sync] backfillSchoolUsers:', e) }
+
     notify('sync-status', { status: 'syncing' })
     try {
         const pushed = await pushChanges(session.schoolId, session.licenseKey)
@@ -253,6 +278,26 @@ export function triggerSyncNow(): void {
 /** Appelé après chaque trackChange — déclenche un sync si le seuil est atteint. */
 export function checkThresholdSync(): void {
     if (pendingCount() >= SYNC_THRESHOLD) triggerSyncNow()
+}
+
+// Backfill unique : pousse les school_users existants qui n'ont jamais été suivis par
+// la sync (ajoutée après coup), pour que le backend récupère l'état sans attendre
+// une prochaine modification. password_hash/must_change_pwd exclus (cf. userService.ts).
+function backfillSchoolUsers(schoolId: string): void {
+    const flag = db.prepare('SELECT school_users_backfilled FROM sync_meta WHERE school_id = ?').get(schoolId) as any
+    if (flag?.school_users_backfilled) return
+
+    const rows = db.prepare(
+        `SELECT id, school_id, name, email, username, role, permissions, scope_levels, photo_url, is_active, created_at, updated_at
+         FROM school_users WHERE school_id = ? AND deleted_at IS NULL`
+    ).all(schoolId) as any[]
+    for (const row of rows) {
+        trackChange('INSERT', 'school_user', row.id, row)
+    }
+
+    db.prepare(`INSERT INTO sync_meta (school_id, school_users_backfilled) VALUES (?, 1)
+        ON CONFLICT(school_id) DO UPDATE SET school_users_backfilled = 1`
+    ).run(schoolId)
 }
 
 /** Sync de démarrage : pull immédiat au lancement de l'app. */
@@ -310,6 +355,7 @@ export async function forceFullSync() {
         { table: 'grades',            entityType: 'grade'             },
         { table: 'classes',           entityType: 'class'             },
         { table: 'subjects',          entityType: 'subject'           },
+        { table: 'school_users',      entityType: 'school_user'       },
     ]
 
     const session = currentSyncSession
@@ -338,8 +384,11 @@ export async function forceFullSync() {
     for (const { table, entityType } of TABLES) {
         let rows: any[] = []
         try {
-            // Try with deleted_at filter first; fall back to full table scan if column doesn't exist
-            rows = db.prepare(`SELECT * FROM ${table} WHERE deleted_at IS NULL`).all() as any[]
+            // school_users vit dans la base globale (device-wide) et peut contenir plusieurs
+            // écoles : il faut filtrer par school_id, contrairement aux tables per-school-db.
+            rows = table === 'school_users'
+                ? db.prepare(`SELECT * FROM ${table} WHERE deleted_at IS NULL AND school_id = ?`).all(session.schoolId) as any[]
+                : db.prepare(`SELECT * FROM ${table} WHERE deleted_at IS NULL`).all() as any[]
         } catch {
             try {
                 rows = db.prepare(`SELECT * FROM ${table}`).all() as any[]
@@ -349,6 +398,8 @@ export async function forceFullSync() {
         }
         for (const row of rows) {
             if (!row.id) continue
+            // password_hash/must_change_pwd ne quittent jamais l'appareil.
+            if (entityType === 'school_user') { delete row.password_hash; delete row.must_change_pwd }
             db.prepare(`
                 INSERT INTO sync_queue (id, operation, entity_type, entity_id, payload, device_id, school_id, created_at, sync_status)
                 VALUES (?, 'INSERT', ?, ?, ?, ?, ?, ?, 'pending')

@@ -3,7 +3,7 @@ import {
     Building2, Sparkles, MapPin, Phone, Mail, Camera, Save,
     GraduationCap, Hash, Plus, Trash2, RotateCcw, CheckCircle,
     School, BookOpen, Medal, Users, ScrollText, CheckSquare, Square,
-    UploadCloud, AlertTriangle,
+    UploadCloud, AlertTriangle, Clock,
 } from 'lucide-react'
 import { dbService } from '../services/db'
 import { UserManagement } from './UserManagement'
@@ -23,17 +23,6 @@ interface GradeMention {
 interface LevelConfig {
     scale:  number
     config: GradeMention[]
-}
-
-// ── Color palette for mentions ────────────────────────────────────────────────
-
-const COLORS: Record<string, { dot: string; bg: string; text: string; border: string; label: string }> = {
-    red:    { dot: 'bg-red-400',    bg: 'bg-red-50',    text: 'text-red-700',    border: 'border-red-200',    label: 'Rouge' },
-    orange: { dot: 'bg-orange-400', bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', label: 'Orange' },
-    yellow: { dot: 'bg-yellow-400', bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200', label: 'Jaune' },
-    green:  { dot: 'bg-green-400',  bg: 'bg-green-50',  text: 'text-green-700',  border: 'border-green-200',  label: 'Vert' },
-    blue:   { dot: 'bg-blue-400',   bg: 'bg-blue-50',   text: 'text-blue-700',   border: 'border-blue-200',   label: 'Bleu' },
-    purple: { dot: 'bg-purple-400', bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200', label: 'Violet' },
 }
 
 // ── Level metadata ────────────────────────────────────────────────────────────
@@ -133,72 +122,52 @@ function GradingLevelEditor({
             {/* Mentions table */}
             <div className="rounded-2xl border border-gray-100 overflow-hidden">
                 <div className="grid grid-cols-[80px_80px_1fr_120px_40px] bg-gray-50 px-4 py-2 border-b border-gray-100">
-                    {['Min', 'Max', 'Mention', 'Couleur', ''].map(h => (
+                    {['Min', 'Max', 'Mention', ''].map(h => (
                         <span key={h} className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{h}</span>
                     ))}
                 </div>
 
-                {config.config.map((mention, i) => {
-                    const c = COLORS[mention.color] ?? COLORS.blue
-                    return (
-                        <div key={i} className="grid grid-cols-[80px_80px_1fr_120px_40px] items-center px-4 py-2.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                            {/* Min */}
-                            <input
-                                type="number"
-                                min={0}
-                                max={config.scale}
-                                step={0.5}
-                                value={mention.min}
-                                onChange={e => updateMention(i, 'min', parseFloat(e.target.value))}
-                                className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm font-bold text-center outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                            />
-                            {/* Max */}
-                            <input
-                                type="number"
-                                min={0}
-                                max={config.scale}
-                                step={0.5}
-                                value={mention.max}
-                                onChange={e => updateMention(i, 'max', parseFloat(e.target.value))}
-                                className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm font-bold text-center outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                            />
-                            {/* Label */}
-                            <input
-                                type="text"
-                                value={mention.label}
-                                onChange={e => updateMention(i, 'label', e.target.value)}
-                                className="mr-3 bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-sm font-bold outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                            />
-                            {/* Color picker */}
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                                {Object.entries(COLORS).map(([key, val]) => (
-                                    <button
-                                        key={key}
-                                        type="button"
-                                        onClick={() => updateMention(i, 'color', key)}
-                                        title={val.label}
-                                        className={`w-5 h-5 rounded-full ${val.dot} transition-transform hover:scale-110 ${
-                                            mention.color === key ? 'ring-2 ring-offset-1 ring-gray-400 scale-110' : ''
-                                        }`}
-                                    />
-                                ))}
-                            </div>
-                            {/* Preview badge + delete */}
-                            <div className="flex items-center justify-end gap-1">
-                                <span className={`hidden xl:inline-block px-2 py-0.5 rounded-full text-[10px] font-black ${c.bg} ${c.text} border ${c.border}`}>
-                                    {mention.label}
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() => removeMention(i)}
-                                    className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-1"
-                                >
-                                    <Trash2 size={13} />
-                                </button>
-                            </div>
+                {config.config.map((mention, i) => (
+                    <div key={i} className="grid grid-cols-[80px_80px_1fr_40px] items-center px-4 py-2.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                        {/* Min */}
+                        <input
+                            type="number"
+                            min={0}
+                            max={config.scale}
+                            step={0.5}
+                            value={mention.min}
+                            onChange={e => updateMention(i, 'min', parseFloat(e.target.value))}
+                            className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm font-bold text-center outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                        />
+                        {/* Max */}
+                        <input
+                            type="number"
+                            min={0}
+                            max={config.scale}
+                            step={0.5}
+                            value={mention.max}
+                            onChange={e => updateMention(i, 'max', parseFloat(e.target.value))}
+                            className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm font-bold text-center outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                        />
+                        {/* Label */}
+                        <input
+                            type="text"
+                            value={mention.label}
+                            onChange={e => updateMention(i, 'label', e.target.value)}
+                            className="mr-3 bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-sm font-bold outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                        />
+                        {/* Delete */}
+                        <div className="flex items-center justify-end">
+                            <button
+                                type="button"
+                                onClick={() => removeMention(i)}
+                                className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                                <Trash2 size={13} />
+                            </button>
                         </div>
-                    )
-                })}
+                    </div>
+                ))}
 
                 <button
                     type="button"
@@ -208,18 +177,6 @@ function GradingLevelEditor({
                     <Plus size={15} />
                     Ajouter une mention
                 </button>
-            </div>
-
-            {/* Preview row */}
-            <div className="flex flex-wrap gap-2 pt-1">
-                {config.config.map((m, i) => {
-                    const c = COLORS[m.color] ?? COLORS.blue
-                    return (
-                        <span key={i} className={`px-3 py-1 rounded-full text-xs font-black ${c.bg} ${c.text} border ${c.border}`}>
-                            {m.min}–{m.max} — {m.label}
-                        </span>
-                    )
-                })}
             </div>
         </div>
     )
@@ -235,13 +192,22 @@ export function Settings() {
     const [schoolInfo, setSchoolInfo] = useState<any>({
         name: '', motto: '', address: '', phone: '', email: '', logo_url: '',
         city: '', region: '', commune: '', sous_prefecture: '', director_name: '',
-        color_sidebar: '#1a2f6e', color_accent: '#2563eb', levels: '[]',
+        color_sidebar: '#1a2f6e', color_accent: '#2563eb', levels: '[]', pending_levels: '[]',
     })
     const [gradingConfigs, setGradingConfigs] = useState<Record<string, LevelConfig>>({})
     const [dirtyLevels, setDirtyLevels] = useState<Set<string>>(new Set())
 
     const [isSaving, setIsSaving] = useState(false)
     const [savedMsg, setSavedMsg] = useState('')
+
+    // Cycles scolaires : brouillon local distinct de schoolInfo.levels — un ajout
+    // ne devient actif qu'après validation admin (schoolInfo.pending_levels).
+    const [draftLevels, setDraftLevels] = useState<string[]>([])
+    const [savingLevels, setSavingLevels] = useState(false)
+    const [levelsMsg, setLevelsMsg] = useState('')
+    useEffect(() => {
+        try { setDraftLevels(JSON.parse(schoolInfo.levels || '[]')) } catch { setDraftLevels([]) }
+    }, [schoolInfo.levels])
 
     // Levels actifs pour cette école
     const schoolActiveLevels: string[] = React.useMemo(() => {
@@ -275,6 +241,45 @@ export function Settings() {
             showSuccess('Informations enregistrées !')
         } catch { showSuccess('Erreur lors de l\'enregistrement.') }
         finally { setIsSaving(false) }
+    }
+
+    // Retrait = appliqué immédiatement par le backend ; ajout = mis en attente
+    // d'approbation admin (voir requestLevels côté backend/schoolService.ts).
+    const handleSaveLevels = async () => {
+        setSavingLevels(true)
+        setLevelsMsg('')
+        try {
+            const result = await dbService.requestSchoolLevels(draftLevels)
+            setSchoolInfo((prev: any) => ({
+                ...prev,
+                levels: JSON.stringify(result.levels ?? []),
+                pending_levels: JSON.stringify(result.pendingLevels ?? []),
+            }))
+            setLevelsMsg('Cycles mis à jour.')
+        } catch (err: any) {
+            setLevelsMsg(err.message || 'Erreur lors de la demande.')
+        } finally {
+            setSavingLevels(false)
+        }
+    }
+
+    // Le statut d'approbation ne redescend automatiquement que via cloud-activate
+    // ou la vérification de licence périodique (session cloud) — ce bouton force
+    // cette vérification tout de suite, y compris pour une session locale.
+    const handleCheckLevelsApproval = async () => {
+        if (!user?.schoolId) return
+        setSavingLevels(true)
+        setLevelsMsg('')
+        try {
+            await dbService.cloudVerifyLicense(user.schoolId)
+            const info = await dbService.getSchoolInfo()
+            if (info) setSchoolInfo(info)
+            setLevelsMsg('Statut vérifié.')
+        } catch {
+            setLevelsMsg('Connexion internet requise pour vérifier le statut.')
+        } finally {
+            setSavingLevels(false)
+        }
     }
 
     const handleSaveGrading = async () => {
@@ -449,30 +454,57 @@ export function Settings() {
                             </h3>
                             <div className="flex flex-wrap gap-2">
                                 {(['Maternelle','Primaire','Collège','Lycée'] as const).map(lvl => {
-                                    let cur: string[] = []
-                                    try { cur = JSON.parse(schoolInfo.levels || '[]') } catch {}
-                                    const checked = cur.includes(lvl)
+                                    let pendingArr: string[] = []
+                                    try { pendingArr = JSON.parse(schoolInfo.pending_levels || '[]') } catch {}
+                                    const isPending = pendingArr.includes(lvl)
+                                    const checked = draftLevels.includes(lvl)
                                     return (
                                         <button key={lvl} type="button"
+                                            disabled={isPending}
                                             onClick={() => {
-                                                const next = checked ? cur.filter((l: string) => l !== lvl) : [...cur, lvl]
-                                                setSchoolInfo({ ...schoolInfo, levels: JSON.stringify(next) })
+                                                if (isPending) return
+                                                setDraftLevels(prev => prev.includes(lvl) ? prev.filter(l => l !== lvl) : [...prev, lvl])
                                             }}
                                             className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all ${
-                                                checked
+                                                isPending
+                                                    ? 'border-amber-300 bg-amber-50 text-amber-700 cursor-not-allowed'
+                                                    : checked
                                                     ? 'border-sky-500 bg-sky-50 text-sky-700'
                                                     : 'border-gray-200 bg-white text-gray-400 hover:border-gray-300'
                                             }`}>
-                                            {checked
+                                            {isPending
+                                                ? <Clock size={14} className="text-amber-500" />
+                                                : checked
                                                 ? <CheckSquare size={14} className="text-sky-600" />
                                                 : <Square size={14} className="text-gray-300" />
                                             }
                                             {lvl}
+                                            {isPending && <span className="text-[9px] uppercase tracking-wider">En attente</span>}
                                         </button>
                                     )
                                 })}
                             </div>
-                            <p className="text-[11px] text-gray-400">Ces cycles déterminent les options disponibles dans l'application.</p>
+                            <div className="flex items-center gap-3">
+                                <button type="button" onClick={handleSaveLevels} disabled={savingLevels}
+                                    className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-sky-500 hover:bg-sky-600 transition-all disabled:opacity-50">
+                                    {savingLevels ? 'Envoi…' : 'Enregistrer les cycles'}
+                                </button>
+                                {(() => {
+                                    let pendingArr: string[] = []
+                                    try { pendingArr = JSON.parse(schoolInfo.pending_levels || '[]') } catch {}
+                                    return pendingArr.length > 0 && (
+                                        <button type="button" onClick={handleCheckLevelsApproval} disabled={savingLevels}
+                                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 transition-all disabled:opacity-50">
+                                            <RotateCcw size={12} />
+                                            Vérifier l'approbation
+                                        </button>
+                                    )
+                                })()}
+                                {levelsMsg && <span className="text-[11px] text-gray-500">{levelsMsg}</span>}
+                            </div>
+                            <p className="text-[11px] text-gray-400">
+                                Retirer un cycle s'applique immédiatement. Ajouter un cycle nécessite une validation par l'administrateur DJOLI avant de devenir actif.
+                            </p>
                         </div>
 
                         {/* Contact */}
@@ -547,44 +579,11 @@ export function Settings() {
                         {/* ── Apparence ── */}
                         <div className="border-t border-gray-100 pt-8">
                             <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest flex items-center gap-2 mb-5">
-                                <span className="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0" style={{ backgroundColor: schoolInfo.color_sidebar }} />
+                                <span className="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0" style={{ backgroundColor: schoolInfo.color_accent }} />
                                 Apparence & Couleurs
                             </h3>
 
-                            <div className="grid grid-cols-2 gap-6">
-                                {/* Sidebar color */}
-                                <div>
-                                    <label className="text-xs font-medium text-gray-600 mb-3 block">Couleur de la barre latérale</label>
-                                    <div className="flex items-center gap-4">
-                                        <div className="relative">
-                                            <input
-                                                type="color"
-                                                value={schoolInfo.color_sidebar}
-                                                onChange={e => {
-                                                    const c = e.target.value
-                                                    setSchoolInfo({ ...schoolInfo, color_sidebar: c })
-                                                    document.documentElement.style.setProperty('--sidebar-bg', c)
-                                                }}
-                                                className="w-14 h-14 rounded-2xl cursor-pointer border-2 border-gray-200 p-1"
-                                                style={{ backgroundColor: schoolInfo.color_sidebar }}
-                                            />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-black text-gray-900">{schoolInfo.color_sidebar.toUpperCase()}</p>
-                                            <p className="text-xs text-gray-400 mt-0.5">Sidebar + navigation</p>
-                                            <div className="flex gap-1.5 mt-2">
-                                                {['#1a2f6e','#0f4c75','#1b1b2f','#2d6a4f','#7b2d8b','#c0392b'].map(c => (
-                                                    <button key={c} type="button"
-                                                        onClick={() => { setSchoolInfo({ ...schoolInfo, color_sidebar: c }); document.documentElement.style.setProperty('--sidebar-bg', c) }}
-                                                        className="w-5 h-5 rounded-full border-2 transition-transform hover:scale-125"
-                                                        style={{ backgroundColor: c, borderColor: schoolInfo.color_sidebar === c ? '#000' : 'transparent' }}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
+                            <div>
                                 {/* Accent color */}
                                 <div>
                                     <label className="text-xs font-medium text-gray-600 mb-3 block">Couleur d'accentuation</label>
@@ -620,16 +619,11 @@ export function Settings() {
                             </div>
 
                             {/* Live preview */}
-                            <div className="mt-5 rounded-2xl overflow-hidden border border-gray-100 shadow-sm" style={{ height: '60px', display: 'flex' }}>
-                                <div className="w-32 flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: schoolInfo.color_sidebar }}>
-                                    Sidebar
-                                </div>
-                                <div className="flex-1 bg-white flex items-center px-4 gap-3">
-                                    <span className="text-xs font-bold text-gray-900">Aperçu en direct</span>
-                                    <button type="button" className="px-3 py-1 text-white text-xs font-bold rounded-lg" style={{ backgroundColor: schoolInfo.color_accent }}>
-                                        Bouton
-                                    </button>
-                                </div>
+                            <div className="mt-5 rounded-2xl overflow-hidden border border-gray-100 shadow-sm bg-white flex items-center px-4 gap-3" style={{ height: '60px' }}>
+                                <span className="text-xs font-bold text-gray-900">Aperçu en direct</span>
+                                <button type="button" className="px-3 py-1 text-white text-xs font-bold rounded-lg" style={{ backgroundColor: schoolInfo.color_accent }}>
+                                    Bouton
+                                </button>
                             </div>
                         </div>
                     </div>

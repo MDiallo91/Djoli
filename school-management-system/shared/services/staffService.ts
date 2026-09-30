@@ -2,6 +2,7 @@ import db from '../db/core'
 import { staffSchema } from '../validation'
 import { trackChange } from '../syncTracker'
 import { logAction } from '../auditLogger'
+import { assertCashAvailable, activeSchoolYearId } from '../cashBalance'
 
 export const staffHandlers: Record<string, (...args: any[]) => any> = {
 
@@ -68,15 +69,18 @@ export const staffHandlers: Record<string, (...args: any[]) => any> = {
         const monthStr = `${year}-${month}`
         const id  = crypto.randomUUID()
         const now = new Date().toISOString()
+        // Sortie de caisse rattachée à l'année active (avant : sans année → comptée nulle part)
+        const yearId = activeSchoolYearId()
+        assertCashAvailable(Number(net_salary) || 0, yearId)
 
         db.prepare(`INSERT INTO salaries (id, staff_id, month, year, base_salary, net_salary, bonus, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'PAID')`)
             .run(id, staff_id, monthStr, year, base_salary, net_salary, bonus || 0)
 
         const cashId = crypto.randomUUID()
         const reason = `Paiement Salaire ${month}/${year} — Personnel #${staff_id}`
-        db.prepare('INSERT INTO cash_transactions (id, type, amount, reason, reference_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
-            .run(cashId, 'OUT', net_salary, reason, id, now, now)
-        trackChange('INSERT', 'cash_transaction', cashId, { id: cashId, type: 'OUT', amount: net_salary, reason, reference_id: id, created_at: now, updated_at: now })
+        db.prepare('INSERT INTO cash_transactions (id, type, amount, reason, reference_id, school_year_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+            .run(cashId, 'OUT', net_salary, reason, id, yearId, now, now)
+        trackChange('INSERT', 'cash_transaction', cashId, { id: cashId, type: 'OUT', amount: net_salary, reason, reference_id: id, school_year_id: yearId, created_at: now, updated_at: now })
 
         return { success: true, id }
     },

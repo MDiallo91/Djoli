@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { dbService, Student } from '../services/db'
-import { UserPlus, Search, Printer, Filter, Calendar, History, Download, Upload, Trash2, Eye, Edit2, Users, UserRound } from 'lucide-react'
+import { UserPlus, Search, Printer, Filter, Calendar, History, Download, Upload, Trash2, Eye, Edit2, Users, UserRound, ChevronLeft, ChevronRight } from 'lucide-react'
 import { PrintHeader } from './PrintHeader'
 import { GradeSheetPrint } from './GradeSheetPrint'
 import { EvaluationResultPrint } from './EvaluationResultPrint'
-import { PrintPreviewBar } from './PrintPreviewBar'
+import { PrintPreview } from './PrintPreview'
 import { FullPageView, InfoField, SectionTitle } from './FullPageView'
 
 interface StudentListProps {
@@ -24,15 +24,11 @@ export const StudentList: React.FC<StudentListProps> = ({ onAddStudent, onEditSt
 
     // UI States
     const [viewingStudent, setViewingStudent] = useState<any>(null)
-    const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null)
-    
+
     // Pagination States
     const [currentPage, setCurrentPage] = useState(1)
     const itemsPerPage = 10
-    
-    //boution d'action
-    const [openMenuId, setOpenMenuId] = useState<string | null>(null)
-    
+
     // Printing States
     const [selectedSubject, setSelectedSubject] = useState<string>('')
     const [selectedTerm, setSelectedTerm] = useState<string>('1er Trimestre')
@@ -165,20 +161,13 @@ export const StudentList: React.FC<StudentListProps> = ({ onAddStudent, onEditSt
 
     return (
         <>
-            {activePrintType && (
-                <PrintPreviewBar
-                    title={activePrintType === 'list' ? 'Liste des élèves' : activePrintType === 'grade' ? 'Feuille de notes' : 'Résultats d\'évaluation'}
-                    onClose={handleClosePrintPreview}
-                />
-            )}
-            {activePrintType === 'list' && <PrintHeader />}
             <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl shadow-primary/5 overflow-hidden min-h-[600px] flex flex-col">
                 <div className="p-8 border-b border-gray-100 space-y-6 no-print">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div>
                             <div className="flex items-center gap-3 mb-1">
-                                <History className="text-primary" size={24} />
-                                <h3 className="text-2xl font-black text-gray-900 tracking-tight">Registre des Élèves</h3>
+                                <History className="text-primary" size={20} />
+                                <h3 className="text-lg font-bold normal-case text-gray-900">Registre des Élèves</h3>
                             </div>
                             <p className="text-gray-400 text-sm font-bold uppercase tracking-widest">
                                 {selectedYear ? `Année Scolaire: ${schoolYears.find(y => y.id.toString() === selectedYear)?.name}` : 'Chargement...'}
@@ -308,15 +297,16 @@ export const StudentList: React.FC<StudentListProps> = ({ onAddStudent, onEditSt
                             <table className="w-full text-left border-collapse bg-white no-print">
                                 <thead>
                                     <tr className="bg-gray-50 border-y border-gray-200">
-                                        <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 w-16 text-center">N°</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Matricule</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Nom & Prénom</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Sexe</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Père</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Mère</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Classe</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700">Date de naissance</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 text-right">Actions</th>
+                                        <th className="px-4 py-4 text-xs font-bold normal-case text-gray-700 w-16 text-center">N°</th>
+                                        <th className="px-6 py-4 text-xs font-bold normal-case text-gray-700">Matricule</th>
+                                        <th className="px-6 py-4 text-xs font-bold normal-case text-gray-700">Nom</th>
+                                        <th className="px-6 py-4 text-xs font-bold normal-case text-gray-700">Prénom</th>
+                                        <th className="px-6 py-4 text-xs font-bold normal-case text-gray-700">Sexe</th>
+                                        <th className="px-6 py-4 text-xs font-bold normal-case text-gray-700">Père</th>
+                                        <th className="px-6 py-4 text-xs font-bold normal-case text-gray-700">Mère</th>
+                                        <th className="px-6 py-4 text-xs font-bold normal-case text-gray-700">Classe</th>
+                                        <th className="px-6 py-4 text-xs font-bold normal-case text-gray-700">Date de naissance</th>
+                                        <th className="px-6 py-4 text-xs font-bold normal-case text-gray-700 text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -330,8 +320,11 @@ export const StudentList: React.FC<StudentListProps> = ({ onAddStudent, onEditSt
                                                     {s.matricule || 'SANS MAT'}
                                                 </span>
                                             </td>
-                                            <td className="px-2 py-2 min-w-[200px]">
-                                                <p className="font-bold text-gray-900 leading-tight">{s.first_name} {s.last_name}</p>
+                                            <td className="px-2 py-2 min-w-[120px]">
+                                                <p className="text-gray-900 leading-tight">{s.last_name}</p>
+                                            </td>
+                                            <td className="px-2 py-2 min-w-[120px]">
+                                                <p className="text-gray-900 leading-tight">{s.first_name}</p>
                                             </td>
                                             <td className="px-6 py-4 max-w-[100px]">
                                                 <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${s.gender === 'M' ? 'bg-blue-50 text-blue-600' : 'bg-pink-50 text-pink-600'}`}>
@@ -342,49 +335,18 @@ export const StudentList: React.FC<StudentListProps> = ({ onAddStudent, onEditSt
                                             <td className="px-2 py-2 text-xs font-bold text-gray-600 min-w-[130px]">{s.mere || '---'}</td>
                                             <td className="px-2 py-2 text-xs font-bold text-gray-600">{s.class_name || '---'}</td>
                                             <td className="px-2 py-2 text-xs font-bold text-gray-500">{s.birth_date || '---'}</td>
-                                            <td className="px-2 py-2 text-right relative max-w-[50px]">
-                                                <button
-                                                    onClick={() => setOpenMenuId(openMenuId === s.id ? null : s.id)}
-                                                    className="p-2 text-gray-500 hover:text-black"
-                                                >
-                                                    ⋮
-                                                </button>
-
-                                                {openMenuId === s.id && (
-                                                    <div className="absolute right-6 mt-2 w-40 bg-white border rounded-lg shadow-lg z-50">
-
-                                                        <button
-                                                            onClick={() => {
-                                                                setViewingStudent(s)
-                                                                setOpenMenuId(null)
-                                                            }}
-                                                            className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 text-sm"
-                                                        >
-                                                            <Eye size={14} /> Détails
-                                                        </button>
-
-                                                        <button
-                                                            onClick={() => {
-                                                                onEditStudent?.(s)
-                                                                setOpenMenuId(null)
-                                                            }}
-                                                            className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 text-sm"
-                                                        >
-                                                            <Edit2 size={14} /> Modifier
-                                                        </button>
-
-                                                        <button
-                                                            onClick={() => {
-                                                                handleDelete(s.id)
-                                                                setOpenMenuId(null)
-                                                            }}
-                                                            className="flex items-center gap-2 w-full px-3 py-2 hover:bg-red-100 text-red-600 text-sm"
-                                                        >
-                                                            <Trash2 size={14} /> Supprimer
-                                                        </button>
-
-                                                    </div>
-                                                )}
+                                            <td className="px-2 py-2 text-right">
+                                                <div className="flex items-center justify-end gap-1.5">
+                                                    <button onClick={() => setViewingStudent(s)} className="p-2 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors" title="Détails">
+                                                        <Eye size={15} />
+                                                    </button>
+                                                    <button onClick={() => onEditStudent?.(s)} className="icon-btn-edit" title="Modifier">
+                                                        <Edit2 size={15} />
+                                                    </button>
+                                                    <button onClick={() => handleDelete(s.id)} className="icon-btn-danger" title="Supprimer">
+                                                        <Trash2 size={15} />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -394,55 +356,48 @@ export const StudentList: React.FC<StudentListProps> = ({ onAddStudent, onEditSt
                             {/* Pagination Controls */}
                             {totalPages > 1 && (
                                 <div className="flex items-center justify-between px-8 py-4 bg-gray-50 rounded-2xl no-print">
-                                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-                                        Page <span className="text-primary">{currentPage}</span> sur <span className="text-primary">{totalPages}</span>
+                                    <p className="text-xs font-bold text-gray-500">
+                                        Page {currentPage} sur {totalPages} — {filteredStudents.length} élève{filteredStudents.length !== 1 ? 's' : ''}
                                     </p>
-                                    <div className="flex gap-2">
+                                    <div className="flex items-center gap-1.5">
                                         <button
                                             disabled={currentPage === 1}
                                             onClick={() => setCurrentPage(p => p - 1)}
-                                            className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-all shadow-sm"
+                                            className="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                                         >
-                                            Précédent
+                                            <ChevronLeft size={15} />
                                         </button>
+                                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                            .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                                            .reduce<(number | 'ellipsis')[]>((acc, p, i, arr) => {
+                                                if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push('ellipsis')
+                                                acc.push(p)
+                                                return acc
+                                            }, [])
+                                            .map((p, i) => p === 'ellipsis' ? (
+                                                <span key={`e${i}`} className="w-8 h-8 flex items-center justify-center text-gray-400 text-xs">…</span>
+                                            ) : (
+                                                <button
+                                                    key={p}
+                                                    onClick={() => setCurrentPage(p)}
+                                                    className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${
+                                                        p === currentPage ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'
+                                                    }`}
+                                                >
+                                                    {p}
+                                                </button>
+                                            ))}
                                         <button
                                             disabled={currentPage === totalPages}
                                             onClick={() => setCurrentPage(p => p + 1)}
-                                            className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 disabled:opacity-50 transition-all shadow-lg shadow-primary/20"
+                                            className="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                                         >
-                                            Suivant
+                                            <ChevronRight size={15} />
                                         </button>
                                     </div>
                                 </div>
                             )}
 
-                            {/* Classic Table for PRINT (No Action, No Pagination) */}
-                            <table className={`${activePrintType === 'list' ? 'print:table' : 'hidden'} w-full border-collapse border border-gray-900 mt-4`}>
-                                <thead>
-                                    <tr className="bg-gray-100 border-b border-gray-900">
-                                        <th className="border border-gray-900 px-2 py-2 text-[10px] font-black uppercase text-center w-10">#</th>
-                                        <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase">Matricule</th>
-                                        <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase">Nom & Prénom</th>
-                                        <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase text-center">Sexe</th>
-                                        <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase">Père</th>
-                                        <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase">Mère</th>
-                                        <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase">Date Naissance</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredStudents.map((s, index) => (
-                                        <tr key={s.id} className="border-b border-gray-900">
-                                            <td className="border border-gray-900 px-2 py-2 text-[10px] font-bold text-center">{index + 1}</td>
-                                            <td className="border border-gray-900 px-3 py-2 text-[10px] font-bold">{s.matricule || '---'}</td>
-                                            <td className="border border-gray-900 px-3 py-2 text-[10px] font-bold uppercase">{s.first_name} {s.last_name}</td>
-                                            <td className="border border-gray-900 px-3 py-2 text-[10px] font-bold text-center">{s.gender}</td>
-                                            <td className="border border-gray-900 px-3 py-2 text-[10px] font-bold">{s.pere || '---'}</td>
-                                            <td className="border border-gray-900 px-3 py-2 text-[10px] font-bold">{s.mere || '---'}</td>
-                                            <td className="border border-gray-900 px-3 py-2 text-[10px] font-bold">{s.birth_date || '---'}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
                         </div>
                     )}
                 </div>
@@ -505,30 +460,66 @@ export const StudentList: React.FC<StudentListProps> = ({ onAddStudent, onEditSt
                     </FullPageView>
                 )}
 
-                {/* Print Templates (Hidden except when printing) */}
-                {selectedClass !== 'all' && (
-                    <>
-                        {activePrintType === 'grade' && (
-                            <GradeSheetPrint 
-                                className={classes.find(c => c.id.toString() === selectedClass)?.name || ''}
-                                subjectName={selectedSubject}
-                                term={selectedTerm}
-                                students={filteredStudents}
-                                schoolYear={schoolYears.find(y => y.id.toString() === selectedYear)?.name || ''}
-                            />
-                        )}
-                        {activePrintType === 'evaluation' && (
-                            <EvaluationResultPrint 
-                                className={classes.find(c => c.id.toString() === selectedClass)?.name || ''}
-                                evaluationName="Evaluation Sommative"
-                                term={selectedTerm}
-                                students={filteredStudents}
-                                schoolYear={schoolYears.find(y => y.id.toString() === selectedYear)?.name || ''}
-                            />
-                        )}
-                    </>
-                )}
             </div>
+
+            {/* Impression — overlay isolé (page blanche, sans sidebar/onglets/arrondis de l'écran) */}
+            {activePrintType === 'list' && (
+                <PrintPreview title="Liste des élèves" onClose={handleClosePrintPreview}>
+                    <PrintHeader alwaysVisible docTitle="Liste des Élèves" />
+                    <table className="w-full border-collapse border border-gray-900 mt-4">
+                        <thead>
+                            <tr className="bg-gray-100 border-b border-gray-900">
+                                <th className="border border-gray-900 px-2 py-2 text-[10px] font-black uppercase text-center w-10">#</th>
+                                <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase">Matricule</th>
+                                <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase">Nom</th>
+                                <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase">Prénom</th>
+                                <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase text-center">Sexe</th>
+                                <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase">Père</th>
+                                <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase">Mère</th>
+                                <th className="border border-gray-900 px-3 py-2 text-[10px] font-black uppercase">Date Naissance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredStudents.map((s, index) => (
+                                <tr key={s.id} className="border-b border-gray-900">
+                                    <td className="border border-gray-900 px-2 py-2 text-[10px] font-bold text-center">{index + 1}</td>
+                                    <td className="border border-gray-900 px-3 py-2 text-[10px] font-bold">{s.matricule || '---'}</td>
+                                    <td className="border border-gray-900 px-3 py-2 text-[10px]">{s.last_name}</td>
+                                    <td className="border border-gray-900 px-3 py-2 text-[10px]">{s.first_name}</td>
+                                    <td className="border border-gray-900 px-3 py-2 text-[10px] font-bold text-center">{s.gender}</td>
+                                    <td className="border border-gray-900 px-3 py-2 text-[10px] font-bold">{s.pere || '---'}</td>
+                                    <td className="border border-gray-900 px-3 py-2 text-[10px] font-bold">{s.mere || '---'}</td>
+                                    <td className="border border-gray-900 px-3 py-2 text-[10px] font-bold">{s.birth_date || '---'}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </PrintPreview>
+            )}
+
+            {activePrintType === 'grade' && selectedClass !== 'all' && (
+                <PrintPreview title="Feuille de notes" onClose={handleClosePrintPreview}>
+                    <GradeSheetPrint
+                        className={classes.find(c => c.id.toString() === selectedClass)?.name || ''}
+                        subjectName={selectedSubject}
+                        term={selectedTerm}
+                        students={filteredStudents}
+                        schoolYear={schoolYears.find(y => y.id.toString() === selectedYear)?.name || ''}
+                    />
+                </PrintPreview>
+            )}
+
+            {activePrintType === 'evaluation' && selectedClass !== 'all' && (
+                <PrintPreview title="Résultats d'évaluation" onClose={handleClosePrintPreview}>
+                    <EvaluationResultPrint
+                        className={classes.find(c => c.id.toString() === selectedClass)?.name || ''}
+                        evaluationName="Evaluation Sommative"
+                        term={selectedTerm}
+                        students={filteredStudents}
+                        schoolYear={schoolYears.find(y => y.id.toString() === selectedYear)?.name || ''}
+                    />
+                </PrintPreview>
+            )}
         </>
     )
 }

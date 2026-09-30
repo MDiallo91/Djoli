@@ -50,6 +50,7 @@ const handlers: Record<string, Handler> = {
     'get-class-subjects': async () => [],
     'add-class-subject': async () => ({ success: true }),
     'remove-class-subject': async () => ({ success: true }),
+    'update-class-subject': async () => ({ success: true }),
     'get-class-rankings': async () => [],
     'get-class-payment-status': async () => [],
 

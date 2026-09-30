@@ -207,6 +207,8 @@ export async function initDatabase(persistenceAdapter: DbPersistenceAdapter) {
   try { globalSqlDb!.exec("ALTER TABLE local_license ADD COLUMN levels TEXT DEFAULT '[]'") } catch {}
   try { globalSqlDb!.exec("ALTER TABLE local_accounts ADD COLUMN levels TEXT DEFAULT '[]'") } catch {}
   try { globalSqlDb!.exec("ALTER TABLE school_users ADD COLUMN scope_levels TEXT DEFAULT '[]'") } catch {}
+  try { globalSqlDb!.exec("ALTER TABLE sync_meta ADD COLUMN school_users_backfilled INTEGER DEFAULT 0") } catch {}
+  try { globalSqlDb!.exec("ALTER TABLE local_license ADD COLUMN access_token TEXT") } catch {}
 
   // Configuration globale du poste (device_id, etc.)
   globalSqlDb!.exec(`CREATE TABLE IF NOT EXISTS global_config (
@@ -303,10 +305,14 @@ export async function switchSchoolDatabase(userId: string) {
     runExec("CREATE TABLE IF NOT EXISTS grading_configs (level TEXT PRIMARY KEY, scale INTEGER NOT NULL DEFAULT 20, config TEXT NOT NULL);")
 
     // Safe migrations for new columns
+    try { schoolSqlDb?.exec("ALTER TABLE students ADD COLUMN birth_place TEXT") } catch {}
     try { schoolSqlDb?.exec("ALTER TABLE school_info ADD COLUMN director_name TEXT") } catch {}
     try { schoolSqlDb?.exec("ALTER TABLE school_info ADD COLUMN color_sidebar TEXT DEFAULT '#1a2f6e'") } catch {}
     try { schoolSqlDb?.exec("ALTER TABLE school_info ADD COLUMN color_accent  TEXT DEFAULT '#2563eb'") } catch {}
     try { schoolSqlDb?.exec("ALTER TABLE school_info ADD COLUMN levels TEXT DEFAULT '[]'") } catch {}
+    // Cycles demandés par l'école mais pas encore approuvés par l'admin plateforme
+    // (miroir local de UserModel.pendingLevels côté backend — voir request-school-levels).
+    try { schoolSqlDb?.exec("ALTER TABLE school_info ADD COLUMN pending_levels TEXT DEFAULT '[]'") } catch {}
     try { schoolSqlDb?.exec("ALTER TABLE subjects ADD COLUMN level TEXT DEFAULT NULL") } catch {}
 
     // Facturation : barème des frais par classe/année

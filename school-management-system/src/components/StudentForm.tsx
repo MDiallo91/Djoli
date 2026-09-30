@@ -46,6 +46,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({ onClose, onSave, initi
         last_name: '',
         gender: 'M' as 'M' | 'F',
         birth_date: '',
+        birth_place: '',
         address: '',
         pere: '',
         mere: '',
@@ -88,6 +89,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({ onClose, onSave, initi
                         last_name: initialData.last_name || '',
                         gender: initialData.gender || 'M',
                         birth_date: initialData.birth_date || '',
+                        birth_place: initialData.birth_place || '',
                         address: initialData.address || '',
                         pere: initialData.pere || '',
                         mere: initialData.mere || '',
@@ -135,6 +137,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({ onClose, onSave, initi
             last_name: s.last_name,
             gender: s.gender,
             birth_date: s.birth_date || '',
+            birth_place: s.birth_place || '',
             address: s.address || '',
             pere: s.pere || '',
             mere: s.mere || '',
@@ -153,7 +156,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({ onClose, onSave, initi
     }
 
     const resetStudent = () => {
-        setStudentData({ id: null, matricule: '', first_name: '', last_name: '', gender: 'M', birth_date: '', address: '', pere: '', mere: '', phone: '' })
+        setStudentData({ id: null, matricule: '', first_name: '', last_name: '', gender: 'M', birth_date: '', birth_place: '', address: '', pere: '', mere: '', phone: '' })
         setParentData({ id: null, first_name: '', last_name: '', phone: '', address: '', profession: '' })
     }
 
@@ -274,7 +277,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({ onClose, onSave, initi
                                                 {s.first_name[0]}{s.last_name[0]}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-bold text-gray-900 truncate">{s.first_name} {s.last_name}</p>
+                                                <p className="text-gray-900 truncate">{s.first_name} {s.last_name}</p>
                                                 <p className="text-xs text-gray-400">Parent: {s.parent_first_name} · {s.parent_phone}</p>
                                             </div>
                                             <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full flex-shrink-0">Choisir</span>
@@ -371,12 +374,21 @@ export const StudentForm: React.FC<StudentFormProps> = ({ onClose, onSave, initi
                                     className={inputCls} />
                             </div>
                         </div>
-                        <div>
-                            <label className={labelCls}>Adresse</label>
-                            <input type="text" placeholder="ex: Conakry, Matam"
-                                value={studentData.address}
-                                onChange={e => setStudentData({ ...studentData, address: e.target.value })}
-                                className={inputCls} />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className={labelCls}>Lieu de naissance</label>
+                                <input type="text" placeholder="ex: Kindia"
+                                    value={studentData.birth_place}
+                                    onChange={e => setStudentData({ ...studentData, birth_place: e.target.value })}
+                                    className={inputCls} />
+                            </div>
+                            <div>
+                                <label className={labelCls}>Adresse / Quartier</label>
+                                <input type="text" placeholder="ex: Conakry, Matam"
+                                    value={studentData.address}
+                                    onChange={e => setStudentData({ ...studentData, address: e.target.value })}
+                                    className={inputCls} />
+                            </div>
                         </div>
                     </Section>
 
