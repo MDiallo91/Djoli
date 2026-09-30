@@ -2,6 +2,7 @@ import { shell } from 'electron'
 import { createAuthHandlers } from '../../shared/services/authService'
 import { registerHandlers } from '../ipcAdapter'
 import { verifyLicense } from '../licenseVerifier'
+import { CLOUD_UNREACHABLE } from '../../shared/authErrors'
 
 export function apiUrl(): string {
     return process.env.SAAS_API_URL || 'https://djoli.vercel.app'
@@ -21,12 +22,26 @@ export async function refreshLicenseByKey(storedLicenseKey: string): Promise<any
 
 const authHandlers = createAuthHandlers({
     cloudLogin: async (username, password) => {
-        const response = await fetch(`${apiUrl()}/api/user/login`, {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ email: username, password }),
-        })
-        const data: any = await response.json()
+        // Le serveur fait foi dès qu'il est joignable (Login.tsx) : on distingue donc
+        // « injoignable » (réseau, délai dépassé, panne 5xx, réponse illisible → le poste
+        // bascule en connexion locale) d'un vrai refus (4xx → identifiants rejetés).
+        let response: Response
+        try {
+            response = await fetch(`${apiUrl()}/api/user/login`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ email: username, password }),
+                signal:  AbortSignal.timeout(10_000),
+            })
+        } catch {
+            throw new Error(`${CLOUD_UNREACHABLE} Serveur injoignable`)
+        }
+        if (response.status >= 500 || response.status === 429) {
+            throw new Error(`${CLOUD_UNREACHABLE} Serveur indisponible (${response.status})`)
+        }
+        let data: any
+        try { data = await response.json() }
+        catch { throw new Error(`${CLOUD_UNREACHABLE} Réponse du serveur illisible`) }
         if (!response.ok) throw new Error(data.message || 'Identifiants cloud incorrects')
         return {
             id:                 data.id,

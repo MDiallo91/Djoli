@@ -54,6 +54,7 @@
   "build": {
     "appId": "com.djoli.school",
     "productName": "DJOLI",
+    "electronDist": "node_modules/electron/dist",
     "directories": {
       "output": "dist-app"
     },

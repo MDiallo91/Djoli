@@ -22,7 +22,7 @@ export const gradeHandlers: Record<string, (...args: any[]) => any> = {
         const now = new Date().toISOString()
         const yearId = school_year_id || (db.prepare('SELECT id FROM school_years WHERE is_active = 1 LIMIT 1').get() as any)?.id || null
         db.prepare('INSERT INTO grades (id, student_id, subject_id, score, exam_type, term, school_year_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(id, student_id, subject_id, score, exam_type, term, yearId, now, now)
-        trackChange('INSERT', 'grade', id, { id, student_id, subject_id, score, exam_type, term, created_at: now, updated_at: now })
+        trackChange('INSERT', 'grade', id, { id, student_id, subject_id, score, exam_type, term, school_year_id: yearId, created_at: now, updated_at: now })
         const subjectRow = db.prepare('SELECT name FROM subjects WHERE id = ?').get(subject_id) as any
         logAction({ action: 'add_grade', entityType: 'grade', entityId: id, entityLabel: `${subjectRow?.name ?? subject_id} — ${score}/${maxScore} (${term})`, newValue: { student_id, subject_id, score, exam_type, term } })
         return { success: true, id }

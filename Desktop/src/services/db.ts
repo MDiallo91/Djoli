@@ -226,7 +226,7 @@ export const dbService = {
         return await (window as any).ipcRenderer.invoke('save-class-grades-bulk', { grades, subjectId, term, yearId, classId })
     },
     // SaaS / Auth
-    login: async (credentials: { username: string, password: string }) => {
+    login: async (credentials: { username: string, password: string, subUsersOnly?: boolean }) => {
         return await (window as any).ipcRenderer.invoke('login', credentials)
     },
     getSubscription: async (): Promise<any> => {

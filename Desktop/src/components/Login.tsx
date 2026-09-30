@@ -2,16 +2,12 @@ import React, { useEffect, useState } from 'react'
 import { Lock, User, AlertCircle, Eye, EyeOff } from 'lucide-react'
 import { dbService } from '../services/db'
 import { toast } from './Toast'
+import { isCloudUnreachable } from '../../shared/authErrors'
 
 interface LoginProps {
     onLogin: (user: any) => void
 }
 
-// Réseau indisponible (première connexion hors-ligne, pas encore activée sur ce
-// poste) — on préfère alors remonter l'erreur de la connexion locale, plus utile
-// à l'utilisateur qu'une erreur réseau brute.
-const isNetworkError = (err: any): boolean =>
-    /fetch|network|ENOTFOUND|ECONNREFUSED|ETIMEDOUT/i.test(err?.message || '')
 
 // Electron préfixe toute erreur IPC par "Error invoking remote method 'x': Error: ..." —
 // on ne garde que le message métier utile à l'utilisateur.
@@ -41,9 +37,13 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         }).catch(() => {})
     }, [])
 
-    // Connexion unique : essaie d'abord le compte local (rapide, fonctionne hors-ligne),
-    // et si aucun compte local ne correspond, tente l'activation cloud automatiquement —
-    // l'utilisateur n'a jamais à choisir un "mode", que ce soit sa 1ère connexion ou non.
+    // Connexion unique, le serveur fait foi dès qu'il est joignable :
+    //  1. en ligne → vérification par le cloud (et la copie locale du mot de passe est mise
+    //     à jour) ; ainsi un mot de passe changé sur le web invalide l'ancien sur ce poste ;
+    //  2. cloud injoignable (hors ligne, panne) → connexion locale, comme avant ;
+    //  3. cloud qui refuse → seuls les comptes utilisateurs locaux (inconnus du cloud)
+    //     restent possibles ; le compte principal de l'école est refusé.
+    // L'utilisateur n'a jamais à choisir un « mode », 1ère connexion ou non.
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!username.trim() || !password.trim()) {
@@ -55,23 +55,29 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         try {
             let user: any
             try {
-                user = await dbService.login({ username, password })
-                localStorage.setItem('user', JSON.stringify(user))
-                toast.success('Connexion réussie', `Bienvenue, ${user.name || user.username}`)
-            } catch (localErr: any) {
-                try {
-                    user = await dbService.cloudActivate({ username, password })
-                    localStorage.setItem('user', JSON.stringify(user))
-                    const statusMsg = user.licenseStatus === 'trial'
-                        ? `Essai — ${user.daysLeft} jour${user.daysLeft !== 1 ? 's' : ''} restant${user.daysLeft !== 1 ? 's' : ''}`
-                        : user.licenseStatus === 'warning'
-                        ? `Abonnement expire dans ${user.daysLeft} jours`
-                        : 'Abonnement actif'
-                    toast.success(`Connecté — ${user.name}`, statusMsg)
-                } catch (cloudErr: any) {
-                    throw isNetworkError(cloudErr) ? localErr : cloudErr
+                user = await dbService.cloudActivate({ username, password })
+                const statusMsg = user.licenseStatus === 'trial'
+                    ? `Essai — ${user.daysLeft} jour${user.daysLeft !== 1 ? 's' : ''} restant${user.daysLeft !== 1 ? 's' : ''}`
+                    : user.licenseStatus === 'warning'
+                    ? `Abonnement expire dans ${user.daysLeft} jours`
+                    : 'Abonnement actif'
+                toast.success(`Connecté — ${user.name}`, statusMsg)
+            } catch (cloudErr: any) {
+                if (isCloudUnreachable(cloudErr)) {
+                    // Hors ligne : la copie locale fait foi jusqu'au retour d'Internet
+                    user = await dbService.login({ username, password })
+                    toast.success('Connexion hors ligne', `Bienvenue, ${user.name || user.username}`)
+                } else {
+                    // Refus du cloud : uniquement un compte utilisateur local, sinon on affiche le refus du serveur
+                    try {
+                        user = await dbService.login({ username, password, subUsersOnly: true })
+                    } catch {
+                        throw cloudErr
+                    }
+                    toast.success('Connexion réussie', `Bienvenue, ${user.name || user.username}`)
                 }
             }
+            localStorage.setItem('user', JSON.stringify(user))
             onLogin(user)
         } catch (err: any) {
             const message = cleanErrorMessage(err)
@@ -85,9 +91,9 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     return (
         <div
             className="min-h-screen flex items-center justify-center p-6 relative"
-            style={{ backgroundImage: "url('/login-bg-pattern.jpg')", backgroundSize: '340px', backgroundRepeat: 'repeat' }}
+            style={{ backgroundImage: "url('/logo-bg-pattern.png')", backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}
         >
-            {/* Voile pour détacher la carte du motif de fond */}
+            {/* Voile pour détacher la carte de la photo de fond */}
             <div className="absolute inset-0 bg-indigo-950/40 backdrop-blur-[2px]" />
 
             {/* Carte de connexion — verre dépoli, centrée */}

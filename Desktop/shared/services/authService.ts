@@ -60,8 +60,12 @@ export function createAuthHandlers(deps: AuthServiceDeps): Record<string, (...ar
     return {
 
         // ── Local login (admin ou sous-utilisateur école) ────────────────────────
-        'login': async (credentials: { username: string, password: string }) => {
-            const { username, password } = credentials
+        // subUsersOnly : le serveur a déjà refusé ces identifiants (Login.tsx vérifie le cloud
+        // d'abord) — seuls les comptes utilisateurs locaux (secrétaire, comptable…, inconnus
+        // du cloud) restent autorisés ; le compte principal de l'école ne doit PAS repasser
+        // par sa copie locale, sinon un ancien mot de passe changé sur le web resterait valide.
+        'login': async (credentials: { username: string, password: string, subUsersOnly?: boolean }) => {
+            const { username, password, subUsersOnly } = credentials
             if (!username || !password) throw new Error('Identifiants requis')
 
             const schoolUser = db.prepare(
@@ -89,6 +93,8 @@ export function createAuthHandlers(deps: AuthServiceDeps): Record<string, (...ar
                     isSubUser:    true,
                 }
             }
+
+            if (subUsersOnly) throw new Error('Identifiants incorrects')
 
             const user = db.prepare(
                 'SELECT * FROM users WHERE username = ? OR email = ? OR phone = ?'

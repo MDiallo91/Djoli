@@ -42,16 +42,34 @@ describe('Login Component', () => {
         })
     })
 
-    it('calls dbService.login on form submit with correct data', async () => {
-        const mockUser = { id: '1', username: 'admin', role: 'SUPER_ADMIN', name: 'Test' }
-        vi.mocked(dbService.login).mockResolvedValue(mockUser)
-
+    // Saisie + clic commun aux scénarios de connexion
+    const submit = async (username: string, password: string) => {
         const user = userEvent.setup()
         render(<Login onLogin={mockOnLogin} />)
-
-        await user.type(screen.getByPlaceholderText(/620000000/i), 'admin')
-        await user.type(screen.getByPlaceholderText('••••••••'), 'password123')
+        await user.type(screen.getByPlaceholderText(/620000000/i), username)
+        await user.type(screen.getByPlaceholderText('••••••••'), password)
         await user.click(screen.getByText('Se connecter'))
+    }
+
+    it('checks credentials with the cloud first when online', async () => {
+        const mockCloudUser = { id: '1', username: 'test@ecole.com', name: 'École Test', licenseStatus: 'active' }
+        vi.mocked(dbService.cloudActivate).mockResolvedValue(mockCloudUser)
+
+        await submit('test@ecole.com', 'test1234')
+
+        await waitFor(() => {
+            expect(dbService.cloudActivate).toHaveBeenCalledWith({ username: 'test@ecole.com', password: 'test1234' })
+            expect(dbService.login).not.toHaveBeenCalled()
+            expect(mockOnLogin).toHaveBeenCalledWith(mockCloudUser)
+        })
+    })
+
+    it('falls back to the local account when the cloud is unreachable (offline)', async () => {
+        const mockUser = { id: '1', username: 'admin', role: 'SUPER_ADMIN', name: 'Test' }
+        vi.mocked(dbService.cloudActivate).mockRejectedValue(new Error('[CLOUD_UNREACHABLE] Serveur injoignable'))
+        vi.mocked(dbService.login).mockResolvedValue(mockUser)
+
+        await submit('admin', 'password123')
 
         await waitFor(() => {
             expect(dbService.login).toHaveBeenCalledWith({ username: 'admin', password: 'password123' })
@@ -59,50 +77,50 @@ describe('Login Component', () => {
         })
     })
 
-    it('falls back to cloudActivate when no local account matches', async () => {
-        const mockCloudUser = { id: '1', username: 'test@ecole.com', name: 'École Test', licenseStatus: 'active' }
-        vi.mocked(dbService.login).mockRejectedValue(new Error('Identifiants incorrects'))
-        vi.mocked(dbService.cloudActivate).mockResolvedValue(mockCloudUser)
-
-        const user = userEvent.setup()
-        render(<Login onLogin={mockOnLogin} />)
-
-        await user.type(screen.getByPlaceholderText(/620000000/i), 'test@ecole.com')
-        await user.type(screen.getByPlaceholderText('••••••••'), 'test1234')
-        await user.click(screen.getByText('Se connecter'))
-
-        await waitFor(() => {
-            expect(dbService.cloudActivate).toHaveBeenCalledWith({ username: 'test@ecole.com', password: 'test1234' })
-            expect(mockOnLogin).toHaveBeenCalledWith(mockCloudUser)
-        })
-    })
-
-    it('shows error message when both local login and cloud activation fail', async () => {
-        vi.mocked(dbService.login).mockRejectedValue(new Error('Identifiants incorrects'))
-        vi.mocked(dbService.cloudActivate).mockRejectedValue(new Error('Email ou mot de passe incorrect'))
-
-        const user = userEvent.setup()
-        render(<Login onLogin={mockOnLogin} />)
-
-        await user.type(screen.getByPlaceholderText(/620000000/i), 'wrong')
-        await user.type(screen.getByPlaceholderText('••••••••'), 'wrong')
-        await user.click(screen.getByText('Se connecter'))
-
-        await waitFor(() => {
-            expect(screen.getByText('Email ou mot de passe incorrect')).toBeInTheDocument()
-        })
-    })
-
-    it('shows the local error when offline (cloud fallback is a network error)', async () => {
-        vi.mocked(dbService.login).mockRejectedValue(new Error('Identifiants incorrects'))
+    it('still treats a raw network error as offline', async () => {
+        const mockUser = { id: '1', username: 'admin', role: 'SUPER_ADMIN', name: 'Test' }
         vi.mocked(dbService.cloudActivate).mockRejectedValue(new Error('fetch failed'))
+        vi.mocked(dbService.login).mockResolvedValue(mockUser)
 
-        const user = userEvent.setup()
-        render(<Login onLogin={mockOnLogin} />)
+        await submit('admin', 'password123')
 
-        await user.type(screen.getByPlaceholderText(/620000000/i), 'wrong')
-        await user.type(screen.getByPlaceholderText('••••••••'), 'wrong')
-        await user.click(screen.getByText('Se connecter'))
+        await waitFor(() => {
+            expect(dbService.login).toHaveBeenCalledWith({ username: 'admin', password: 'password123' })
+            expect(mockOnLogin).toHaveBeenCalledWith(mockUser)
+        })
+    })
+
+    it('rejects an old password changed on the web: cloud refusal only allows local sub-users', async () => {
+        vi.mocked(dbService.cloudActivate).mockRejectedValue(new Error('Email ou mot de passe incorrect'))
+        vi.mocked(dbService.login).mockRejectedValue(new Error('Identifiants incorrects'))
+
+        await submit('test@ecole.com', 'ancien-mot-de-passe')
+
+        await waitFor(() => {
+            expect(dbService.login).toHaveBeenCalledWith({ username: 'test@ecole.com', password: 'ancien-mot-de-passe', subUsersOnly: true })
+            expect(screen.getByText('Email ou mot de passe incorrect')).toBeInTheDocument()
+            expect(mockOnLogin).not.toHaveBeenCalled()
+        })
+    })
+
+    it('lets a local sub-user (unknown to the cloud) log in after the cloud refusal', async () => {
+        const subUser = { id: 's1', username: 'secretaire', role: 'secretaire', name: 'Secrétaire', isSubUser: true }
+        vi.mocked(dbService.cloudActivate).mockRejectedValue(new Error('Email ou mot de passe incorrect'))
+        vi.mocked(dbService.login).mockResolvedValue(subUser)
+
+        await submit('secretaire', 'secret123')
+
+        await waitFor(() => {
+            expect(dbService.login).toHaveBeenCalledWith({ username: 'secretaire', password: 'secret123', subUsersOnly: true })
+            expect(mockOnLogin).toHaveBeenCalledWith(subUser)
+        })
+    })
+
+    it('shows the local error when offline and no local account matches', async () => {
+        vi.mocked(dbService.cloudActivate).mockRejectedValue(new Error('fetch failed'))
+        vi.mocked(dbService.login).mockRejectedValue(new Error('Identifiants incorrects'))
+
+        await submit('wrong', 'wrong')
 
         await waitFor(() => {
             expect(screen.getByText('Identifiants incorrects')).toBeInTheDocument()
@@ -115,12 +133,7 @@ describe('Login Component', () => {
             new Error("Error invoking remote method 'cloud-activate': Error: Licence invalide reçue du serveur")
         )
 
-        const user = userEvent.setup()
-        render(<Login onLogin={mockOnLogin} />)
-
-        await user.type(screen.getByPlaceholderText(/620000000/i), 'wrong')
-        await user.type(screen.getByPlaceholderText('••••••••'), 'wrong')
-        await user.click(screen.getByText('Se connecter'))
+        await submit('wrong', 'wrong')
 
         await waitFor(() => {
             expect(screen.getByText('Licence invalide reçue du serveur')).toBeInTheDocument()
