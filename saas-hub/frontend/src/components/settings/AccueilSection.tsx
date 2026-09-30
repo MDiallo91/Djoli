@@ -10,7 +10,8 @@
 import { useState, useEffect } from 'react';
 import { Upload, X, CheckCircle, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { fetchSetting, saveSetting, uploadMedia } from '../../services/settingsApi';
+import { fetchSetting, saveSetting } from '../../services/settingsApi';
+import { uploadMedia } from '../../services/mediaApi';
 import { useAdminContext }           from '../../context/AdminContext';
 import { StatutToggle }              from '../../ui/component/StatutToggle';
 import { Spinner }                   from '../../ui/design_system/Spinner';

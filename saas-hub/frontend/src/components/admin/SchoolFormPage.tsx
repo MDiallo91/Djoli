@@ -129,8 +129,7 @@ export function SchoolFormPage({ school, onBack, onSave }: Props) {
               label="Logo de l'école"
               value={form.logoUrl || ''}
               onChange={v => set('logoUrl', v)}
-              folder="djoli/logos"
-              hint="PNG, JPG, SVG — max 5 Mo"
+              hint="PNG, JPG ou WEBP — redimensionné automatiquement"
               previewHeight={120}
             />
           </div>

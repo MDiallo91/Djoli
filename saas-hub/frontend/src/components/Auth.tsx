@@ -443,8 +443,8 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
                 </div>
               </div>
               <FileUpload label="Logo de l'école" value={data.logoUrl || ''} onChange={v => setData({ ...data, logoUrl: v })}
-                accept="image/png,image/jpeg,image/svg+xml,image/webp" types={['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp']}
-                maxBytes={LOGO_MAX_BYTES} hint="PNG, JPG, SVG — 500 Ko maximum" />
+                accept="image/png,image/jpeg,image/webp" types={['image/png', 'image/jpeg', 'image/webp']}
+                maxBytes={LOGO_MAX_BYTES} hint="PNG, JPG ou WEBP — 500 Ko maximum" />
               <FileUpload label="Document RCCM" optional value={data.rccmFile?.dataUrl || ''}
                 onChange={(v, name) => setData({ ...data, rccmFile: v ? { dataUrl: v, name } : null })}
                 accept="application/pdf,image/jpeg,image/png" types={['application/pdf', 'image/jpeg', 'image/png']}

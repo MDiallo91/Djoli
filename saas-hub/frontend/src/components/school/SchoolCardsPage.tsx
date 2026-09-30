@@ -4,8 +4,12 @@ import QRCode from 'qrcode';
 import { Users, Download, CheckSquare, Square, Calendar, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 import * as api from '../../services/schoolApi';
-import SchoolCardDocument, { type CardStudent, type CardOptions, formatDate, initials } from './SchoolCardPDF';
+import { shrinkImageToDataUrl } from '../../lib/imageData';
+import SchoolCardDocument, { type CardStudent, type CardOptions, formatDate, initials, tint, cardFields, CARD_FONT } from './SchoolCardPDF';
 import { Card, Select, Input, Spinner, EmptyState } from '../../ui/design_system';
+
+// Armoiries de la République de Guinée (public/cartes)
+const ARMOIRIE_URL = '/cartes/armoirie-guinee.png';
 
 // ─── Couleurs ───────────────────────────────────────────────────────────────
 const THEMES = [
@@ -35,124 +39,151 @@ async function generateQR(text: string): Promise<string> {
   return QRCode.toDataURL(text, { width: 120, margin: 1, color: { dark: '#000000', light: '#ffffff' } });
 }
 
-// ─── Aperçus HTML (miroir visuel des 3 modèles PDF) ─────────────────────────
-function PreviewClassique({ student, opts, color }: { student: CardStudent; opts: CardOptions; color: string }) {
+// ─── Aperçus HTML (miroir visuel du PDF — SchoolCardPDF.tsx) ────────────────────
+// Même mise en page à l'échelle : 1 mm = 4 px, 1 pt ≈ 1,41 px.
+const MM = (n: number) => n * 4;
+const PT = (n: number) => n * 1.41;
+const F = CARD_FONT;
+
+function PLogo({ opts, size }: { opts: CardOptions; size: number }) {
+  return (
+    <div style={{ width: MM(size), height: MM(size), borderRadius: MM(1.5), background: '#fff', padding: MM(0.8), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxSizing: 'border-box' }}>
+      {opts.logoUrl
+        ? <img src={opts.logoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+        : <span style={{ fontSize: PT(size * 0.9), fontWeight: 700, color: opts.themeColor }}>{(opts.schoolName || 'É')[0]}</span>}
+    </div>
+  );
+}
+
+function PArmoirie({ opts, size }: { opts: CardOptions; size: number }) {
+  if (!opts.armoirieUrl) return null;
+  return (
+    <div style={{ width: MM(size * 0.85), height: MM(size), borderRadius: MM(1.5), background: '#fff', padding: MM(0.6), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxSizing: 'border-box' }}>
+      <img src={opts.armoirieUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+    </div>
+  );
+}
+
+function PPhoto({ student, color, w, h, round }: { student: CardStudent; color: string; w: number; h: number; round?: boolean }) {
   const [imgErr, setImgErr] = useState(false);
   return (
-    <div style={{ width: 340, height: 216, backgroundColor: '#fff', borderRadius: 8, overflow: 'hidden', border: '1px solid #e2e8f0', flexShrink: 0 }}>
-      {/* Header */}
-      <div style={{ height: 52, backgroundColor: color, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px' }}>
-        <div>
-          <p style={{ color: '#fff', fontWeight: 700, fontSize: 13, margin: 0 }}>{opts.schoolName || 'Nom école'}</p>
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 10, margin: 0 }}>Carte scolaire — {opts.yearLabel}</p>
+    <div style={{ width: MM(w), height: MM(h), borderRadius: round ? '50%' : MM(1.5), border: `${MM(0.6)}px solid ${color}`, background: tint(color, 0.08), overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxSizing: 'border-box' }}>
+      {student.photo_url && !imgErr
+        ? <img src={student.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setImgErr(true)} />
+        : <span style={{ fontSize: PT(13), fontWeight: 700, color: tint(color, 0.5) }}>{initials(student)}</span>}
+    </div>
+  );
+}
+
+function PFields({ rows }: { rows: [string, string][] }) {
+  return (
+    <div>
+      {rows.map(([l, v]) => (
+        <div key={l} style={{ display: 'flex', alignItems: 'baseline', marginBottom: MM(1) }}>
+          <span style={{ fontSize: PT(F.label), color: '#64748b', width: MM(15), flexShrink: 0 }}>{l}</span>
+          <span style={{ fontSize: PT(F.value), color: '#0f172a', fontWeight: 700 }}>{v}</span>
         </div>
-        {opts.logoUrl
-          ? <img src={opts.logoUrl} alt="" style={{ width: 36, height: 36, borderRadius: 4, objectFit: 'cover' }} />
-          : <div style={{ width: 36, height: 36, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ color: '#fff', fontWeight: 700, fontSize: 12 }}>{(opts.schoolName || 'É')[0]}</span>
-            </div>}
+      ))}
+    </div>
+  );
+}
+
+const pCard: React.CSSProperties = { width: MM(85), height: MM(54), background: '#fff', borderRadius: MM(2.5), overflow: 'hidden', border: '1px solid #e2e8f0', flexShrink: 0, fontFamily: 'Helvetica, Arial, sans-serif', boxSizing: 'border-box' };
+const pName: React.CSSProperties = { fontSize: PT(F.name), fontWeight: 700, color: '#0f172a', margin: `0 0 ${MM(1.6)}px`, lineHeight: 1.15 };
+
+export function PreviewClassique({ student, opts, color }: { student: CardStudent; opts: CardOptions; color: string }) {
+  return (
+    <div style={{ ...pCard, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ height: MM(14), background: color, display: 'flex', alignItems: 'center', padding: `0 ${MM(3)}px`, flexShrink: 0 }}>
+        <PLogo opts={opts} size={10} />
+        <div style={{ marginLeft: MM(2.5), flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: PT(F.school), fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.15 }}>{(opts.schoolName || 'Nom école').toUpperCase()}</p>
+          <p style={{ fontSize: PT(F.tag), color: 'rgba(255,255,255,0.85)', letterSpacing: 0.8, margin: '2px 0 0' }}>CARTE SCOLAIRE · {opts.yearLabel}</p>
+        </div>
+        <PArmoirie opts={opts} size={10} />
       </div>
-      {/* Body */}
-      <div style={{ display: 'flex', padding: '10px 12px', gap: 12, height: 'calc(100% - 52px)' }}>
-        <div style={{ width: 58, height: 76, borderRadius: 6, overflow: 'hidden', backgroundColor: '#f1f5f9', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', alignSelf: 'center' }}>
-          {student.photo_url && !imgErr
-            ? <img src={student.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setImgErr(true)} />
-            : <span style={{ color: '#94a3b8', fontWeight: 700, fontSize: 18 }}>{initials(student)}</span>}
+      <div style={{ height: MM(0.9), background: tint(color, 0.35), flexShrink: 0 }} />
+      <div style={{ flex: 1, display: 'flex', padding: `${MM(2.3)}px ${MM(3)}px` }}>
+        <PPhoto student={student} color={color} w={21} h={26} />
+        <div style={{ flex: 1, marginLeft: MM(3), display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
+          <p style={pName}>{student.first_name} {student.last_name}</p>
+          <PFields rows={cardFields(student)} />
         </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2 }}>
-          <p style={{ fontWeight: 700, fontSize: 13, color: '#0f172a', margin: '0 0 4px' }}>{student.first_name} {student.last_name}</p>
-          {[['Classe', student.class_name || '—'], ['Matricule', student.matricule || '—'], ['Né(e) le', formatDate(student.birth_date)], ['Valide', formatDate(opts.expiryDate)]].map(([l, v]) => (
-            <div key={l} style={{ display: 'flex', gap: 4 }}>
-              <span style={{ color: '#94a3b8', fontSize: 10, width: 56, flexShrink: 0 }}>{l}</span>
-              <span style={{ color: '#1e293b', fontSize: 10, fontWeight: 500 }}>{v}</span>
+        {student.qrDataUrl && <img src={student.qrDataUrl} alt="QR" style={{ width: MM(13), height: MM(13), alignSelf: 'flex-end', marginLeft: MM(1) }} />}
+      </div>
+    </div>
+  );
+}
+
+export function PreviewModerne({ student, opts, color }: { student: CardStudent; opts: CardOptions; color: string }) {
+  return (
+    <div style={{ ...pCard, display: 'flex' }}>
+      <div style={{ width: MM(25), background: color, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: `0 ${MM(1.5)}px`, flexShrink: 0 }}>
+        <PLogo opts={opts} size={8} />
+        <div style={{ marginTop: MM(2), borderRadius: '50%', border: `${MM(0.8)}px solid #fff` }}>
+          <PPhoto student={student} color={color} w={18} h={18} round />
+        </div>
+        <p style={{ fontSize: PT(5.8), fontWeight: 700, color: '#fff', textAlign: 'center', margin: `${MM(1.8)}px 0 0`, lineHeight: 1.2 }}>{opts.schoolName.toUpperCase()}</p>
+      </div>
+      <div style={{ flex: 1, padding: `${MM(2.8)}px ${MM(3.5)}px`, display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: MM(1.5) }}>
+            <div>
+              <div style={{ fontSize: PT(F.tag), fontWeight: 700, color, letterSpacing: 0.8 }}>CARTE SCOLAIRE</div>
+              <div style={{ fontSize: PT(F.tag), color: '#64748b', marginTop: 1 }}>{opts.yearLabel}</div>
             </div>
-          ))}
-          {student.qrDataUrl && (
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
-              <img src={student.qrDataUrl} alt="QR" style={{ width: 44, height: 44 }} />
-            </div>
-          )}
+            {opts.armoirieUrl && <img src={opts.armoirieUrl} alt="" style={{ width: MM(7), height: MM(8.5), objectFit: 'contain' }} />}
+          </div>
+          <p style={pName}>{student.first_name} {student.last_name}</p>
+          <div style={{ height: MM(0.4), background: tint(color, 0.25), marginBottom: MM(1.5) }} />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+          <div style={{ flex: 1 }}><PFields rows={cardFields(student)} /></div>
+          {student.qrDataUrl && <img src={student.qrDataUrl} alt="QR" style={{ width: MM(12), height: MM(12) }} />}
         </div>
       </div>
     </div>
   );
 }
 
-function PreviewModerne({ student, opts, color }: { student: CardStudent; opts: CardOptions; color: string }) {
-  const [imgErr, setImgErr] = useState(false);
+export function PreviewElegant({ student, opts, color }: { student: CardStudent; opts: CardOptions; color: string }) {
   return (
-    <div style={{ width: 340, height: 216, backgroundColor: '#fff', borderRadius: 8, overflow: 'hidden', border: '1px solid #e2e8f0', display: 'flex', flexShrink: 0 }}>
-      {/* Sidebar */}
-      <div style={{ width: 80, backgroundColor: color, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '8px 0', gap: 6 }}>
-        {opts.logoUrl && <img src={opts.logoUrl} alt="" style={{ width: 28, height: 28, borderRadius: 4, objectFit: 'cover' }} />}
-        <div style={{ width: 56, height: 56, borderRadius: 28, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {student.photo_url && !imgErr
-            ? <img src={student.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setImgErr(true)} />
-            : <span style={{ color: '#fff', fontWeight: 700, fontSize: 18 }}>{initials(student)}</span>}
+    <div style={{ ...pCard, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ height: MM(12), background: color, display: 'flex', alignItems: 'center', padding: `0 ${MM(3)}px`, flexShrink: 0 }}>
+        <PLogo opts={opts} size={8.5} />
+        <div style={{ marginLeft: MM(2), flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: PT(8), fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.15 }}>{(opts.schoolName || 'Nom école').toUpperCase()}</p>
+          <p style={{ fontSize: PT(F.tag), color: 'rgba(255,255,255,0.85)', letterSpacing: 0.6, margin: '1px 0 0' }}>CARTE SCOLAIRE · {opts.yearLabel}</p>
         </div>
-        <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 8, textAlign: 'center', margin: 0, padding: '0 4px', lineHeight: 1.2 }}>{opts.schoolName}</p>
+        <PArmoirie opts={opts} size={8.5} />
       </div>
-      {/* Right */}
-      <div style={{ flex: 1, padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-        <div>
-          <p style={{ color: '#94a3b8', fontSize: 9, margin: '0 0 2px' }}>{opts.yearLabel}</p>
-          <p style={{ fontWeight: 700, fontSize: 14, color: '#0f172a', margin: '0 0 6px' }}>{student.first_name} {student.last_name}</p>
-          {[['Classe', student.class_name || '—'], ['Matricule', student.matricule || '—'], ['Né(e) le', formatDate(student.birth_date)], ['Valide', formatDate(opts.expiryDate)]].map(([l, v]) => (
-            <div key={l} style={{ display: 'flex', gap: 4, marginBottom: 2 }}>
-              <span style={{ color: '#94a3b8', fontSize: 10, width: 56, flexShrink: 0 }}>{l}</span>
-              <span style={{ color: '#1e293b', fontSize: 10, fontWeight: 500 }}>{v}</span>
-            </div>
-          ))}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: `0 ${MM(3)}px`, background: tint(color, 0.05) }}>
+        <PPhoto student={student} color={color} w={21} h={21} round />
+        <div style={{ flex: 1, marginLeft: MM(3), minWidth: 0 }}>
+          <p style={pName}>{student.first_name} {student.last_name}</p>
+          <PFields rows={cardFields(student)} />
         </div>
-        {student.qrDataUrl && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <img src={student.qrDataUrl} alt="QR" style={{ width: 44, height: 44 }} />
-          </div>
-        )}
+        {student.qrDataUrl && <img src={student.qrDataUrl} alt="QR" style={{ width: MM(13), height: MM(13) }} />}
       </div>
+      <div style={{ height: MM(3.5), background: color, flexShrink: 0 }} />
     </div>
   );
 }
 
-function PreviewElegant({ student, opts, color }: { student: CardStudent; opts: CardOptions; color: string }) {
-  const [imgErr, setImgErr] = useState(false);
+export function PreviewVerso({ opts, color }: { opts: CardOptions; color: string }) {
   return (
-    <div style={{ width: 340, height: 216, backgroundColor: '#fff', borderRadius: 8, overflow: 'hidden', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-      {/* Top band */}
-      <div style={{ height: 38, backgroundColor: color, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {opts.logoUrl && <img src={opts.logoUrl} alt="" style={{ width: 24, height: 24, borderRadius: 3, objectFit: 'cover' }} />}
-          <div>
-            <p style={{ color: '#fff', fontWeight: 700, fontSize: 11, margin: 0 }}>{opts.schoolName || 'Nom école'}</p>
-            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 9, margin: 0 }}>{opts.yearLabel}</p>
-          </div>
-        </div>
-        <div style={{ backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 8, padding: '2px 8px' }}>
-          <span style={{ color: '#fff', fontSize: 9, fontWeight: 600 }}>CARTE SCOLAIRE</span>
-        </div>
+    <div style={{ ...pCard, display: 'flex', flexDirection: 'column', border: `${MM(0.3)}px solid ${tint(color, 0.3)}` }}>
+      <div style={{ height: MM(3.5), background: color, flexShrink: 0 }} />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: `0 ${MM(6)}px`, textAlign: 'center' }}>
+        <PLogo opts={opts} size={16} />
+        <p style={{ fontSize: PT(9), fontWeight: 700, color: '#0f172a', margin: `${MM(2)}px 0 0` }}>{(opts.schoolName || 'Nom école').toUpperCase()}</p>
+        {opts.schoolAddress && <p style={{ fontSize: PT(6.8), color: '#475569', margin: `${MM(1.2)}px 0 0` }}>{opts.schoolAddress}</p>}
+        {opts.schoolPhone && <p style={{ fontSize: PT(7.4), fontWeight: 700, color, margin: `${MM(1)}px 0 0` }}>Tél. {opts.schoolPhone}</p>}
+        <div style={{ width: MM(30), height: MM(0.4), background: tint(color, 0.3), margin: `${MM(2)}px 0` }} />
+        <p style={{ fontSize: PT(6.4), color: '#0f172a', margin: 0 }}>Année scolaire {opts.yearLabel} · valable jusqu'au {formatDate(opts.expiryDate)}</p>
+        <p style={{ fontSize: PT(5.6), color: '#64748b', margin: `${MM(1)}px 0 0` }}>En cas de perte, merci de rapporter cette carte à l'établissement.</p>
       </div>
-      {/* Body */}
-      <div style={{ flex: 1, display: 'flex', padding: '8px 12px', gap: 12, alignItems: 'center' }}>
-        <div style={{ width: 64, height: 64, borderRadius: 32, overflow: 'hidden', backgroundColor: '#f1f5f9', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {student.photo_url && !imgErr
-            ? <img src={student.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setImgErr(true)} />
-            : <span style={{ color: '#94a3b8', fontWeight: 700, fontSize: 20 }}>{initials(student)}</span>}
-        </div>
-        <div style={{ flex: 1 }}>
-          <p style={{ fontWeight: 700, fontSize: 13, color: '#0f172a', margin: '0 0 5px' }}>{student.first_name} {student.last_name}</p>
-          {[['Classe', student.class_name || '—'], ['Matricule', student.matricule || '—'], ['Né(e) le', formatDate(student.birth_date)]].map(([l, v]) => (
-            <div key={l} style={{ display: 'flex', gap: 4, marginBottom: 2 }}>
-              <span style={{ color: '#94a3b8', fontSize: 10, width: 56, flexShrink: 0 }}>{l}</span>
-              <span style={{ color: '#1e293b', fontSize: 10, fontWeight: 500 }}>{v}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-      {/* Bottom band */}
-      <div style={{ height: 38, backgroundColor: color, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px' }}>
-        <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 10 }}>Valide jusqu'au {formatDate(opts.expiryDate)}</span>
-        {student.qrDataUrl && <img src={student.qrDataUrl} alt="QR" style={{ width: 30, height: 30 }} />}
-      </div>
+      <div style={{ height: MM(3.5), background: color, flexShrink: 0 }} />
     </div>
   );
 }
@@ -306,20 +337,34 @@ export default function SchoolCardsPage({ user }: Props) {
     setChecked(checked.size === filtered.length ? new Set() : new Set(filtered.map(s => String(s.id))));
   };
 
-  const selectedStudents: CardStudent[] = filtered
-    .filter(s => checked.has(String(s.id)))
-    .map(s => ({
-      id: String(s.id), first_name: s.first_name, last_name: s.last_name,
-      birth_date: s.birth_date, matricule: s.matricule, photo_url: s.photo_url,
-      class_name: s.class_name, gender: s.gender, qrDataUrl: qrCodes[String(s.id)],
-    }));
+  // Images stockées en base (/api/media/<id>) : URL complète pour le générateur PDF,
+  // qui les télécharge lui-même (une URL relative n'est pas toujours résolue).
+  const absoluteUrl = (u?: string | null) => (u ? new URL(u, window.location.origin).href : null);
+
+  // Logo et armoiries répétés sur chaque carte (recto + verso) : réduits à ~240 px en
+  // data URL, sinon le PDF intègre l'image pleine taille à chaque face (PDF de 15+ Mo).
+  const [logoData, setLogoData] = useState<string | null>(null);
+  const [armoirieData, setArmoirieData] = useState<string | null>(null);
+  useEffect(() => {
+    const logo = absoluteUrl(user.logoUrl);
+    if (logo) shrinkImageToDataUrl(logo).then(setLogoData).catch(() => setLogoData(logo));
+    shrinkImageToDataUrl(absoluteUrl(ARMOIRIE_URL)!).then(setArmoirieData).catch(() => setArmoirieData(null));
+  }, [user.logoUrl]);
+
+  // Élève → données de carte. Téléphone : celui du tuteur en priorité, sinon celui de l'élève.
+  const toCard = (s: any): CardStudent => ({
+    id: String(s.id), first_name: s.first_name, last_name: s.last_name,
+    birth_date: s.birth_date, matricule: s.matricule, photo_url: absoluteUrl(s.photo_url),
+    class_name: s.class_name, gender: s.gender, qrDataUrl: qrCodes[String(s.id)],
+    phone: s.tutor_phone || s.phone || null,
+    phoneLabel: s.tutor_phone ? 'Tél. tuteur' : 'Téléphone',
+  });
+
+  const selectedStudents: CardStudent[] = filtered.filter(s => checked.has(String(s.id))).map(toCard);
 
   const previewStudent: CardStudent | null = (() => {
     const s = students.find(s => String(s.id) === previewId);
-    if (!s) return null;
-    return { id: String(s.id), first_name: s.first_name, last_name: s.last_name,
-      birth_date: s.birth_date, matricule: s.matricule, photo_url: s.photo_url,
-      class_name: s.class_name, gender: s.gender, qrDataUrl: qrCodes[String(s.id)] };
+    return s ? toCard(s) : null;
   })();
 
   const activeYear = years.find(y => String(y.id) === selectedYear);
@@ -327,7 +372,14 @@ export default function SchoolCardsPage({ user }: Props) {
 
   const opts: CardOptions = {
     schoolName: user.schoolName || 'Mon École',
-    logoUrl:    user.logoUrl    || null,
+    logoUrl:    logoData ?? absoluteUrl(user.logoUrl),
+    armoirieUrl: armoirieData,
+    schoolPhone: user.phone || null,
+    // Pas de champ « adresse » dans le profil web : composée à partir de la localisation
+    schoolAddress: [user.sousPrefecture, user.prefecture, user.city, user.country]
+      .filter((v: string | null | undefined) => v && String(v).trim())
+      .filter((v: string, i: number, arr: string[]) => arr.findIndex(x => x.toLowerCase() === v.toLowerCase()) === i)
+      .join(', ') || null,
     yearLabel,
     themeColor: theme.color,
     expiryDate,
@@ -488,8 +540,11 @@ export default function SchoolCardsPage({ user }: Props) {
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider self-start">Aperçu en temps réel</p>
           {previewStudent ? (
             <>
-              <div className="overflow-x-auto w-full flex justify-center">
+              <div className="overflow-x-auto w-full flex flex-col items-center">
+                <p className="text-[11px] text-slate-400 mb-1.5">Recto</p>
                 <PreviewComp student={previewStudent} opts={opts} color={theme.color} />
+                <p className="text-[11px] text-slate-400 mt-3 mb-1.5">Verso</p>
+                <PreviewVerso opts={opts} color={theme.color} />
               </div>
               <p className="text-[10px] text-slate-400 text-center">
                 {previewStudent.first_name} {previewStudent.last_name}

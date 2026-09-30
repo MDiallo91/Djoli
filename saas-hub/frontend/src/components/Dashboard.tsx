@@ -1,11 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate as useRRNavigate, useParams } from 'react-router-dom';
-import {
-  LogOut, Wallet, Download, CheckCircle, AlertCircle,
-  Zap, Settings, Bell, BookOpen, Users, Award,
-  RefreshCw, Shield, Globe, Save, Lock,
-  Building2, Key, Package, Menu, X, Briefcase, GraduationCap, DollarSign, CreditCard,
-} from 'lucide-react';
+import { LogOut, Wallet, Download, CheckCircle, AlertCircle, Zap, Settings, Bell, BookOpen, Users, Award, RefreshCw, Shield, Globe, Save, Lock, Building2, Key, Package, Menu, X, Briefcase, GraduationCap, DollarSign, CreditCard, Eye, EyeOff } from 'lucide-react';
 import StructureSection from './school/StructureSection';
 import { SubscriptionPage } from './school/SubscriptionPage';
 import ImageUpload from './ui/ImageUpload';
@@ -81,9 +76,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     sousPrefecture: user.sousPrefecture || '',
     rccm:           user.rccm           || '',
     logoUrl:        user.logoUrl        || '',
+    phone:          user.phone          || '',
   });
+  // Profil rechargé depuis le serveur : la session (login) peut être incomplète ou périmée.
+  // Tant qu'il n'est pas chargé, l'enregistrement est bloqué — sinon des champs vides
+  // écraseraient les vraies valeurs en base (bug : directeur/ville/préfecture effacés).
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [savedProfile, setSavedProfile] = useState<typeof profile | null>(null);
+  useEffect(() => {
+    apiClient.get('/school/me').then(({ data }) => {
+      let levels: string[] = [];
+      try { levels = Array.isArray(data.levels) ? data.levels : JSON.parse(data.levels || '[]'); } catch { /* cycles illisibles */ }
+      const fresh = {
+        schoolName: data.schoolName || '', directorName: data.directorName || '', country: data.country || '',
+        city: data.city || '', levels, prefecture: data.prefecture || '', sousPrefecture: data.sousPrefecture || '',
+        rccm: data.rccm || '', logoUrl: data.logoUrl || '', phone: data.phone || '',
+      };
+      setProfile(fresh);
+      setSavedProfile(fresh);
+      setProfileLoaded(true);
+    }).catch(() => toast.error("Impossible de charger le profil de l'école"));
+  }, []);
   const [saving, setSaving] = useState(false);
   const [pwd, setPwd] = useState({ oldPassword: '', newPassword: '', confirm: '' });
+  // Afficher / masquer chaque champ de mot de passe (icône œil)
+  const [showPwd, setShowPwd] = useState<Record<string, boolean>>({});
   const [savingPwd, setSavingPwd] = useState(false);
 
   const [release, setRelease] = useState<GithubRelease | null>(null);
@@ -147,12 +164,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   };
 
   const saveProfile = async () => {
+    if (!profileLoaded) return;
     setSaving(true);
     try {
       await apiClient.put(`/school/profile`, profile);
+      setSavedProfile(profile);
       toast.success('Profil mis à jour avec succès');
-    } catch {
-      toast.error('Erreur lors de la sauvegarde');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || 'Erreur lors de la sauvegarde');
     } finally {
       setSaving(false);
     }
@@ -626,7 +645,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           {/* ══════════════════════════════════════════
               CARTES SCOLAIRES
           ══════════════════════════════════════════ */}
-          {activeNav === 'cards' && <SchoolCardsPage user={user} />}
+          {activeNav === 'cards' && <SchoolCardsPage user={{ ...user, ...(savedProfile ?? {}) }} />}
 
           {activeNav === 'grades' && <GradesSection />}
 
@@ -752,7 +771,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   <ImageUpload
                     value={profile.logoUrl}
                     onChange={url => setField('logoUrl', url)}
-                    folder="djoli/logos"
                     shape="square"
                     size="lg"
                     placeholder="Logo"
@@ -770,7 +788,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Email = identifiant du compte (connexion web et activation du desktop) : lecture seule */}
+                  <Input label="Email" type="email" value={user.email || ''} disabled
+                    helper="Identifiant de connexion — contactez le support pour le modifier." />
                   {([
+                    { label: 'Téléphone',            field: 'phone',          placeholder: 'Ex: +224 620 00 00 00' },
                     { label: "Nom de l'école",      field: 'schoolName',     placeholder: 'Ex: École Primaire Lumière' },
                     { label: 'Nom du directeur',     field: 'directorName',   placeholder: 'Ex: M. Diallo Mamadou' },
                     { label: 'Pays',                 field: 'country',        placeholder: 'Ex: Guinée' },
@@ -818,7 +840,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </div>
 
                 <div className="mt-5 flex justify-end">
-                  <Button variant="primary" leftIcon={<Save size={14} />} loading={saving} onClick={saveProfile}>
+                  <Button variant="primary" leftIcon={<Save size={14} />} loading={saving} disabled={!profileLoaded} onClick={saveProfile}>
                     Enregistrer
                   </Button>
                 </div>
@@ -843,10 +865,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                     <Input
                       key={key}
                       label={label}
-                      type="password"
+                      type={showPwd[key] ? 'text' : 'password'}
                       value={pwd[key]}
                       onChange={e => setPwd(p => ({ ...p, [key]: e.target.value }))}
                       placeholder="••••••••"
+                      autoComplete={key === 'oldPassword' ? 'current-password' : 'new-password'}
+                      rightIcon={
+                        <button type="button" onClick={() => setShowPwd(p => ({ ...p, [key]: !p[key] }))}
+                          className="flex items-center text-slate-400 hover:text-slate-700 transition-colors"
+                          aria-label={showPwd[key] ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                          title={showPwd[key] ? 'Masquer' : 'Afficher'}>
+                          {showPwd[key] ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      }
                     />
                   ))}
                   <Button variant="primary" leftIcon={<Lock size={14} />} loading={savingPwd} onClick={changePassword}>

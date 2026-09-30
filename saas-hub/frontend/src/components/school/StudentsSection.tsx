@@ -157,6 +157,7 @@ export default function StudentsSection({ onOpenBulletin }: Props) {
                   <tr className="bg-gray-50 border-b border-gray-200">
                     <th className="px-3 py-2 border border-gray-200 w-10 text-center">#</th>
                     <th className="px-3 py-2 border border-gray-200">Nom</th>
+                    <th className="px-3 py-2 border border-gray-200">Prénom</th>
                     <th className="px-3 py-2 border border-gray-200">Matricule</th>
                     <th className="px-3 py-2 border border-gray-200 hidden md:table-cell">Sexe</th>
                     <th className="px-3 py-2 border border-gray-200 hidden lg:table-cell">Père</th>
@@ -172,9 +173,8 @@ export default function StudentsSection({ onOpenBulletin }: Props) {
                       <td className="px-3 py-2 border border-gray-200 text-center text-gray-400">
                         {(page - 1) * ITEMS_PER_PAGE + i + 1}
                       </td>
-                      <td className="px-3 py-2 border border-gray-200 font-medium text-gray-900">
-                        {s.first_name} {s.last_name}
-                      </td>
+                      <td className="px-3 py-2 border border-gray-200 text-gray-900">{s.last_name}</td>
+                      <td className="px-3 py-2 border border-gray-200 text-gray-900">{s.first_name}</td>
                       <td className="px-3 py-2 border border-gray-200 text-gray-600">{s.matricule || '—'}</td>
                       <td className="px-3 py-2 border border-gray-200 hidden md:table-cell text-gray-600">{s.gender || '—'}</td>
                       <td className="px-3 py-2 border border-gray-200 hidden lg:table-cell text-gray-600">{s.pere || '—'}</td>

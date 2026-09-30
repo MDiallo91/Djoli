@@ -94,7 +94,6 @@ export default function StudentModal({ student, classes, years, activeYearId, on
           <ImageUpload
             value={form.photo_url}
             onChange={url => set('photo_url', url)}
-            folder="djoli/students"
             shape="circle"
             size="lg"
             placeholder="Photo"

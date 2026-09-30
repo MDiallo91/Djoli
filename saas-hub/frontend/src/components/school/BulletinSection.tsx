@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Printer, ChevronLeft, GraduationCap, Search, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import * as api from '../../services/schoolApi';
+import { scaleForLevel, getMention } from '../../lib/gradingScale';
 import { Input, Select, Spinner, EmptyState } from '../../ui/design_system';
 
 // ── Design tokens (identiques desktop BulletinPrint) ─────────────────────────
@@ -18,20 +19,15 @@ const tdStyle: React.CSSProperties = {
 
 const fmt = (v: number | null, dec = 2) => v !== null ? v.toFixed(dec).replace('.', ',') : '—';
 
-function getMention(avg: number | null) {
-  if (avg === null) return '—';
-  if (avg >= 16) return 'Très Bien';
-  if (avg >= 14) return 'Bien';
-  if (avg >= 12) return 'Assez Bien';
-  if (avg >= 10) return 'Passable';
-  return 'Insuffisant';
-}
 
 const TERMS_LABELS = ['1er Trimestre', '2ème Trimestre', '3ème Trimestre'];
 
 // ── Bulletin imprimable (clone de BulletinPrint.tsx du desktop) ───────────────
 function BulletinPrint({ data, term }: { data: any; term: string }) {
   const { student, class: cls, year, subjectResults, rankings, classSize, schoolInfo } = data;
+  // Barème et mentions selon le niveau de la classe (maternelle/primaire /10, sinon /20) — comme le desktop
+  const scale = scaleForLevel(cls?.level);
+  const mentionOf = (v: number | null) => (v === null ? '—' : getMention(v, cls?.level).label);
 
   const isT1 = term.includes('1er');
   const isT2 = term.includes('2ème') && !term.toLowerCase().includes('ann');
@@ -63,7 +59,7 @@ function BulletinPrint({ data, term }: { data: any; term: string }) {
   const mgA = annualCount > 0 ? annualTotal / annualCount : null;
 
   const activeMoy = isT1 ? mg.T1 : isT2 ? mg.T2 : mgA ?? mg.T3;
-  const globalMention = getMention(activeMoy ?? null);
+  const globalMention = mentionOf(activeMoy ?? null);
   const rank = isT1 ? rankings.T1 : isT2 ? rankings.T2 : rankings.T3;
 
   const colSpanMoyennes = 1 + (showT2 ? 1 : 0) + (showT3 ? 1 : 0) + (showAnn ? 1 : 0);
@@ -142,7 +138,7 @@ function BulletinPrint({ data, term }: { data: any; term: string }) {
                 {showT3  && <td style={{ ...tdStyle, textAlign: 'center', backgroundColor: rowBg }}>{fmt(g.grades?.T3?.moyenne ?? null)}</td>}
                 {showAnn && <td style={{ ...tdStyle, textAlign: 'center', backgroundColor: rowBg }}>{fmt(ann)}</td>}
                 <td style={{ ...tdStyle, textAlign: 'center', fontStyle: 'italic', backgroundColor: rowBg }}>
-                  {getMention(activeMoyRow ?? null) !== '—' ? getMention(activeMoyRow ?? null) : ''}
+                  {mentionOf(activeMoyRow ?? null) !== '—' ? mentionOf(activeMoyRow ?? null) : ''}
                 </td>
               </tr>
             );
@@ -161,10 +157,10 @@ function BulletinPrint({ data, term }: { data: any; term: string }) {
           <tr>
             <td style={{ ...tdStyle, fontWeight: 'bold', backgroundColor: BLUE, color: '#fff' }}>Moyenne générale</td>
             <td style={{ ...tdStyle, backgroundColor: BLUE }} />
-            <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 'bold', backgroundColor: BLUE, color: '#fff' }}>{mg.T1 !== null ? `${fmt(mg.T1)}/20` : '—'}</td>
-            {showT2 && <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 'bold', backgroundColor: BLUE, color: '#fff' }}>{mg.T2 !== null ? `${fmt(mg.T2)}/20` : '—'}</td>}
-            {showT3 && <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 'bold', backgroundColor: BLUE, color: '#fff' }}>{mg.T3 !== null ? `${fmt(mg.T3)}/20` : '—'}</td>}
-            {showAnn && <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 'bold', backgroundColor: BLUE, color: '#fff' }}>{mgA !== null ? `${fmt(mgA)}/20` : '—'}</td>}
+            <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 'bold', backgroundColor: BLUE, color: '#fff' }}>{mg.T1 !== null ? `${fmt(mg.T1)}/${scale}` : '—'}</td>
+            {showT2 && <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 'bold', backgroundColor: BLUE, color: '#fff' }}>{mg.T2 !== null ? `${fmt(mg.T2)}/${scale}` : '—'}</td>}
+            {showT3 && <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 'bold', backgroundColor: BLUE, color: '#fff' }}>{mg.T3 !== null ? `${fmt(mg.T3)}/${scale}` : '—'}</td>}
+            {showAnn && <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 'bold', backgroundColor: BLUE, color: '#fff' }}>{mgA !== null ? `${fmt(mgA)}/${scale}` : '—'}</td>}
             <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 'bold', fontStyle: 'italic', backgroundColor: BLUE, color: '#fff' }}>{globalMention}</td>
           </tr>
         </tbody>
@@ -198,12 +194,12 @@ function BulletinPrint({ data, term }: { data: any; term: string }) {
             ];
             return rows.map(({ label, moy }, i) => {
               const rowBg = i % 2 === 0 ? '#fff' : B_SOFT;
-              const passes = moy !== null && moy >= 10;
+              const passes = moy !== null && moy >= scale / 2;
               return (
                 <tr key={label}>
                   <td style={{ ...tdStyle, fontWeight: 'bold', backgroundColor: rowBg }}>{label}</td>
                   <td style={{ ...tdStyle, textAlign: 'center', backgroundColor: rowBg }}>{moy !== null ? fmt(moy) : ''}</td>
-                  <td style={{ ...tdStyle, textAlign: 'center', backgroundColor: rowBg }}>{moy !== null ? getMention(moy) : ''}</td>
+                  <td style={{ ...tdStyle, textAlign: 'center', backgroundColor: rowBg }}>{moy !== null ? mentionOf(moy) : ''}</td>
                   <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 'bold', backgroundColor: rowBg }}>{moy !== null && passes ? 'X' : ''}</td>
                   <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 'bold', backgroundColor: rowBg }}>{moy !== null && !passes ? 'X' : ''}</td>
                 </tr>
@@ -215,7 +211,7 @@ function BulletinPrint({ data, term }: { data: any; term: string }) {
               <tr>
                 <td style={{ ...tdStyle, fontWeight: 'bold', backgroundColor: B_SOFT }}>Moyenne annuelle</td>
                 <td style={{ ...tdStyle, textAlign: 'center', backgroundColor: B_SOFT }}>{mgA !== null ? fmt(mgA) : ''}</td>
-                <td style={{ ...tdStyle, textAlign: 'center', backgroundColor: B_SOFT }}>{mgA !== null ? getMention(mgA) : ''}</td>
+                <td style={{ ...tdStyle, textAlign: 'center', backgroundColor: B_SOFT }}>{mgA !== null ? mentionOf(mgA) : ''}</td>
                 <td style={{ ...tdStyle, backgroundColor: B_SOFT }} /><td style={{ ...tdStyle, backgroundColor: B_SOFT }} />
               </tr>
               <tr>
@@ -242,7 +238,7 @@ function BulletinPrint({ data, term }: { data: any; term: string }) {
       {/* ═══ FOOTER ═══ */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: '6mm' }}>
         <div style={{ border: `1pt solid ${BLUE}`, padding: '4pt 10pt', fontSize: '10pt' }}>
-          <strong>Appréciation :</strong> {activeMoy !== null ? getMention(activeMoy) : '—'}
+          <strong>Appréciation :</strong> {activeMoy !== null ? mentionOf(activeMoy) : '—'}
         </div>
         <div style={{ textAlign: 'center', fontSize: '10pt' }}>
           <div>{schoolInfo?.city ?? 'Conakry'}, le {new Date().toLocaleDateString('fr-FR')}</div>

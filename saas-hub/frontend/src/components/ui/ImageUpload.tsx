@@ -1,10 +1,9 @@
 import { useRef, useState } from 'react';
-import apiClient from '../../lib/apiClient';
+import { uploadMedia, MEDIA_ACCEPT } from '../../services/mediaApi';
 
 interface Props {
   value?: string;
   onChange: (url: string) => void;
-  folder: 'djoli/logos' | 'djoli/students' | 'djoli/staff';
   shape?: 'circle' | 'square';
   size?: 'sm' | 'md' | 'lg';
   label?: string;
@@ -14,30 +13,20 @@ interface Props {
 const SIZES = { sm: 'w-14 h-14', md: 'w-20 h-20', lg: 'w-28 h-28' };
 const TEXT_SIZES = { sm: 'text-xs', md: 'text-sm', lg: 'text-base' };
 
-export default function ImageUpload({ value, onChange, folder, shape = 'circle', size = 'md', label, placeholder }: Props) {
+// Photo / logo stocké en base (/api/media) — plus de Cloudinary.
+export default function ImageUpload({ value, onChange, shape = 'circle', size = 'md', label, placeholder }: Props) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) { setError('Fichier image requis'); return; }
-    if (file.size > 5 * 1024 * 1024) { setError('Image trop lourde (max 5 Mo)'); return; }
     setError('');
     setUploading(true);
     try {
-      const { data } = await apiClient.get('/upload/signature', { params: { folder } });
-      const form = new FormData();
-      form.append('file', file);
-      form.append('api_key', data.apiKey);
-      form.append('timestamp', String(data.timestamp));
-      form.append('signature', data.signature);
-      form.append('folder', data.folder);
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${data.cloudName}/image/upload`, { method: 'POST', body: form });
-      if (!res.ok) throw new Error('Upload Cloudinary échoué');
-      const json = await res.json();
-      onChange(json.secure_url);
+      // Redimensionnée si besoin (photos de téléphone) puis stockée en base
+      onChange(await uploadMedia(file, { maxDimension: 1000 }));
     } catch (e: any) {
-      setError(e?.message || 'Erreur upload');
+      setError(e?.response?.data?.message || e?.message || 'Erreur upload');
     } finally {
       setUploading(false);
     }
@@ -75,7 +64,7 @@ export default function ImageUpload({ value, onChange, folder, shape = 'circle',
         )}
       </button>
       {error && <p className="text-[11px] text-red-500 font-medium">{error}</p>}
-      <input ref={inputRef} type="file" accept="image/*" className="hidden"
+      <input ref={inputRef} type="file" accept={MEDIA_ACCEPT} className="hidden"
         onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ''; }} />
     </div>
   );

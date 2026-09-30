@@ -170,7 +170,6 @@ export default function StaffSection() {
             <ImageUpload
               value={formData.photo_url}
               onChange={url => setFormData((p: any) => ({ ...p, photo_url: url }))}
-              folder="djoli/staff"
               shape="circle"
               size="lg"
               placeholder="Photo"

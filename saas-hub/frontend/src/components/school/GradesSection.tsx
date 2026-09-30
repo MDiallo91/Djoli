@@ -3,18 +3,10 @@ import { Search, Plus, TrendingUp, Award, FileText, GraduationCap, Save, ArrowLe
 import { toast } from 'sonner';
 import * as api from '../../services/schoolApi';
 import { Card, Tabs, Select, Input, Button, IconButton, Modal, EmptyState } from '../../ui/design_system';
+import { scaleForLevel, getMention } from '../../lib/gradingScale';
 
 const TERMS = ['1er Trimestre', '2ème Trimestre', '3ème Trimestre'];
 const EXAM_TYPES = ['Devoir', 'Composition', 'Moyenne'];
-
-function getMention(avg: number | null) {
-  if (avg === null) return { label: '—', color: 'text-gray-400' };
-  if (avg >= 16) return { label: 'Très Bien', color: 'text-secondary-600' };
-  if (avg >= 14) return { label: 'Bien', color: 'text-blue-600' };
-  if (avg >= 12) return { label: 'Assez Bien', color: 'text-primary-600' };
-  if (avg >= 10) return { label: 'Passable', color: 'text-amber-600' };
-  return { label: 'Insuffisant', color: 'text-red-600' };
-}
 
 export default function GradesSection() {
   const [mobileView, setMobileView]     = useState<'list' | 'detail'>('list');
@@ -118,7 +110,7 @@ export default function GradesSection() {
       const g = await api.getGrades({ studentId: activeStudent.id, yearId: selectedYear });
       setGrades(g);
       toast.success('Note enregistrée');
-    } catch { toast.error('Erreur'); }
+    } catch (err: any) { toast.error(err?.response?.data?.error || "Erreur lors de l'enregistrement de la note"); }
   };
 
   const handleSaveBulk = async () => {
@@ -137,12 +129,18 @@ export default function GradesSection() {
         }));
       await api.saveGradesBulk(toSave);
       toast.success('Notes enregistrées !');
-    } catch { toast.error('Erreur enregistrement'); }
+    } catch (err: any) { toast.error(err?.response?.data?.error || 'Erreur enregistrement'); }
     finally { setSaving(false); }
   };
 
+  // Barème selon le niveau de la classe (maternelle/primaire /10, sinon /20) — comme le desktop
+  const levelOf = (classId: unknown) => classes.find(c => String(c.id) === String(classId ?? ''))?.level;
+  const studentLevel = levelOf(activeStudent?.class_id);
+  const studentScale = scaleForLevel(studentLevel);
+  const classScale   = scaleForLevel(levelOf(selectedClassId));
+
   const avg = calculateAverage();
-  const mention = getMention(avg);
+  const mention = getMention(avg, studentLevel);
 
   return (
     <div className="space-y-5 animate-in">
@@ -150,7 +148,7 @@ export default function GradesSection() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
           { label: 'Moyenne générale', icon: TrendingUp, iconBg: 'linear-gradient(135deg,#2563eb,#60a5fa)', shadow: 'rgba(37,99,235,0.3)',
-            value: activeStudent && avg !== null ? `${avg.toFixed(2)}/20` : '—', sub: activeStudent ? 'Élève sélectionné' : 'Sélectionner un élève' },
+            value: activeStudent && avg !== null ? `${avg.toFixed(2)}/${studentScale}` : '—', sub: activeStudent ? 'Élève sélectionné' : 'Sélectionner un élève' },
           { label: 'Mention', icon: Award, iconBg: 'linear-gradient(135deg,#f59e0b,#fbbf24)', shadow: 'rgba(245,158,11,0.3)',
             value: activeStudent && avg !== null ? mention.label : '—', sub: 'Trimestre courant',
             valueClass: activeStudent && avg !== null ? mention.color : 'text-gray-900' },
@@ -278,7 +276,7 @@ export default function GradesSection() {
                       {grades.length === 0 ? (
                         <tr><td colSpan={4} className="px-8 py-20 text-center text-gray-400 italic">Aucune note enregistrée pour cet élève.</td></tr>
                       ) : grades.filter(g => g.term === selectedTerm).map(g => {
-                        const isPass = g.score >= 10;
+                        const isPass = g.score >= studentScale / 2;
                         return (
                           <tr key={g.id} className="hover:bg-gray-50/50 transition-colors">
                             <td className="px-8 py-4 font-bold text-gray-800">{g.subject_name}</td>
@@ -288,7 +286,7 @@ export default function GradesSection() {
                             </td>
                             <td className="px-8 py-4 text-center">
                               <span className={`text-lg font-bold ${isPass ? 'text-green-600' : 'text-red-600'}`}>
-                                {g.score} <span className="text-xs text-gray-400">/20</span>
+                                {g.score} <span className="text-xs text-gray-400">/{studentScale}</span>
                               </span>
                             </td>
                             <td className="px-8 py-4 text-center text-gray-500 font-medium">x{g.coefficient || 1}</td>
@@ -323,25 +321,27 @@ export default function GradesSection() {
                 <table className="w-full text-left">
                   <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 sticky top-0 z-10">
                     <tr>
-                      <th className="px-6 py-3">Élève</th>
-                      <th className="px-6 py-3 text-center">Note / 20</th>
+                      <th className="px-6 py-3">Nom</th>
+                      <th className="px-6 py-3">Prénom</th>
+                      <th className="px-6 py-3 text-center">Note / {classScale}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {classGrades.length === 0 ? (
                       <tr>
-                        <td colSpan={2} className="p-16 text-center text-gray-400 italic text-sm">
+                        <td colSpan={3} className="p-16 text-center text-gray-400 italic text-sm">
                           {selectedClassId ? 'Chargement des élèves…' : 'Sélectionnez une classe, une matière et un trimestre.'}
                         </td>
                       </tr>
                     ) : classGrades.map((cg, idx) => (
                       <tr key={cg.student_id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-3 font-semibold text-sm text-gray-900">
-                          {cg.first_name} {cg.last_name}
-                          <span className="ml-2 text-[10px] text-gray-400 font-normal">{cg.matricule}</span>
+                        <td className="px-6 py-3 text-sm text-gray-900">
+                          {cg.last_name}
+                          <span className="ml-2 text-[10px] text-gray-400">{cg.matricule}</span>
                         </td>
+                        <td className="px-6 py-3 text-sm text-gray-900">{cg.first_name}</td>
                         <td className="px-6 py-3">
-                          <input type="number" step="0.25" min="0" max="20" placeholder="—"
+                          <input type="number" step="0.25" min="0" max={classScale} placeholder="—"
                             className="w-20 mx-auto block px-3 py-1.5 border border-gray-200 rounded-lg text-center font-bold text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
                             value={cg.moyenne ?? ''}
                             onChange={e => {
@@ -379,7 +379,7 @@ export default function GradesSection() {
             options={subjects.map(s => ({ value: s.id, label: `${s.name} (coeff ${s.coefficient})` }))}
           />
           <Input
-            label="Note (sur 20)" type="number" step="0.25" min="0" max="20" required
+            label={`Note (sur ${studentScale})`} type="number" step="0.25" min="0" max={studentScale} required
             value={newGrade.score} onChange={e => setNewGrade({ ...newGrade, score: e.target.value })}
           />
           <Select

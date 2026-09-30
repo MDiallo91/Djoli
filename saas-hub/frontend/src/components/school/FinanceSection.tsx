@@ -315,7 +315,8 @@ export default function FinanceSection() {
                 <thead>
                   <tr className="bg-gray-50 border-y border-gray-200">
                     <th className="th-desktop">N°</th>
-                    <th className="th-desktop">Élève</th>
+                    <th className="th-desktop">Nom</th>
+                    <th className="th-desktop">Prénom</th>
                     <th className="th-desktop">Classe</th>
                     <th className="th-desktop text-center">Statut {reportConfig.month}</th>
                   </tr>
@@ -324,7 +325,8 @@ export default function FinanceSection() {
                   {reportFiltered.map((s, i) => (
                     <tr key={s.id} className="hover:bg-gray-50/50">
                       <td className="px-6 py-4 text-xs font-black text-gray-400">{i + 1}</td>
-                      <td className="px-6 py-4 font-bold text-gray-900">{s.first_name} {s.last_name}</td>
+                      <td className="px-6 py-4 text-gray-900">{s.last_name}</td>
+                      <td className="px-6 py-4 text-gray-900">{s.first_name}</td>
                       <td className="px-6 py-4 text-sm text-gray-500">{s.class_name || '—'}</td>
                       <td className="px-6 py-4 text-center">
                         <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${s.has_paid ? 'bg-secondary-50 text-secondary-700' : 'bg-amber-50 text-amber-700'}`}>
