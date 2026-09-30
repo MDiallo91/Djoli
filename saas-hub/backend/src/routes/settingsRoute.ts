@@ -1,8 +1,24 @@
 import { Router } from 'express';
 import Setting from '../models/settingModel';
 import { requireAdminAuth } from '../middleware/adminAuth';
+import { cleanupUnusedMedia } from '../services/mediaService';
 
 const router = Router();
+
+// Colonne `settings.data` = TEXT MySQL (65 535 octets) : au-delà, MySQL tronque
+// silencieusement et le JSON devient illisible. Les images ne doivent pas y être
+// stockées (voir /api/media) — on refuse explicitement plutôt que de corrompre.
+const MAX_DATA_BYTES = 60_000;
+
+// Une ligne corrompue ne doit pas faire tomber toutes les autres.
+function parseData(key: string, raw: string | null): any {
+    if (!raw) return null;
+    try { return JSON.parse(raw); }
+    catch {
+        console.error(`[settings] JSON illisible pour la clé "${key}" (${raw.length} caractères) — ignorée`);
+        return null;
+    }
+}
 
 // GET toutes les settings → { site: { statut, data }, legal: { statut, data } }
 router.get('/', async (_req, res) => {
@@ -13,7 +29,7 @@ router.get('/', async (_req, res) => {
             result[row.key] = {
                 id:     row.id,
                 statut: row.statut,
-                data:   row.data ? JSON.parse(row.data) : null,
+                data:   parseData(row.key, row.data),
             };
         }
         res.json(result);
@@ -30,7 +46,7 @@ router.get('/:key', async (req, res) => {
         res.json({
             id:     row.id,
             statut: row.statut,
-            data:   row.data ? JSON.parse(row.data) : null,
+            data:   parseData(row.key, row.data),
         });
     } catch {
         res.status(500).json({ error: 'Erreur serveur' });
@@ -42,6 +58,10 @@ router.get('/:key', async (req, res) => {
 router.put('/:key', requireAdminAuth, async (req, res) => {
     try {
         const { statut, data } = req.body;
+        if (data !== undefined && Buffer.byteLength(JSON.stringify(data), 'utf8') > MAX_DATA_BYTES) {
+            res.status(413).json({ message: 'Paramètres trop volumineux — les images doivent être uploadées (pas collées en base64).' });
+            return;
+        }
         const [row, created] = await Setting.findOrCreate({
             where: { key: req.params.key },
             defaults: {
@@ -49,16 +69,19 @@ router.put('/:key', requireAdminAuth, async (req, res) => {
                 data:   JSON.stringify(data ?? {}),
             },
         });
+        const previousRaw = created ? null : row.data;
         if (!created) {
             if (statut !== undefined) row.statut = Number(statut);
             if (data   !== undefined) row.data   = JSON.stringify(data);
             await row.save();
         }
+        // Images remplacées/retirées (ou uploadées puis jamais enregistrées) → supprimées.
+        if (data !== undefined) await cleanupUnusedMedia(previousRaw);
         res.json({
             id:     row.id,
             key:    req.params.key,
             statut: row.statut,
-            data:   row.data ? JSON.parse(row.data) : null,
+            data:   parseData(row.key, row.data),
         });
     } catch {
         res.status(500).json({ error: 'Erreur serveur' });

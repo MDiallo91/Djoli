@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/authMiddleware';
-import { getProfile, updateProfile, changePassword, getSchoolStats } from '../controllers/school/schoolProfileController';
+import { getProfile, updateProfile, changePassword, getSchoolStats, requestLevels } from '../controllers/school/schoolProfileController';
 import { getDashboardStats } from '../controllers/school/dashboardController';
 import { getStudents, createStudent, updateStudent, deleteStudent, getStudentsDetailed, getStudentBulletin } from '../controllers/school/elevesController';
 import { getSchoolYears, createSchoolYear, updateSchoolYear, deleteSchoolYear } from '../controllers/school/anneesScolairesController';
 import { getClasses, createClass, updateClass, deleteClass } from '../controllers/school/classesController';
 import { getSubjects, createSubject, deleteSubject, getClassSubjects, createClassSubject, deleteClassSubject } from '../controllers/school/matieresController';
 import { getStaff, createStaff, updateStaff, deleteStaff } from '../controllers/school/personnelController';
+import { getSchoolUsers, updateSchoolUserPermissions } from '../controllers/school/schoolUsersController';
 import { getEnrollments, createEnrollment, deleteEnrollment } from '../controllers/school/inscriptionsController';
 import { getGrades, saveGradesBulk, deleteGrade } from '../controllers/school/notesController';
 import { getPayments, createPayment, deletePayment, getTransactions, createTransaction, deleteTransaction } from '../controllers/school/financeController';
@@ -19,6 +20,7 @@ router.get('/stats',     requireAuth, getSchoolStats);
 router.get('/dashboard', requireAuth, getDashboardStats);
 router.put('/profile',   requireAuth, updateProfile);
 router.put('/password',  requireAuth, changePassword);
+router.put('/levels',    requireAuth, requestLevels);
 
 // Années scolaires
 router.get('/school-years',      requireAuth, getSchoolYears);
@@ -47,6 +49,10 @@ router.get('/staff',        requireAuth, getStaff);
 router.post('/staff',       requireAuth, createStaff);
 router.put('/staff/:id',    requireAuth, updateStaff);
 router.delete('/staff/:id', requireAuth, deleteStaff);
+
+// Comptes/permissions du personnel d'école (pas de création depuis le web — cf. schoolUsersService.ts)
+router.get('/users',                requireAuth, getSchoolUsers);
+router.put('/users/:id/permissions', requireAuth, updateSchoolUserPermissions);
 
 // Élèves
 router.get('/students',            requireAuth, getStudents);

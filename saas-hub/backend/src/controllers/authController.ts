@@ -1,7 +1,10 @@
 import { Request, Response } from 'express';
+import { Op } from 'sequelize';
 import UserModel from '../models/userModel';
 import Administrateur from '../models/administrateurModel';
 import Role from '../models/roleModel';
+import DocumentEcole from '../models/documentEcoleModel';
+import sequelize from '../config/db';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { generateLicenseKey } from '../services/licenseService';
@@ -13,25 +16,37 @@ const TOKEN_MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
 // `users`) — les deux partagent le même cookie `jwt` et le même endpoint de
 // login (voir signIn ci-dessous), donc requireAdminAuth s'appuie sur ce
 // claim pour savoir dans quelle table recharger l'utilisateur.
-const createToken = (id: string, type: 'school' | 'admin' = 'school'): string => {
+export const createToken = (id: string, type: 'school' | 'admin' = 'school'): string => {
     const secret = process.env.JWT_SECRET;
     if (!secret) throw new Error('JWT_SECRET non configuré');
     return jwt.sign({ id, type }, secret, { expiresIn: TOKEN_MAX_AGE_MS / 1000 });
 };
 
 export const signUp = async (req: Request, res: Response): Promise<void> => {
-    const { schoolName, email, password, country, city, levels, directorName,
-            prefecture, sousPrefecture, district, rccm, rccmUrl, logoUrl } = req.body;
+    const { schoolName, email, phone, password, country, city, levels, directorName,
+            prefecture, sousPrefecture, rccm, rccmFile, logoUrl } = req.body;
     let user: UserModel | null = null;
     try {
         const code    = String(Math.floor(100000 + Math.random() * 900000));
         const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-        user = await UserModel.create({
-            schoolName, email, password, country, city,
-            levels: JSON.stringify(levels ?? []),
-            directorName, prefecture, sousPrefecture, rccm, rccmUrl, logoUrl,
-            approvalStatus: 'email_verification',
-            otp_code: code, otp_expires_at: expires,
+        // École + document RCCM (stocké en base, pas sur Cloudinary) dans une même
+        // transaction : pas d'école créée si l'enregistrement du document échoue.
+        user = await sequelize.transaction(async transaction => {
+            const created = await UserModel.create({
+                schoolName, email, phone, password, country, city,
+                levels: JSON.stringify(levels ?? []),
+                directorName, prefecture, sousPrefecture, rccm, logoUrl,
+                approvalStatus: 'email_verification',
+                otp_code: code, otp_expires_at: expires,
+            }, { transaction });
+            if (rccmFile) {
+                const content = Buffer.from(rccmFile.data, 'base64');
+                await DocumentEcole.create({
+                    school_id: created.id, type: 'rccm', filename: rccmFile.name,
+                    mime_type: rccmFile.type, size: content.length, content,
+                }, { transaction });
+            }
+            return created;
         });
     } catch (error: any) {
         if (error.name === 'SequelizeUniqueConstraintError') {
@@ -63,11 +78,13 @@ export const signUp = async (req: Request, res: Response): Promise<void> => {
 
 function buildUserResponse(user: UserModel, token: string) {
     let levelsArr: string[] = [];
+    let pendingLevelsArr: string[] = [];
     try { levelsArr = JSON.parse(user.levels || '[]'); } catch {}
+    try { pendingLevelsArr = JSON.parse(user.pendingLevels || '[]'); } catch {}
     const license_key = generateLicenseKey(user);
     return {
         id: user.id, schoolName: user.schoolName, email: user.email,
-        role: user.role, country: user.country, levels: levelsArr,
+        role: user.role, country: user.country, levels: levelsArr, pendingLevels: pendingLevelsArr,
         subscriptionStatus: user.subscriptionStatus, subscriptionExpiry: user.subscriptionExpiry,
         createdAt: user.createdAt, license_key, access_token: token,
     };
@@ -96,9 +113,11 @@ async function buildAdminResponse(admin: Administrateur, token: string) {
     };
 }
 
-// Connexion simple email + mot de passe — sert à la fois les comptes école
+// Connexion simple identifiant + mot de passe — sert à la fois les comptes école
 // (table `users`) et les comptes admin plateforme (table `admins`), pour
-// garder un seul endpoint/formulaire de connexion côté frontend.
+// garder un seul endpoint/formulaire de connexion côté frontend. Le champ
+// `email` du body accepte aussi un numéro de téléphone (recherché sur la
+// colonne `phone` de `users` — les admins plateforme restent email uniquement).
 export const signIn = async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
     try {
@@ -110,7 +129,7 @@ export const signIn = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const user = await UserModel.findOne({ where: { email } });
+        const user = await UserModel.findOne({ where: { [Op.or]: [{ email }, { phone: email }] } });
         if (!user || !(await bcrypt.compare(password, user.password))) {
             res.status(401).json({ message: 'Email ou mot de passe incorrect' });
             return;

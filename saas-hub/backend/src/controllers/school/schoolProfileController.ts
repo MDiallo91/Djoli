@@ -23,12 +23,12 @@ export const updateProfile = async (req: Request, res: Response) => {
         const user = await UserModel.findByPk(req.user!.id);
         if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
 
+        // `levels` n'est PAS dans cette liste : les cycles passent par requestLevels
+        // (ajout = validation admin requise, retrait = immédiat — voir plus bas),
+        // jamais par une écriture directe ici.
         const allowed = ['schoolName', 'directorName', 'country', 'city', 'prefecture', 'sousPrefecture', 'rccm', 'logoUrl'];
         for (const field of allowed) {
             if (req.body[field] !== undefined) (user as any)[field] = req.body[field];
-        }
-        if (req.body.levels !== undefined) {
-            user.levels = JSON.stringify(req.body.levels);
         }
 
         await user.save();
@@ -36,6 +36,30 @@ export const updateProfile = async (req: Request, res: Response) => {
         let levelsArr: string[] = [];
         try { levelsArr = JSON.parse(levelsRaw || '[]'); } catch {}
         res.json({ ...rest, levels: levelsArr });
+    } catch {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+};
+
+// Demande de changement de cycles — un ajout reste en attente d'approbation admin
+// (`pendingLevels`), un retrait s'applique immédiatement (aucune validation requise).
+export const requestLevels = async (req: Request, res: Response) => {
+    try {
+        const user = await UserModel.findByPk(req.user!.id);
+        if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
+
+        const requested: string[] = Array.isArray(req.body.levels) ? req.body.levels : [];
+        let current: string[] = [];
+        let pending: string[] = [];
+        try { current = JSON.parse(user.levels || '[]'); } catch {}
+        try { pending = JSON.parse(user.pendingLevels || '[]'); } catch {}
+
+        const additions = requested.filter(l => !current.includes(l));
+        const kept      = current.filter(l => requested.includes(l));
+        const newPending = [...new Set([...pending, ...additions])];
+
+        await user.update({ levels: JSON.stringify(kept), pendingLevels: JSON.stringify(newPending) });
+        res.json({ levels: kept, pendingLevels: newPending });
     } catch {
         res.status(500).json({ error: 'Erreur serveur' });
     }

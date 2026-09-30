@@ -6,12 +6,14 @@ class UserModel extends Model {
     declare id: string;
     declare schoolName: string;
     declare email: string;
+    declare phone: string | null;
     declare password: string;
     declare role: string;
     declare country: string;
     declare city: string;
     declare level: string;
     declare levels: string;
+    declare pendingLevels: string;
     declare directorName: string;
     declare prefecture: string;
     declare sousPrefecture: string;
@@ -23,6 +25,8 @@ class UserModel extends Model {
     declare approvalStatus: string; // pending | approved | rejected
     declare subscriptionStatus: string;
     declare subscriptionExpiry: string;
+    /** École archivée (au lieu d'être supprimée) — voir `paranoid` ci-dessous. */
+    declare deletedAt: Date | null;
     declare readonly createdAt: Date;
     declare readonly updatedAt: Date;
 }
@@ -31,12 +35,16 @@ UserModel.init({
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     schoolName:   { type: DataTypes.STRING, allowNull: false },
     email:        { type: DataTypes.STRING, allowNull: false, unique: true, validate: { isEmail: true } },
+    phone:        { type: DataTypes.STRING(32), allowNull: true },
     password:     { type: DataTypes.STRING, allowNull: false },
     role:         { type: DataTypes.STRING, defaultValue: 'user' },
     country:      { type: DataTypes.STRING, allowNull: true },
     city:         { type: DataTypes.STRING, allowNull: true },
     level:        { type: DataTypes.STRING, allowNull: true },
     levels:       { type: DataTypes.TEXT, allowNull: true, defaultValue: '[]' },
+    // Cycles demandés par l'école mais pas encore approuvés par l'admin plateforme
+    // (voir schoolProfileController.requestLevels / adminController.approveLevels).
+    pendingLevels: { type: DataTypes.TEXT, allowNull: true, defaultValue: '[]' },
     directorName: { type: DataTypes.STRING, allowNull: true },
     prefecture:   { type: DataTypes.STRING, allowNull: true },
     sousPrefecture: { type: DataTypes.STRING, allowNull: true },
@@ -58,6 +66,12 @@ UserModel.init({
 }, {
     sequelize,
     tableName: 'users',
+    // Suppression « douce » : destroy() renseigne deletedAt au lieu d'effacer la ligne,
+    // et TOUTES les requêtes (connexion, listes, synchro, licence…) excluent
+    // automatiquement les écoles archivées. Une école archivée garde toutes ses
+    // données (school_records, documents…) et peut être restaurée (restore()).
+    // Lire une école archivée : { paranoid: false }. Effacer vraiment : { force: true }.
+    paranoid: true,
     hooks: {
         beforeCreate: async (user: UserModel) => {
             if (user.password) {

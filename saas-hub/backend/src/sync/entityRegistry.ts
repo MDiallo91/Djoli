@@ -11,6 +11,7 @@ import TransactionCaisse from '../models/transactionCaisseModel';
 import InfoEcole from '../models/infoEcoleModel';
 import PaiementEleve from '../models/paiementEleveModel';
 import NoteEleve from '../models/noteEleveModel';
+import UtilisateurEcole from '../models/utilisateurEcoleModel';
 
 // ── Registre déclaratif des entités synchronisées ────────────────────────────
 // `school_records` (JSON libre) reste la seule source de vérité pour le
@@ -76,6 +77,8 @@ export const entityRegistry: EntityRegistryEntry[] = [
         mapPayload: p => ({
             first_name: p.first_name ?? null, last_name: p.last_name ?? null, gender: p.gender ?? null,
             birth_date: p.birth_date ?? null, phone: p.phone ?? null, address: p.address ?? null, matricule: p.matricule ?? null,
+            pere: p.pere ?? null, mere: p.mere ?? null, birth_place: p.birth_place ?? null,
+            tutor_name: p.tutor_name ?? null, tutor_phone: p.tutor_phone ?? null, photo_url: p.photo_url ?? null,
             client_created_at: isoOrNull(p.created_at), client_updated_at: isoOrNull(p.updated_at),
         }),
     },
@@ -118,6 +121,17 @@ export const entityRegistry: EntityRegistryEntry[] = [
         mapPayload: p => ({
             student_id: p.student_id ?? null, subject_id: p.subject_id ?? null, score: p.score ?? null,
             exam_type: p.exam_type ?? null, term: p.term ?? null, school_year_id: p.school_year_id ?? null,
+            client_created_at: isoOrNull(p.created_at), client_updated_at: isoOrNull(p.updated_at),
+        }),
+    },
+    {
+        // Comptes/permissions du personnel d'école — password_hash/must_change_pwd ne sont
+        // jamais envoyés par le desktop et n'apparaissent donc jamais ici (cf. userService.ts).
+        entityType: 'school_user', model: UtilisateurEcole, critical: true,
+        mapPayload: p => ({
+            name: p.name ?? null, email: p.email ?? null, username: p.username ?? null,
+            role: p.role ?? null, permissions: p.permissions ?? '[]', scope_levels: p.scope_levels ?? '[]',
+            phone: p.phone ?? null, photo_url: p.photo_url ?? null, is_active: p.is_active ?? true,
             client_created_at: isoOrNull(p.created_at), client_updated_at: isoOrNull(p.updated_at),
         }),
     },

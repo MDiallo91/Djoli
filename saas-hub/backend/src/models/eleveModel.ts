@@ -12,6 +12,12 @@ class Eleve extends Model {
     declare phone:                 string | null;
     declare address:               string | null;
     declare matricule:             string | null;
+    declare pere:                  string | null;
+    declare mere:                  string | null;
+    declare birth_place:           string | null;
+    declare tutor_name:            string | null;
+    declare tutor_phone:           string | null;
+    declare photo_url:             string | null;
     declare device_id:             string | null;
     declare deleted_at:            Date | null;
     declare client_created_at:     string | null;
@@ -28,6 +34,14 @@ Eleve.init({
     phone:             { type: DataTypes.STRING(32),  allowNull: true },
     address:           { type: DataTypes.TEXT,        allowNull: true },
     matricule:         { type: DataTypes.STRING(64),  allowNull: true },
+    // Filiation / tuteur / lieu de naissance — utilisés par les cartes scolaires.
+    // Colonnes ajoutées après coup : migration + rattrapage dans config/db.ts.
+    pere:              { type: DataTypes.STRING(128), allowNull: true },
+    mere:              { type: DataTypes.STRING(128), allowNull: true },
+    birth_place:       { type: DataTypes.STRING(128), allowNull: true },
+    tutor_name:        { type: DataTypes.STRING(128), allowNull: true },
+    tutor_phone:       { type: DataTypes.STRING(32),  allowNull: true },
+    photo_url:         { type: DataTypes.TEXT,        allowNull: true }, // Cloudinary (photos élèves)
     device_id:         { type: DataTypes.STRING(36),  allowNull: true },
     deleted_at:        { type: DataTypes.DATE,        allowNull: true },
     client_created_at: { type: DataTypes.STRING(30),  allowNull: true },

@@ -20,6 +20,8 @@ import settingsRoute from './routes/settingsRoute';
 import schoolRoute from './routes/schoolRoute';
 import seedRoute from './routes/seedRoute';
 import uploadRoute from './routes/uploadRoute';
+import mediaRoute from './routes/mediaRoute';
+import appReleaseRoute from './routes/appReleaseRoute';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -74,6 +76,8 @@ app.use('/api/settings', settingsRoute);
 app.use('/api/school',   schoolRoute);
 app.use('/api/seed',     seedRoute);
 app.use('/api/upload',   uploadRoute);
+app.use('/api/media',    mediaRoute);
+app.use('/api/app-releases', appReleaseRoute);
 
 // Export pour Vercel (serverless)
 export default app;

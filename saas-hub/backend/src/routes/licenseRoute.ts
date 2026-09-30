@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { requireAuth } from '../middleware/authMiddleware';
 import { requireLicenseBearer } from '../middleware/licenseBearerAuth';
 import { generateLicenseKey } from '../services/licenseService';
+import { createToken } from '../controllers/authController';
 import UserModel from '../models/userModel';
 
 const router = Router();
@@ -12,12 +13,16 @@ router.post('/refresh', requireAuth, (req, res) => {
         const user = req.user;
         const license_key = generateLicenseKey(user);
         let levels: string[] = [];
+        let pendingLevels: string[] = [];
         try { levels = JSON.parse(user.levels || '[]'); } catch {}
+        try { pendingLevels = JSON.parse(user.pendingLevels || '[]'); } catch {}
         res.status(200).json({
             license_key,
             subscriptionStatus: user.subscriptionStatus,
             subscriptionExpiry: user.subscriptionExpiry,
             levels,
+            pendingLevels,
+            access_token: createToken(user.id, 'school'),
         });
     } catch (error) {
         console.error('[licenseRoute /refresh]', error);
@@ -33,12 +38,16 @@ router.post('/refresh-by-key', requireLicenseBearer, async (req, res) => {
         if (!user) { res.status(404).json({ message: 'École introuvable' }); return; }
         const license_key = generateLicenseKey(user);
         let levels: string[] = [];
+        let pendingLevels: string[] = [];
         try { levels = JSON.parse(user.levels || '[]'); } catch {}
+        try { pendingLevels = JSON.parse(user.pendingLevels || '[]'); } catch {}
         res.status(200).json({
             license_key,
             subscriptionStatus: user.subscriptionStatus,
             subscriptionExpiry: user.subscriptionExpiry,
             levels,
+            pendingLevels,
+            access_token: createToken(user.id, 'school'),
         });
     } catch (error) {
         console.error('[licenseRoute /refresh-by-key]', error);

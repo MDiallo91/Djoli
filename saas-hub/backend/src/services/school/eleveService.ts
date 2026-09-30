@@ -9,6 +9,7 @@ import { createEnrollment } from './inscriptionsService';
 export interface StudentJson {
     id: string; first_name: string; last_name: string; gender: string; birth_date: string | null;
     phone: string; address: string; matricule: string; created_at: string | null;
+    pere: string; mere: string; birth_place: string; tutor_name: string; tutor_phone: string; photo_url: string;
 }
 
 const MOIS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
@@ -17,6 +18,8 @@ const toJson = (row: any): StudentJson => ({
     id: row.id, first_name: row.first_name, last_name: row.last_name, gender: row.gender || 'M',
     birth_date: row.birth_date, phone: row.phone || '', address: row.address || '',
     matricule: row.matricule || '', created_at: row.client_created_at,
+    pere: row.pere || '', mere: row.mere || '', birth_place: row.birth_place || '',
+    tutor_name: row.tutor_name || '', tutor_phone: row.tutor_phone || '', photo_url: row.photo_url || '',
 });
 
 const crud = createTypedCrud<StudentJson>({ entityType: 'student', model: Eleve, toJson });
@@ -113,12 +116,15 @@ export async function listStudentsDetailed(schoolId: string, yearId?: string) {
 }
 
 export async function createStudent(schoolId: string, body: any): Promise<StudentJson> {
-    const { first_name, last_name, gender, birth_date, phone, address, matricule, class_id, school_year_id } = body;
+    const { first_name, last_name, gender, birth_date, phone, address, matricule, class_id, school_year_id,
+            pere, mere, birth_place, tutor_name, tutor_phone, photo_url } = body;
     if (!first_name || !last_name) throw httpError(400, 'Nom et prénom requis');
 
     const student = await crud.create(schoolId, {
         first_name, last_name, gender: gender || 'M', birth_date: birth_date || null,
         phone: phone || '', address: address || '', matricule: matricule || '',
+        pere: pere || '', mere: mere || '', birth_place: birth_place || '',
+        tutor_name: tutor_name || '', tutor_phone: tutor_phone || '', photo_url: photo_url || '',
     });
     if (class_id && school_year_id) {
         await createEnrollment(schoolId, { student_id: student.id, class_id, school_year_id });
