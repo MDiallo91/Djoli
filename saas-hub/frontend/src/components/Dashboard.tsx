@@ -118,12 +118,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   };
   const [dashStats, setDashStats] = useState<DashStats | null>(null);
 
-  const fetchStats = useCallback(() => {
-    setLoadingStats(true);
+  // silent : rafraîchissement en arrière-plan, sans réafficher l'indicateur de chargement
+  // (sinon la page semblait se recharger toutes les 30 s).
+  const fetchStats = useCallback((silent = false) => {
+    if (!silent) setLoadingStats(true);
     apiClient.get('/school/stats')
       .then(r => { if (r.data) setSyncStats(r.data); })
       .catch(() => {})
-      .finally(() => setLoadingStats(false));
+      .finally(() => { if (!silent) setLoadingStats(false); });
   }, []);
 
   const fetchDashboard = useCallback(() => {
@@ -135,7 +137,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   useEffect(() => {
     fetchStats();
     fetchDashboard();
-    const t = setInterval(() => { fetchStats(); fetchDashboard(); }, 30_000);
+    // Rafraîchissement discret toutes les 30 s, seulement si l'onglet est visible
+    const t = setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      fetchStats(true);
+      fetchDashboard();
+    }, 30_000);
     return () => clearInterval(t);
   }, [fetchStats, fetchDashboard]);
 
