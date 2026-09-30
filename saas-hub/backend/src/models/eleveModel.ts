@@ -41,7 +41,7 @@ Eleve.init({
     birth_place:       { type: DataTypes.STRING(128), allowNull: true },
     tutor_name:        { type: DataTypes.STRING(128), allowNull: true },
     tutor_phone:       { type: DataTypes.STRING(32),  allowNull: true },
-    photo_url:         { type: DataTypes.TEXT,        allowNull: true }, // Cloudinary (photos élèves)
+    photo_url:         { type: DataTypes.TEXT,        allowNull: true }, // /api/media/<id> (image stockée en base)
     device_id:         { type: DataTypes.STRING(36),  allowNull: true },
     deleted_at:        { type: DataTypes.DATE,        allowNull: true },
     client_created_at: { type: DataTypes.STRING(30),  allowNull: true },

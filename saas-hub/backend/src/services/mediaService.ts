@@ -2,10 +2,13 @@ import { Op } from 'sequelize';
 import MediaSite from '../models/mediaSiteModel';
 import Setting from '../models/settingModel';
 import UserModel from '../models/userModel';
+import SchoolRecord from '../models/schoolRecordModel';
 
 // Les images (MediaSite) sont référencées, sous forme d'URL /api/media/<id>, depuis :
 //   - les réglages du site (`settings.data` : hero, cartes, logo du site…)
 //   - le logo de chaque école (`users.logoUrl`)
+//   - les données synchronisées (`school_records.data` : photos d'élèves, du personnel,
+//     des comptes utilisateurs de l'école…) — source de vérité, miroirs inclus
 // Une image qui n'est plus référencée nulle part est inutile et peut être supprimée.
 // ⚠ Toute nouvelle colonne qui stocke une URL /api/media doit être ajoutée à
 // referencedMediaIds(), sinon ses images seraient supprimées au bout d'une heure.
@@ -31,6 +34,11 @@ async function referencedMediaIds(): Promise<Set<string>> {
         paranoid: false, // écoles archivées incluses : restaurables, leur logo doit survivre
     }) as { logoUrl: string | null }[];
     for (const u of logos) for (const id of extractMediaIds(u.logoUrl)) referenced.add(id);
+    // Entités supprimées (deleted_at) incluses : restaurables comme le reste des données.
+    const records = await SchoolRecord.findAll({
+        attributes: ['data'], where: { data: { [Op.like]: '%/api/media/%' } }, raw: true,
+    }) as { data: string | null }[];
+    for (const r of records) for (const id of extractMediaIds(r.data)) referenced.add(id);
     return referenced;
 }
 

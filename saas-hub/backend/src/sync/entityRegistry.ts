@@ -69,6 +69,7 @@ export const entityRegistry: EntityRegistryEntry[] = [
         mapPayload: p => ({
             first_name: p.first_name ?? null, last_name: p.last_name ?? null, role: p.role ?? null,
             phone: p.phone ?? null, email: p.email ?? null, salary_base: p.salary_base ?? null, hire_date: p.hire_date ?? null,
+            photo_url: p.photo_url ?? null,
             client_created_at: isoOrNull(p.created_at), client_updated_at: isoOrNull(p.updated_at),
         }),
     },

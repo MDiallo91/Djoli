@@ -111,6 +111,19 @@ export const DBconnect = async (): Promise<void> => {
         }
     }
 
+    // Personnel (miroir typé) : photo stockée en base (/api/media/<id>).
+    try {
+        await sequelize.getQueryInterface().addColumn('staff_typed', 'photo_url', { type: DataTypes.TEXT, allowNull: true });
+        // Rattrapage depuis school_records (source de vérité) pour les fiches déjà synchronisées
+        const [rows] = await sequelize.query(
+            "SELECT entity_id, data FROM school_records WHERE entity_type = 'staff' AND data LIKE '%photo_url%'",
+        ) as [{ entity_id: string; data: string }[], unknown];
+        for (const r of rows) {
+            let p: any; try { p = JSON.parse(r.data); } catch { continue; }
+            if (p.photo_url) await sequelize.query('UPDATE staff_typed SET photo_url = ? WHERE id = ?', { replacements: [p.photo_url, r.entity_id] });
+        }
+    } catch { /* colonne déjà existante */ }
+
     // Archivage des écoles (UserModel paranoid) — doit exister avant toute requête sur `users`.
     try {
         await sequelize.getQueryInterface().addColumn('users', 'deletedAt', { type: DataTypes.DATE, allowNull: true });

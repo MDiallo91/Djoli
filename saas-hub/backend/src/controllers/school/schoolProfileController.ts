@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import { fn, col } from 'sequelize';
 import UserModel from '../../models/userModel';
 import SchoolRecord from '../../models/schoolRecordModel';
+import { cleanupUnusedMedia } from '../../services/mediaService';
 
 // Profil, stats globales, mot de passe — logique inchangée par rapport à
 // l'ancien schoolController.ts (rien ici ne scannait school_records
@@ -26,12 +27,27 @@ export const updateProfile = async (req: Request, res: Response) => {
         // `levels` n'est PAS dans cette liste : les cycles passent par requestLevels
         // (ajout = validation admin requise, retrait = immédiat — voir plus bas),
         // jamais par une écriture directe ici.
-        const allowed = ['schoolName', 'directorName', 'country', 'city', 'prefecture', 'sousPrefecture', 'rccm', 'logoUrl'];
+        const allowed = ['schoolName', 'directorName', 'country', 'city', 'prefecture', 'sousPrefecture', 'rccm', 'logoUrl', 'phone'];
+        const previousLogo = user.logoUrl;
+
+        // Le téléphone sert aussi d'identifiant de connexion (signIn cherche email OU phone) :
+        // il doit rester unique entre écoles (archivées comprises, restaurables).
+        if (typeof req.body.phone === 'string') {
+            req.body.phone = req.body.phone.trim() || null;
+            if (req.body.phone && req.body.phone !== user.phone) {
+                const taken = await UserModel.findOne({ where: { phone: req.body.phone }, paranoid: false, attributes: ['id'] });
+                if (taken && taken.id !== user.id) {
+                    return res.status(409).json({ error: 'Ce numéro de téléphone est déjà utilisé par un autre établissement.' });
+                }
+            }
+        }
         for (const field of allowed) {
             if (req.body[field] !== undefined) (user as any)[field] = req.body[field];
         }
 
         await user.save();
+        // Logo remplacé ou retiré → l'ancienne image est supprimée si plus utilisée
+        if (user.logoUrl !== previousLogo) await cleanupUnusedMedia(previousLogo);
         const { password: _pw, levels: levelsRaw, ...rest } = user.toJSON() as any;
         let levelsArr: string[] = [];
         try { levelsArr = JSON.parse(levelsRaw || '[]'); } catch {}

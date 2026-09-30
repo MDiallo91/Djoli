@@ -5,6 +5,7 @@ import PaiementEleve from '../../models/paiementEleveModel';
 import { createTypedCrud, httpError } from './typedCrud';
 import { listSchoolYears, resolveYear } from './anneesScolairesService';
 import { createEnrollment } from './inscriptionsService';
+import { cleanupUnusedMedia } from '../mediaService';
 
 export interface StudentJson {
     id: string; first_name: string; last_name: string; gender: string; birth_date: string | null;
@@ -135,7 +136,10 @@ export async function createStudent(schoolId: string, body: any): Promise<Studen
 export async function updateStudent(schoolId: string, id: string, body: any): Promise<StudentJson> {
     const student = await crud.find(schoolId, id);
     if (!student) throw httpError(404, 'Élève introuvable');
-    return (await crud.update(schoolId, id, body))!;
+    const updated = (await crud.update(schoolId, id, body))!;
+    // Photo remplacée ou retirée → l'ancienne image est supprimée si plus utilisée
+    if (body.photo_url !== undefined && body.photo_url !== student.photo_url) await cleanupUnusedMedia(student.photo_url);
+    return updated;
 }
 
 export async function deleteStudent(schoolId: string, id: string): Promise<void> {

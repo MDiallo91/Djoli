@@ -12,6 +12,7 @@ class Personnel extends Model {
     declare email:                string | null;
     declare salary_base:          number | null;
     declare hire_date:            string | null;
+    declare photo_url:            string | null;
     declare device_id:            string | null;
     declare deleted_at:           Date | null;
     declare client_created_at:    string | null;
@@ -28,6 +29,7 @@ Personnel.init({
     email:             { type: DataTypes.STRING(255), allowNull: true },
     salary_base:       { type: DataTypes.FLOAT,        allowNull: true },
     hire_date:         { type: DataTypes.STRING(30),   allowNull: true },
+    photo_url:         { type: DataTypes.TEXT,         allowNull: true }, // /api/media/<id>
     device_id:         { type: DataTypes.STRING(36),   allowNull: true },
     deleted_at:        { type: DataTypes.DATE,         allowNull: true },
     client_created_at: { type: DataTypes.STRING(30),   allowNull: true },

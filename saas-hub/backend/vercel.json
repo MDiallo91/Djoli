@@ -5,7 +5,7 @@
       "src": "src/index.ts",
       "use": "@vercel/node",
       "config": {
-        "externalNodeModules": ["mysql2", "sequelize", "bcrypt", "cloudinary", "resend"]
+        "externalNodeModules": ["mysql2", "sequelize", "bcrypt", "resend"]
       }
     }
   ],

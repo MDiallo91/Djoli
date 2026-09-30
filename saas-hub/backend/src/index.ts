@@ -19,7 +19,6 @@ import auditRoute from './routes/auditRoute';
 import settingsRoute from './routes/settingsRoute';
 import schoolRoute from './routes/schoolRoute';
 import seedRoute from './routes/seedRoute';
-import uploadRoute from './routes/uploadRoute';
 import mediaRoute from './routes/mediaRoute';
 import appReleaseRoute from './routes/appReleaseRoute';
 
@@ -75,7 +74,6 @@ app.use('/api/audit',    auditRoute);
 app.use('/api/settings', settingsRoute);
 app.use('/api/school',   schoolRoute);
 app.use('/api/seed',     seedRoute);
-app.use('/api/upload',   uploadRoute);
 app.use('/api/media',    mediaRoute);
 app.use('/api/app-releases', appReleaseRoute);
 

@@ -9,6 +9,11 @@ import { listSchoolYears, resolveYear } from './anneesScolairesService';
 import { httpError } from './typedCrud';
 
 const TERMS = ['T1', 'T2', 'T3'];
+// Les notes sont enregistrées avec le libellé complet (desktop GradeManagement et web
+// GradesSection) : « 1er Trimestre »… — la réponse garde les clés T1/T2/T3 attendues par
+// BulletinSection. Avant, seul « T1 » était cherché → bulletin web toujours vide.
+const TERM_LABELS: Record<string, string> = { T1: '1er Trimestre', T2: '2ème Trimestre', T3: '3ème Trimestre' };
+const isTerm = (value: string | null | undefined, key: string) => value === key || value === TERM_LABELS[key];
 
 // Port fidèle de l'ancien getStudentBulletin (schoolController.ts).
 export async function getStudentBulletin(schoolId: string, studentId: string, yearId?: string) {
@@ -37,9 +42,9 @@ export async function getStudentBulletin(schoolId: string, studentId: string, ye
         if (!sub) return null;
         const result: any = { subject_id: sub.id, name: sub.name, coefficient: c.coefficient || 1, grades: {} as Record<string, any> };
         for (const term of TERMS) {
-            const devoir = studentGrades.find(g => g.subject_id === sub.id && g.term === term && g.exam_type === 'Devoir');
-            const compo  = studentGrades.find(g => g.subject_id === sub.id && g.term === term && g.exam_type === 'Composition');
-            const moy    = studentGrades.find(g => g.subject_id === sub.id && g.term === term && g.exam_type === 'Moyenne');
+            const devoir = studentGrades.find(g => g.subject_id === sub.id && isTerm(g.term, term) && g.exam_type === 'Devoir');
+            const compo  = studentGrades.find(g => g.subject_id === sub.id && isTerm(g.term, term) && g.exam_type === 'Composition');
+            const moy    = studentGrades.find(g => g.subject_id === sub.id && isTerm(g.term, term) && g.exam_type === 'Moyenne');
             const calcMoy = moy?.score ?? (devoir && compo
                 ? (Number(devoir.score) + Number(compo.score) * 2) / 3
                 : (devoir?.score ?? compo?.score ?? null));
@@ -67,7 +72,7 @@ export async function getStudentBulletin(schoolId: string, studentId: string, ye
         const classAvgs = classEnrollmentIds.map(sid => {
             let tw = 0, tc = 0;
             for (const sr of subjectResults) {
-                const g = grades.find(g => g.student_id === sid && g.subject_id === sr.subject_id && g.term === term && g.exam_type === 'Moyenne');
+                const g = grades.find(g => g.student_id === sid && g.subject_id === sr.subject_id && isTerm(g.term, term) && g.exam_type === 'Moyenne');
                 if (g) { tw += Number(g.score) * sr.coefficient; tc += sr.coefficient; }
             }
             return { student_id: sid, avg: tc > 0 ? tw / tc : null };

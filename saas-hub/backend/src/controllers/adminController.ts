@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import UserModel from '../models/userModel';
 import DocumentEcole from '../models/documentEcoleModel';
+import { cleanupUnusedMedia } from '../services/mediaService';
 import bcrypt from 'bcrypt';
 import { v4 as uuid } from 'uuid';
 import { sendApprovalEmail, sendRejectionEmail } from '../services/emailService';
@@ -48,7 +49,9 @@ export const updateSchool = async (req: Request, res: Response) => {
         const school = await UserModel.findByPk(req.params.id as string);
         if (!school) return res.status(404).json({ error: 'École non trouvée' });
         const { schoolName, email, phone, country, city, level, directorName, prefecture, sousPrefecture, rccm, logoUrl } = req.body;
+        const previousLogo = school.logoUrl;
         await school.update({ schoolName, email, phone, country, city, level, directorName, prefecture, sousPrefecture, rccm, logoUrl });
+        if (school.logoUrl !== previousLogo) await cleanupUnusedMedia(previousLogo);
         res.json(safe(school));
     } catch { res.status(500).json({ error: 'Erreur serveur' }); }
 };

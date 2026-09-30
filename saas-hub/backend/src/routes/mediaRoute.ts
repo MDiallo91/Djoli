@@ -1,10 +1,22 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import MediaSite, { MEDIA_MIME_TYPES, MEDIA_MAX_BYTES } from '../models/mediaSiteModel';
+import jwt from 'jsonwebtoken';
 import { requireAdminAuth } from '../middleware/adminAuth';
+import { requireAuth } from '../middleware/authMiddleware';
 import { validate } from '../middleware/validate';
 
 const router = Router();
+
+// Upload ouvert aux admins (images du site) ET aux comptes école (logo, photos
+// élèves/personnel) : on aiguille selon le type du jeton (claim `type` posé au login).
+function requireAdminOrSchool(req: Request, res: Response, next: NextFunction): void {
+    const token = req.cookies?.jwt
+        || (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7) : null);
+    const decoded = token ? jwt.decode(token) as { type?: string } | null : null;
+    if (decoded?.type === 'admin') requireAdminAuth(req, res, next);
+    else requireAuth(req, res, next);
+}
 
 const mediaSchema = z.object({
     name: z.string().min(1).max(255),
@@ -12,8 +24,8 @@ const mediaSchema = z.object({
     data: z.string().regex(/^[A-Za-z0-9+/]+={0,2}$/, 'Image invalide'),
 });
 
-// POST /api/media — upload d'une image du site (admin). Body : { name, type, data (base64) }.
-router.post('/', requireAdminAuth, validate(mediaSchema), async (req, res) => {
+// POST /api/media — upload d'une image (admin ou école). Body : { name, type, data (base64) }.
+router.post('/', requireAdminOrSchool, validate(mediaSchema), async (req, res) => {
     try {
         const { name, type, data } = req.body;
         const content = Buffer.from(data, 'base64');

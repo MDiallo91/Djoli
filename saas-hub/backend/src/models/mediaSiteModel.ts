@@ -1,8 +1,9 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/db';
 
-// Images publiques du site vitrine (hero, aperçus des fonctionnalités…), stockées
-// en base et servies par GET /api/media/:id (voir routes/mediaRoute.ts).
+// TOUTES les images de la plateforme (pas de Cloudinary) : site vitrine (hero, cartes,
+// logo du site), logos d'école, photos d'élèves et du personnel. Stockées en base et
+// servies par GET /api/media/:id (voir routes/mediaRoute.ts).
 // Les réglages (`settings`) ne gardent que l'URL : avant, l'image y était mise en
 // base64 et dépassait la limite de 65 535 caractères de la colonne TEXT MySQL
 // (JSON tronqué → /api/settings en erreur 500).

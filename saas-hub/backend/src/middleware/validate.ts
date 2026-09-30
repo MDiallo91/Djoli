@@ -41,8 +41,11 @@ export const registerSchema = z.object({
     district:       z.string().optional(),
     rccm:           z.string().optional(),
     rccmFile:       documentFileSchema.optional(),
-    // data URL base64 d'un logo de 500 Ko max (~683 000 caractères)
-    logoUrl:        z.string().max(700_000, 'Logo trop volumineux (500 Ko maximum)').optional(),
+    // Logo en data URL base64 (PNG/JPEG/WEBP/GIF, 500 Ko max ≈ 683 000 caractères),
+    // converti en image stockée en base par authController.signUp. SVG refusé (script possible).
+    logoUrl:        z.string().max(700_000, 'Logo trop volumineux (500 Ko maximum)')
+                        .regex(/^data:image\/(png|jpeg|webp|gif);base64,/, 'Logo : image PNG, JPG, WEBP ou GIF requise')
+                        .optional().or(z.literal('')),
 })
 
 // Le champ `email` sert d'identifiant générique — accepte aussi un numéro de

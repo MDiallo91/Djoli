@@ -4,6 +4,7 @@ import UserModel from '../models/userModel';
 import Administrateur from '../models/administrateurModel';
 import Role from '../models/roleModel';
 import DocumentEcole from '../models/documentEcoleModel';
+import MediaSite from '../models/mediaSiteModel';
 import sequelize from '../config/db';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
@@ -32,10 +33,19 @@ export const signUp = async (req: Request, res: Response): Promise<void> => {
         // École + document RCCM (stocké en base, pas sur Cloudinary) dans une même
         // transaction : pas d'école créée si l'enregistrement du document échoue.
         user = await sequelize.transaction(async transaction => {
+            // Logo envoyé en data URL (validé dans registerSchema) → image stockée en base,
+            // l'école ne garde que son URL (plus de base64 dans `users`).
+            let storedLogoUrl: string | undefined;
+            const logo = typeof logoUrl === 'string' ? logoUrl.match(/^data:(image\/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/]+={0,2})$/) : null;
+            if (logo) {
+                const content = Buffer.from(logo[2], 'base64');
+                const media = await MediaSite.create({ filename: `logo-${Date.now()}`, mime_type: logo[1], size: content.length, content }, { transaction });
+                storedLogoUrl = `/api/media/${media.id}`;
+            }
             const created = await UserModel.create({
                 schoolName, email, phone, password, country, city,
                 levels: JSON.stringify(levels ?? []),
-                directorName, prefecture, sousPrefecture, rccm, logoUrl,
+                directorName, prefecture, sousPrefecture, rccm, logoUrl: storedLogoUrl,
                 approvalStatus: 'email_verification',
                 otp_code: code, otp_expires_at: expires,
             }, { transaction });
@@ -85,6 +95,10 @@ function buildUserResponse(user: UserModel, token: string) {
     return {
         id: user.id, schoolName: user.schoolName, email: user.email,
         role: user.role, country: user.country, levels: levelsArr, pendingLevels: pendingLevelsArr,
+        // Profil complet : le portail initialise son formulaire « Informations de l'école » et les
+        // cartes scolaires avec ces champs — absents, ils étaient enregistrés vides (données effacées).
+        phone: user.phone, directorName: user.directorName, city: user.city, prefecture: user.prefecture,
+        sousPrefecture: user.sousPrefecture, rccm: user.rccm, logoUrl: user.logoUrl,
         subscriptionStatus: user.subscriptionStatus, subscriptionExpiry: user.subscriptionExpiry,
         createdAt: user.createdAt, license_key, access_token: token,
     };
