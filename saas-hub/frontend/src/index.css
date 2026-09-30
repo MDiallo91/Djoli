@@ -1,10 +1,43 @@
 @import "tailwindcss";
 
+/* `dark:` suit le bouton Mode sombre/clair de l'app (classe .dark posée sur <html>
+   par lib/colorSystem.injectTheme), pas la préférence du système d'exploitation —
+   sinon un Windows en thème sombre activait les `dark:` alors que l'admin est en clair. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-primary: #2563eb;
   --color-secondary: #1d4ed8;
   --font-sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
   --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+}
+
+/* Nuances primary-50…900 / secondary-50…900 : calculées à l'exécution depuis la
+   couleur admin par lib/colorSystem.injectTheme (variables --primary-N). Sans ce
+   mapping, Tailwind v4 ne générait AUCUNE classe bg-primary-600, text-secondary-700…
+   (boutons transparents, badges sans fond). `inline` → la classe lit la variable
+   au niveau de l'élément, ce qui permet de la surcharger en mode sombre. */
+@theme inline {
+  --color-primary-50: var(--primary-50);
+  --color-secondary-50: var(--secondary-50);
+  --color-primary-100: var(--primary-100);
+  --color-secondary-100: var(--secondary-100);
+  --color-primary-200: var(--primary-200);
+  --color-secondary-200: var(--secondary-200);
+  --color-primary-300: var(--primary-300);
+  --color-secondary-300: var(--secondary-300);
+  --color-primary-400: var(--primary-400);
+  --color-secondary-400: var(--secondary-400);
+  --color-primary-500: var(--primary-500);
+  --color-secondary-500: var(--secondary-500);
+  --color-primary-600: var(--primary-600);
+  --color-secondary-600: var(--secondary-600);
+  --color-primary-700: var(--primary-700);
+  --color-secondary-700: var(--secondary-700);
+  --color-primary-800: var(--primary-800);
+  --color-secondary-800: var(--secondary-800);
+  --color-primary-900: var(--primary-900);
+  --color-secondary-900: var(--secondary-900);
 }
 
 :root {
@@ -234,29 +267,134 @@
 .dark .admin-shell {
   background-color: var(--bg);
   color: var(--text-default);
-}
 
-/* Surfaces — :not(span) préserve le thumb blanc des toggles */
-.dark .admin-shell .bg-white:not(span)    { background-color: var(--surface)   !important; }
-.dark .admin-shell .bg-slate-50:not(span) { background-color: var(--bg)        !important; }
-.dark .admin-shell .bg-slate-100:not(span){ background-color: var(--surface-2) !important; }
-.dark .admin-shell .bg-slate-50\/70       { background-color: var(--surface-2) !important; }
-.dark .admin-shell .bg-slate-800:not(span){ background-color: var(--surface)   !important; }
+  /* Couleurs teintées : Tailwind v4 lit ces variables, donc TOUTES les classes
+     bg-/text-/border-/ring-<teinte>-N (y compris hover: et /opacité) suivent,
+     sans devoir lister chaque classe. Fonds clairs (50–200) → voile translucide,
+     textes foncés (700–800) → nuance claire lisible sur fond sombre. */
+  --color-red-50:  color-mix(in srgb, var(--color-red-500) 12%, transparent);
+  --color-red-100: color-mix(in srgb, var(--color-red-500) 18%, transparent);
+  --color-red-200: color-mix(in srgb, var(--color-red-500) 32%, transparent);
+  --color-red-700: var(--color-red-300);
+  --color-red-800: var(--color-red-300);
+  --color-rose-50:  color-mix(in srgb, var(--color-rose-500) 12%, transparent);
+  --color-rose-100: color-mix(in srgb, var(--color-rose-500) 18%, transparent);
+  --color-rose-200: color-mix(in srgb, var(--color-rose-500) 32%, transparent);
+  --color-rose-700: var(--color-rose-300);
+  --color-rose-800: var(--color-rose-300);
+  --color-amber-50:  color-mix(in srgb, var(--color-amber-500) 12%, transparent);
+  --color-amber-100: color-mix(in srgb, var(--color-amber-500) 18%, transparent);
+  --color-amber-200: color-mix(in srgb, var(--color-amber-500) 32%, transparent);
+  --color-amber-700: var(--color-amber-300);
+  --color-amber-800: var(--color-amber-300);
+  --color-orange-50:  color-mix(in srgb, var(--color-orange-500) 12%, transparent);
+  --color-orange-100: color-mix(in srgb, var(--color-orange-500) 18%, transparent);
+  --color-orange-200: color-mix(in srgb, var(--color-orange-500) 32%, transparent);
+  --color-orange-700: var(--color-orange-300);
+  --color-orange-800: var(--color-orange-300);
+  --color-blue-50:  color-mix(in srgb, var(--color-blue-500) 12%, transparent);
+  --color-blue-100: color-mix(in srgb, var(--color-blue-500) 18%, transparent);
+  --color-blue-200: color-mix(in srgb, var(--color-blue-500) 32%, transparent);
+  --color-blue-700: var(--color-blue-300);
+  --color-blue-800: var(--color-blue-300);
+  --color-sky-50:  color-mix(in srgb, var(--color-sky-500) 12%, transparent);
+  --color-sky-100: color-mix(in srgb, var(--color-sky-500) 18%, transparent);
+  --color-sky-200: color-mix(in srgb, var(--color-sky-500) 32%, transparent);
+  --color-sky-700: var(--color-sky-300);
+  --color-sky-800: var(--color-sky-300);
+  --color-green-50:  color-mix(in srgb, var(--color-green-500) 12%, transparent);
+  --color-green-100: color-mix(in srgb, var(--color-green-500) 18%, transparent);
+  --color-green-200: color-mix(in srgb, var(--color-green-500) 32%, transparent);
+  --color-green-700: var(--color-green-300);
+  --color-green-800: var(--color-green-300);
+  --color-emerald-50:  color-mix(in srgb, var(--color-emerald-500) 12%, transparent);
+  --color-emerald-100: color-mix(in srgb, var(--color-emerald-500) 18%, transparent);
+  --color-emerald-200: color-mix(in srgb, var(--color-emerald-500) 32%, transparent);
+  --color-emerald-700: var(--color-emerald-300);
+  --color-emerald-800: var(--color-emerald-300);
+  --color-purple-50:  color-mix(in srgb, var(--color-purple-500) 12%, transparent);
+  --color-purple-100: color-mix(in srgb, var(--color-purple-500) 18%, transparent);
+  --color-purple-200: color-mix(in srgb, var(--color-purple-500) 32%, transparent);
+  --color-purple-700: var(--color-purple-300);
+  --color-purple-800: var(--color-purple-300);
+  --color-violet-50:  color-mix(in srgb, var(--color-violet-500) 12%, transparent);
+  --color-violet-100: color-mix(in srgb, var(--color-violet-500) 18%, transparent);
+  --color-violet-200: color-mix(in srgb, var(--color-violet-500) 32%, transparent);
+  --color-violet-700: var(--color-violet-300);
+  --color-violet-800: var(--color-violet-300);
+  --color-pink-50:  color-mix(in srgb, var(--color-pink-500) 12%, transparent);
+  --color-pink-100: color-mix(in srgb, var(--color-pink-500) 18%, transparent);
+  --color-pink-200: color-mix(in srgb, var(--color-pink-500) 32%, transparent);
+  --color-pink-700: var(--color-pink-300);
+  --color-pink-800: var(--color-pink-300);
+
+  /* Couleurs de l'admin (primary/secondary) : mêmes règles. 600/700 restent
+     intactes car utilisées comme fonds de boutons (dégradé from-600 to-700). */
+  --primary-50:    color-mix(in srgb, var(--primary-500) 14%, transparent);
+  --primary-100:   color-mix(in srgb, var(--primary-500) 20%, transparent);
+  --primary-200:   color-mix(in srgb, var(--primary-500) 34%, transparent);
+  --secondary-50:  color-mix(in srgb, var(--secondary-500) 14%, transparent);
+  --secondary-100: color-mix(in srgb, var(--secondary-500) 20%, transparent);
+  --secondary-200: color-mix(in srgb, var(--secondary-500) 34%, transparent);
+}
+.dark .admin-shell .text-primary-700,
+.dark .admin-shell .text-primary-800   { color: var(--primary-300)   !important; }
+.dark .admin-shell .text-secondary-700,
+.dark .admin-shell .text-secondary-800 { color: var(--secondary-300) !important; }
+
+/* ── Neutres (slate/gray) : correspondances explicites ──
+   Pas de remap par variables ici : certains composants utilisent déjà
+   dark:bg-slate-800 avec sa vraie valeur sombre (Button, SettingsPage). */
+
+/* Surfaces — bg-white:not(span) préserve le thumb blanc des toggles */
+.dark .admin-shell .bg-white:not(span)  { background-color: var(--surface)   !important; }
+.dark .admin-shell .bg-slate-50,
+.dark .admin-shell .bg-gray-50          { background-color: var(--bg)        !important; }
+.dark .admin-shell .bg-slate-100,
+.dark .admin-shell .bg-gray-100         { background-color: var(--surface-2) !important; }
+.dark .admin-shell .bg-slate-50\/70     { background-color: var(--surface-2) !important; }
+.dark .admin-shell .bg-slate-200        { background-color: #475569          !important; }
+
+/* Boutons foncés (Sauvegarder, choix actif…) : inversés en mode sombre,
+   comme les onglets actifs de SettingsPage (dark:bg-white dark:text-slate-900). */
+.dark .admin-shell .bg-slate-900,
+.dark .admin-shell .bg-slate-800:not([class*="dark:bg-"]) { background-color: var(--text-default) !important; }
+.dark .admin-shell .bg-slate-900.text-white,
+.dark .admin-shell .bg-slate-800.text-white:not([class*="dark:text-"]) { color: var(--bg) !important; }
+.dark .admin-shell .hover\:bg-slate-700:hover,
+.dark .admin-shell .hover\:bg-slate-800:hover { background-color: #cbd5e1 !important; }
 
 /* Textes */
 .dark .admin-shell .text-slate-900,
-.dark .admin-shell .text-slate-800 { color: var(--text-default)        !important; }
-.dark .admin-shell .text-slate-700  { color: rgba(226,232,240,0.90)    !important; }
-.dark .admin-shell .text-slate-600  { color: rgba(203,213,225,0.75)    !important; }
-.dark .admin-shell .text-slate-500  { color: var(--text-muted)         !important; }
-.dark .admin-shell .text-slate-400  { color: rgba(148,163,184,0.55)    !important; }
-.dark .admin-shell .text-black       { color: var(--text-default)       !important; }
+.dark .admin-shell .text-slate-800,
+.dark .admin-shell .text-gray-900,
+.dark .admin-shell .text-gray-800,
+.dark .admin-shell .text-black    { color: var(--text-default)    !important; }
+.dark .admin-shell .text-slate-700,
+.dark .admin-shell .text-gray-700 { color: rgba(226,232,240,0.90) !important; }
+.dark .admin-shell .text-slate-600,
+.dark .admin-shell .text-gray-600 { color: rgba(203,213,225,0.75) !important; }
+.dark .admin-shell .text-slate-500,
+.dark .admin-shell .text-gray-500 { color: var(--text-muted)      !important; }
+.dark .admin-shell .text-slate-400,
+.dark .admin-shell .text-gray-400 { color: rgba(148,163,184,0.55) !important; }
+.dark .admin-shell .hover\:text-slate-900:hover,
+.dark .admin-shell .hover\:text-slate-800:hover,
+.dark .admin-shell .hover\:text-slate-700:hover { color: var(--text-default) !important; }
 
 /* Bordures */
-.dark .admin-shell .border-slate-200  { border-color: var(--border-color)    !important; }
-.dark .admin-shell .border-slate-100  { border-color: rgba(255,255,255,0.07) !important; }
-.dark .admin-shell .divide-slate-100 > * + * { border-color: rgba(255,255,255,0.07) !important; }
-.dark .admin-shell .divide-slate-50  > * + * { border-color: rgba(255,255,255,0.04) !important; }
+.dark .admin-shell .border-slate-200,
+.dark .admin-shell .border-slate-300,
+.dark .admin-shell .border-gray-200 { border-color: var(--border-color)    !important; }
+.dark .admin-shell .border-slate-100,
+.dark .admin-shell .border-slate-50,
+.dark .admin-shell .border-gray-100 { border-color: rgba(255,255,255,0.07) !important; }
+.dark .admin-shell .hover\:border-slate-400:hover { border-color: #64748b !important; }
+/* Tailwind v4 : divide-y pose la bordure en BAS de chaque enfant sauf le dernier
+   (v3 : en haut de chaque enfant sauf le premier) → cibler tous les enfants. */
+.dark .admin-shell .divide-slate-100 > *,
+.dark .admin-shell .divide-gray-100  > * { border-color: rgba(255,255,255,0.07) !important; }
+.dark .admin-shell .divide-slate-50  > * { border-color: rgba(255,255,255,0.04) !important; }
 
 /* Inputs */
 .dark .admin-shell input:not([type=radio]):not([type=checkbox]):not([type=color]):not([type=range]),
@@ -266,6 +404,8 @@
   color: var(--text-default)         !important;
   border-color: var(--border-color)  !important;
 }
+/* Champ transparent posé dans un conteneur déjà stylé (barre de recherche…) */
+.dark .admin-shell input.bg-transparent { background-color: transparent !important; }
 .dark .admin-shell input::placeholder,
 .dark .admin-shell textarea::placeholder {
   color: var(--text-muted) !important;
@@ -281,19 +421,7 @@
 .dark .admin-shell .shadow-xl { box-shadow: 0 8px 28px rgba(0,0,0,0.65) !important; }
 
 /* Hover */
-.dark .admin-shell .hover\:bg-slate-50:hover  { background-color: var(--surface-2) !important; }
-.dark .admin-shell .hover\:bg-slate-100:hover { background-color: var(--surface-2) !important; }
-
-/* Bannières amber / blue */
-.dark .admin-shell .bg-amber-50     { background-color: rgba(245,158,11,0.10) !important; }
-.dark .admin-shell .border-amber-200{ border-color:     rgba(245,158,11,0.28) !important; }
-.dark .admin-shell .text-amber-700  { color: rgb(251,191,36)  !important; }
-.dark .admin-shell .bg-blue-50      { background-color: rgba(59,130,246,0.10) !important; }
-.dark .admin-shell .border-blue-200 { border-color:     rgba(59,130,246,0.28) !important; }
-.dark .admin-shell .text-blue-700   { color: rgb(147,197,253) !important; }
-
-/* StatutToggle wrapper */
-.dark .admin-shell .bg-slate-50.border-slate-100 {
-  background-color: var(--surface-2) !important;
-  border-color: rgba(255,255,255,0.07) !important;
-}
+.dark .admin-shell .hover\:bg-slate-50:hover,
+.dark .admin-shell .hover\:bg-slate-100:hover,
+.dark .admin-shell .hover\:bg-gray-50:hover,
+.dark .admin-shell .hover\:bg-gray-100:hover { background-color: var(--surface-2) !important; }

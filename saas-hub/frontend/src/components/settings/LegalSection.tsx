@@ -34,7 +34,7 @@ export function LegalSection() {
         try {
           const s = localStorage.getItem('hub_legal');
           if (s) setData(p => ({ ...p, ...JSON.parse(s) }));
-        } catch {}
+        } catch { /* localStorage indisponible ou JSON invalide */ }
       }
       setLoading(false);
     });

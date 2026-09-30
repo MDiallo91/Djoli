@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Wallet, ArrowUpCircle, ArrowDownCircle, Plus, Filter, Search, Eye, Pencil, Trash2, MoreVertical } from 'lucide-react';
+import { Wallet, ArrowUpCircle, ArrowDownCircle, Plus, Filter, Search, Trash2, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import * as api from '../../services/schoolApi';
+import { Card, Tabs, Select, Input, Textarea, Button, Modal, EmptyState, Spinner, Checkbox, confirmDialog } from '../../ui/design_system';
 
 const ALL_MONTHS = ['Septembre','Octobre','Novembre','Décembre','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août'];
 const METHODS    = ['Espèces','Chèque','Virement','Mobile Money'];
@@ -95,11 +96,14 @@ export default function FinanceSection() {
       setIsGeneralOpen(false);
       setGeneralData({ type: 'OUT', amount: 0, reason: '' });
       if (selectedYear) { const txs = await api.getTransactions(selectedYear); setTransactions(txs); }
-    } catch { toast.error('Erreur'); }
+    } catch (err: any) {
+      // ex. sortie supérieure au solde de caisse de l'année
+      toast.error(err?.response?.data?.error || "Impossible d'enregistrer la transaction");
+    }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Supprimer cette transaction ?')) return;
+    if (!(await confirmDialog({ message: 'Supprimer cette transaction ?', variant: 'danger' }))) return;
     try { await api.deleteTransaction(id); setTransactions(p => p.filter(t => t.id !== id)); toast.success('Supprimé'); }
     catch { toast.error('Erreur'); }
     setOpenMenuId(null);
@@ -145,7 +149,7 @@ export default function FinanceSection() {
             iconBg: balance >= 0 ? 'linear-gradient(135deg,#2563eb,#60a5fa)' : 'linear-gradient(135deg,#dc2626,#f87171)',
             shadow: balance >= 0 ? 'rgba(37,99,235,0.3)' : 'rgba(220,38,38,0.3)' },
         ].map(k => (
-          <div key={k.label} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+          <Card key={k.label} hover className="flex items-center gap-4">
             <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white flex-shrink-0"
               style={{ background: k.iconBg, boxShadow: `0 4px 12px ${k.shadow}` }}>
               <k.icon size={20} />
@@ -155,32 +159,30 @@ export default function FinanceSection() {
               <p className="text-lg font-black text-gray-900 truncate" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{k.value}</p>
               <p className="text-[10px] text-gray-400 font-medium mt-0.5">{k.sub}</p>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
       {/* ─── Header + mode toggle ─── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 lg:p-4 space-y-3">
+      <Card padding="sm" className="lg:p-4 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex bg-gray-100 p-1 rounded-xl">
-              {(['transactions', 'reports'] as const).map(m => (
-                <button key={m} onClick={() => setViewMode(m)}
-                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg font-bold text-sm transition-all ${viewMode === m ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-                  {m === 'transactions' ? 'Transactions' : 'Rapports'}
-                </button>
-              ))}
-            </div>
-            <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)}
-              className="p-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none flex-1 sm:flex-none">
-              {years.map(y => <option key={y.id} value={y.id}>{y.name}{y.is_active ? ' ✓' : ''}</option>)}
-            </select>
+            <Tabs
+              options={[{ value: 'transactions', label: 'Transactions' }, { value: 'reports', label: 'Rapports' }]}
+              value={viewMode}
+              onChange={setViewMode}
+              activeClassName="bg-white text-blue-600 shadow-sm"
+            />
+            <Select
+              value={selectedYear} onChange={e => setSelectedYear(e.target.value)}
+              options={years.map(y => ({ value: y.id, label: `${y.name}${y.is_active ? ' ✓' : ''}` }))}
+            />
           </div>
           {viewMode === 'transactions' && (
             <div className="flex gap-2">
-              <button onClick={() => setIsPaymentOpen(true)} className="btn-primary flex-1 sm:flex-none justify-center py-2 text-sm">
-                <Plus size={15} /> <span className="hidden xs:inline">Paiement</span> élève
-              </button>
+              <Button variant="primary" size="sm" leftIcon={<Plus size={15} />} onClick={() => setIsPaymentOpen(true)}>
+                <span className="hidden xs:inline">Paiement</span> élève
+              </Button>
               <button onClick={() => setIsGeneralOpen(true)}
                 className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3 py-2 bg-gray-900 text-white rounded-xl font-semibold text-sm hover:bg-black transition-all">
                 <Plus size={15} /> Caisse
@@ -188,36 +190,28 @@ export default function FinanceSection() {
             </div>
           )}
         </div>
-      </div>
+      </Card>
 
       {viewMode === 'transactions' ? (
-        <div className="card-main">
+        <Card padding="none" className="overflow-hidden">
           <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex bg-gray-100 p-1 rounded-xl gap-0.5">
-              {(['ALL', 'IN', 'OUT'] as const).map(t => (
-                <button key={t} onClick={() => setActiveTab(t)}
-                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === t ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-                  {t === 'ALL' ? 'Tout' : t === 'IN' ? 'Entrées' : 'Sorties'}
-                </button>
-              ))}
-            </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
-              <input type="text" placeholder="Rechercher…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                className="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none w-full sm:w-52" />
+            <Tabs
+              options={[{ value: 'ALL', label: 'Tout' }, { value: 'IN', label: 'Entrées' }, { value: 'OUT', label: 'Sorties' }]}
+              value={activeTab}
+              onChange={setActiveTab}
+            />
+            <div className="w-full sm:w-52">
+              <Input type="text" placeholder="Rechercher…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} leftIcon={<Search size={15} />} />
             </div>
           </div>
 
           <div className="overflow-x-auto">
             {loading ? (
               <div className="py-20 text-center">
-                <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto" />
+                <Spinner size="2xl" color="blue" className="mx-auto" />
               </div>
             ) : filtered.length === 0 ? (
-              <div className="py-20 text-center">
-                <Wallet className="text-gray-200 mx-auto mb-3" size={40} />
-                <p className="text-gray-400 font-bold uppercase tracking-widest text-sm">Aucune transaction</p>
-              </div>
+              <EmptyState icon={<Wallet size={24} />} message="Aucune transaction" />
             ) : (
               <>
               <div className="sm:hidden divide-y divide-gray-50">
@@ -286,41 +280,36 @@ export default function FinanceSection() {
               </>
             )}
           </div>
-        </div>
+        </Card>
       ) : (
         /* ─── Rapports ─── */
-        <div className="card-main">
+        <Card padding="none" className="overflow-hidden">
           <div className="p-6 border-b border-gray-100 flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-2">
               <Filter size={16} className="text-gray-400" />
-              <select value={reportConfig.classId} onChange={e => setReportConfig(p => ({ ...p, classId: e.target.value }))}
-                className="p-2 bg-white border border-gray-200 rounded-xl text-sm font-bold outline-none">
-                <option value="">Sélectionner une classe</option>
-                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              <select value={reportConfig.month} onChange={e => setReportConfig(p => ({ ...p, month: e.target.value }))}
-                className="p-2 bg-white border border-gray-200 rounded-xl text-sm font-bold outline-none">
-                {ALL_MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
+              <Select
+                value={reportConfig.classId} onChange={e => setReportConfig(p => ({ ...p, classId: e.target.value }))}
+                options={[{ value: '', label: 'Sélectionner une classe' }, ...classes.map(c => ({ value: c.id, label: c.name }))]}
+              />
+              <Select
+                value={reportConfig.month} onChange={e => setReportConfig(p => ({ ...p, month: e.target.value }))}
+                options={ALL_MONTHS.map(m => ({ value: m, label: m }))}
+              />
             </div>
-            <div className="flex bg-gray-100 p-1 rounded-xl gap-0.5">
-              {(['ALL', 'PAID', 'UNPAID'] as const).map(f => (
-                <button key={f} onClick={() => setReportFilter(f)}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${reportFilter === f ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}>
-                  {f === 'ALL' ? 'Tous' : f === 'PAID' ? 'Payé' : 'Non payé'}
-                </button>
-              ))}
-            </div>
+            <Tabs
+              size="sm"
+              options={[{ value: 'ALL', label: 'Tous' }, { value: 'PAID', label: 'Payé' }, { value: 'UNPAID', label: 'Non payé' }]}
+              value={reportFilter}
+              onChange={setReportFilter}
+            />
           </div>
           <div className="overflow-x-auto p-2">
             {loadingReport ? (
               <div className="py-16 flex justify-center">
-                <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+                <Spinner size="xl" color="blue" />
               </div>
             ) : reportFiltered.length === 0 ? (
-              <div className="py-16 text-center text-gray-400">
-                <p className="font-bold uppercase tracking-widest text-sm">Sélectionnez une classe</p>
-              </div>
+              <EmptyState message="Sélectionnez une classe" />
             ) : (
               <table className="w-full text-left">
                 <thead>
@@ -348,124 +337,89 @@ export default function FinanceSection() {
               </table>
             )}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* ─── Modal Paiement élève ─── */}
-      {isPaymentOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden border border-gray-100 max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 sticky top-0">
-              <h2 className="text-xl font-bold text-gray-900">Paiement Scolarité</h2>
-              <button onClick={() => setIsPaymentOpen(false)} className="text-gray-400 hover:text-gray-600 font-bold text-2xl leading-none">×</button>
-            </div>
-            <form onSubmit={handlePaymentSubmit} className="p-6 space-y-4">
-              {/* Recherche élève */}
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Élève</label>
-                <div className="relative">
-                  <input type="text" placeholder="Rechercher un élève…" value={studentSearch}
-                    onChange={e => handleSearch(e.target.value)}
-                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none" />
-                  {searchResults.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden">
-                      {searchResults.map(s => (
-                        <button key={s.id} type="button" onClick={() => { setSelectedStudent(s); setStudentSearch(s.first_name + ' ' + s.last_name); setSearchResults([]); }}
-                          className="w-full text-left px-3 py-2.5 hover:bg-gray-50 text-sm text-gray-700 transition-colors border-b last:border-0">
-                          <span className="font-bold">{s.first_name} {s.last_name}</span>
-                          {s.class_name && <span className="text-gray-400 ml-2 text-xs">· {s.class_name}</span>}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-              {/* Mois */}
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Mois concernés</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {ALL_MONTHS.map(m => (
-                    <label key={m} className={`flex items-center gap-2 p-2 rounded-xl border-2 cursor-pointer transition-all text-xs font-semibold ${selectedMonths.includes(m) ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-100 hover:border-gray-200 text-gray-600'}`}>
-                      <input type="checkbox" className="sr-only" checked={selectedMonths.includes(m)}
-                        onChange={() => setSelectedMonths(p => p.includes(m) ? p.filter(x => x !== m) : [...p, m])} />
-                      {m}
-                    </label>
+      <Modal open={isPaymentOpen} onClose={() => setIsPaymentOpen(false)} title="Paiement Scolarité">
+        <form onSubmit={handlePaymentSubmit} className="space-y-4">
+          {/* Recherche élève */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Élève</label>
+            <div className="relative">
+              <Input type="text" placeholder="Rechercher un élève…" value={studentSearch} onChange={e => handleSearch(e.target.value)} />
+              {searchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden">
+                  {searchResults.map(s => (
+                    <button key={s.id} type="button" onClick={() => { setSelectedStudent(s); setStudentSearch(s.first_name + ' ' + s.last_name); setSearchResults([]); }}
+                      className="w-full text-left px-3 py-2.5 hover:bg-gray-50 text-sm text-gray-700 transition-colors border-b last:border-0">
+                      <span className="font-bold">{s.first_name} {s.last_name}</span>
+                      {s.class_name && <span className="text-gray-400 ml-2 text-xs">· {s.class_name}</span>}
+                    </button>
                   ))}
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Montant (GNF)</label>
-                <input type="number" min="0" required value={paymentData.amount || ''}
-                  onChange={e => setPaymentData(p => ({ ...p, amount: parseFloat(e.target.value) || 0 }))}
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Mode de paiement</label>
-                <select value={paymentData.method} onChange={e => setPaymentData(p => ({ ...p, method: e.target.value }))}
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none">
-                  {METHODS.map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </div>
-              <div className="pt-4 flex gap-3">
-                <button type="button" onClick={() => setIsPaymentOpen(false)}
-                  className="flex-1 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm transition-all">
-                  Annuler
-                </button>
-                <button type="submit" className="flex-1 btn-primary py-3 shadow-lg shadow-blue-500/30">
-                  Enregistrer
-                </button>
-              </div>
-            </form>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+          {/* Mois */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Mois concernés</label>
+            <div className="grid grid-cols-3 gap-2">
+              {ALL_MONTHS.map(m => (
+                <Checkbox
+                  key={m} variant="chip" label={m}
+                  checked={selectedMonths.includes(m)}
+                  onChange={() => setSelectedMonths(p => p.includes(m) ? p.filter(x => x !== m) : [...p, m])}
+                />
+              ))}
+            </div>
+          </div>
+          <Input
+            label="Montant (GNF)" type="number" min="0" required value={paymentData.amount || ''}
+            onChange={e => setPaymentData(p => ({ ...p, amount: parseFloat(e.target.value) || 0 }))}
+          />
+          <Select
+            label="Mode de paiement"
+            value={paymentData.method} onChange={e => setPaymentData(p => ({ ...p, method: e.target.value }))}
+            options={METHODS.map(m => ({ value: m, label: m }))}
+          />
+          <div className="pt-4 flex gap-3">
+            <Button type="button" variant="outline" fullWidth onClick={() => setIsPaymentOpen(false)}>Annuler</Button>
+            <Button type="submit" variant="primary" fullWidth>Enregistrer</Button>
+          </div>
+        </form>
+      </Modal>
 
       {/* ─── Modal Caisse ─── */}
-      {isGeneralOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <h2 className="text-xl font-bold text-gray-900">Transaction de Caisse</h2>
-              <button onClick={() => setIsGeneralOpen(false)} className="text-gray-400 hover:text-gray-600 font-bold text-2xl leading-none">×</button>
+      <Modal open={isGeneralOpen} onClose={() => setIsGeneralOpen(false)} title="Transaction de Caisse" size="sm">
+        <form onSubmit={handleGeneralSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Type</label>
+            <div className="flex gap-3">
+              {(['IN', 'OUT'] as const).map(t => (
+                <label key={t} className={`flex-1 flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer font-bold text-sm transition-all ${generalData.type === t ? (t === 'IN' ? 'border-secondary-500 bg-secondary-50 text-secondary-700' : 'border-red-500 bg-red-50 text-red-700') : 'border-gray-100 text-gray-500'}`}>
+                  <input type="radio" name="type" value={t} checked={generalData.type === t}
+                    onChange={() => setGeneralData(p => ({ ...p, type: t }))} className="sr-only" />
+                  {t === 'IN' ? <ArrowUpCircle size={16} /> : <ArrowDownCircle size={16} />}
+                  {t === 'IN' ? 'Entrée' : 'Sortie'}
+                </label>
+              ))}
             </div>
-            <form onSubmit={handleGeneralSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Type</label>
-                <div className="flex gap-3">
-                  {(['IN', 'OUT'] as const).map(t => (
-                    <label key={t} className={`flex-1 flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer font-bold text-sm transition-all ${generalData.type === t ? (t === 'IN' ? 'border-secondary-500 bg-secondary-50 text-secondary-700' : 'border-red-500 bg-red-50 text-red-700') : 'border-gray-100 text-gray-500'}`}>
-                      <input type="radio" name="type" value={t} checked={generalData.type === t}
-                        onChange={() => setGeneralData(p => ({ ...p, type: t }))} className="sr-only" />
-                      {t === 'IN' ? <ArrowUpCircle size={16} /> : <ArrowDownCircle size={16} />}
-                      {t === 'IN' ? 'Entrée' : 'Sortie'}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Montant (GNF)</label>
-                <input type="number" min="0" required value={generalData.amount || ''}
-                  onChange={e => setGeneralData(p => ({ ...p, amount: parseFloat(e.target.value) || 0 }))}
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Motif / Description</label>
-                <textarea required value={generalData.reason} onChange={e => setGeneralData(p => ({ ...p, reason: e.target.value }))} rows={3}
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none resize-none" />
-              </div>
-              <div className="pt-4 flex gap-3">
-                <button type="button" onClick={() => setIsGeneralOpen(false)}
-                  className="flex-1 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm transition-all">
-                  Annuler
-                </button>
-                <button type="submit" className="flex-1 btn-primary py-3">
-                  Enregistrer
-                </button>
-              </div>
-            </form>
           </div>
-        </div>
-      )}
+          <Input
+            label="Montant (GNF)" type="number" min="0" required value={generalData.amount || ''}
+            onChange={e => setGeneralData(p => ({ ...p, amount: parseFloat(e.target.value) || 0 }))}
+          />
+          <Textarea
+            label="Motif / Description" required value={generalData.reason}
+            onChange={e => setGeneralData(p => ({ ...p, reason: e.target.value }))} rows={3}
+          />
+          <div className="pt-4 flex gap-3">
+            <Button type="button" variant="outline" fullWidth onClick={() => setIsGeneralOpen(false)}>Annuler</Button>
+            <Button type="submit" variant="primary" fullWidth>Enregistrer</Button>
+          </div>
+        </form>
+      </Modal>
 
       {openMenuId && <div className="fixed inset-0 z-40" onClick={() => setOpenMenuId(null)} />}
     </div>

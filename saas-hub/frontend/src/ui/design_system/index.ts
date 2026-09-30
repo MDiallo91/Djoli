@@ -17,3 +17,8 @@ export { ColorPicker }     from './ColorPicker';
 export { WysiwygEditor }   from './WysiwygEditor';
 export { FileUpload }      from './FileUpload';
 export { CopyField }       from './CopyField';
+export { Checkbox }        from './Checkbox';
+export { confirmDialog, ConfirmModalHost } from './ConfirmModal';
+export { IconButton }      from './IconButton';
+export { Card }            from './Card';
+export { Tabs }             from './Tabs';

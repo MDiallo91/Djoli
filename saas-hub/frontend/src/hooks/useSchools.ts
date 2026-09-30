@@ -21,9 +21,13 @@ interface UseSchoolsResult {
 function parseSchool(s: any): School {
   return {
     ...s,
-    // levels peut arriver en JSON string depuis le backend
+    // levels/pendingLevels peuvent arriver en JSON string depuis le backend
     levels: (() => {
       try { return Array.isArray(s.levels) ? s.levels : JSON.parse(s.levels || '[]'); }
+      catch { return []; }
+    })(),
+    pendingLevels: (() => {
+      try { return Array.isArray(s.pendingLevels) ? s.pendingLevels : JSON.parse(s.pendingLevels || '[]'); }
       catch { return []; }
     })(),
   };

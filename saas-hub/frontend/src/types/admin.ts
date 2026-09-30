@@ -14,6 +14,7 @@ export interface School {
   city: string;
   level: string;
   levels?: string[];
+  pendingLevels?: string[];
   directorName: string;
   prefecture: string;
   sousPrefecture: string;
@@ -23,6 +24,8 @@ export interface School {
   subscriptionStatus: 'trial' | 'active' | 'expired' | 'suspended';
   subscriptionExpiry: string;
   createdAt: string;
+  /** Date d'archivage (école supprimée côté admin, restaurable) — null/absent si active. */
+  deletedAt?: string | null;
 }
 
 // ─── Navigation principale ────────────────────────────────────

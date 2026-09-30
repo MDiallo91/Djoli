@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Printer, ChevronLeft, GraduationCap, Search, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import * as api from '../../services/schoolApi';
+import { Input, Select, Spinner, EmptyState } from '../../ui/design_system';
 
 // ── Design tokens (identiques desktop BulletinPrint) ─────────────────────────
 const BLUE   = '#1a2f6e';
@@ -30,7 +31,7 @@ const TERMS_LABELS = ['1er Trimestre', '2ème Trimestre', '3ème Trimestre'];
 
 // ── Bulletin imprimable (clone de BulletinPrint.tsx du desktop) ───────────────
 function BulletinPrint({ data, term }: { data: any; term: string }) {
-  const { student, class: cls, year, subjectResults, termAverages, annualAvg, rankings, classSize, schoolInfo } = data;
+  const { student, class: cls, year, subjectResults, rankings, classSize, schoolInfo } = data;
 
   const isT1 = term.includes('1er');
   const isT2 = term.includes('2ème') && !term.toLowerCase().includes('ann');
@@ -42,9 +43,6 @@ function BulletinPrint({ data, term }: { data: any; term: string }) {
 
   // Recalculer totaux
   const termKeys: Array<'T1' | 'T2' | 'T3'> = ['T1', 'T2', 'T3'];
-  const termMap: Record<string, 'T1' | 'T2' | 'T3'> = { [TERMS_LABELS[0]]: 'T1', [TERMS_LABELS[1]]: 'T2', [TERMS_LABELS[2]]: 'T3' };
-  const activeTKey: 'T1' | 'T2' | 'T3' = termMap[term] ?? 'T3';
-
   const totalCoeff = subjectResults.reduce((s: number, g: any) => s + (g.coefficient || 1), 0);
 
   const termTotal = (key: 'T1' | 'T2' | 'T3') =>
@@ -340,17 +338,15 @@ export default function BulletinSection({ student: initStudent, onBack }: Props)
         <div className={`lg:col-span-4 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col ${mobileView === 'bulletin' ? 'hidden lg:flex' : 'flex'}`}
           style={{ height: typeof window !== 'undefined' && window.innerWidth >= 1024 ? 600 : undefined, minHeight: 280 }}>
           <div className="p-4 border-b border-gray-200 bg-gray-50 space-y-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-              <input type="text" placeholder="Chercher un élève…" value={search} onChange={e => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none" />
-            </div>
+            <Input type="text" placeholder="Chercher un élève…" value={search} onChange={e => setSearch(e.target.value)} leftIcon={<Search size={16} />} />
             <div className="flex items-center gap-2">
               <Calendar size={14} className="text-gray-400 flex-shrink-0" />
-              <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)}
-                className="flex-1 p-1.5 bg-white border border-gray-200 rounded-xl text-xs font-bold outline-none">
-                {years.map(y => <option key={y.id} value={y.id}>{y.name}{(y.is_active == 1 || y.is_active) ? ' ★' : ''}</option>)}
-              </select>
+              <div className="flex-1">
+                <Select
+                  value={selectedYear} onChange={e => setSelectedYear(e.target.value)}
+                  options={years.map(y => ({ value: y.id, label: `${y.name}${(y.is_active == 1 || y.is_active) ? ' ★' : ''}` }))}
+                />
+              </div>
             </div>
             <div className="flex gap-1">
               {TERMS_LABELS.map((t, i) => (
@@ -387,17 +383,17 @@ export default function BulletinSection({ student: initStudent, onBack }: Props)
         <div className={`lg:col-span-8 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col ${mobileView === 'list' ? 'hidden lg:flex' : 'flex'}`}
           style={{ height: typeof window !== 'undefined' && window.innerWidth >= 1024 ? 600 : undefined, minHeight: 400 }}>
           {!selectedStudent ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-12 bg-gray-50/30">
-              <div className="w-20 h-20 bg-white rounded-full shadow-sm flex items-center justify-center mb-6">
-                <GraduationCap className="text-gray-200" size={40} />
-              </div>
-              <h3 className="text-lg font-bold text-gray-400">Sélectionnez un élève</h3>
-              <p className="text-gray-400 text-sm max-w-xs mx-auto mt-2">Choisissez un élève dans la liste à gauche pour afficher son bulletin.</p>
+            <div className="flex-1 flex items-center justify-center bg-gray-50/30">
+              <EmptyState
+                icon={<GraduationCap size={28} />}
+                message="Sélectionnez un élève"
+                hint="Choisissez un élève dans la liste à gauche pour afficher son bulletin."
+              />
             </div>
           ) : loading ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center space-y-4">
-                <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto" />
+                <Spinner size="3xl" color="blue" className="mx-auto" />
                 <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Chargement du bulletin…</p>
               </div>
             </div>

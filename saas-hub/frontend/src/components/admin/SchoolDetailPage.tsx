@@ -5,8 +5,8 @@
  * Consommé par : SchoolsTab, PendingTab, SubscriptionsTab (via sub-view)
  */
 
-import { useState } from 'react';
-import { Edit2, Plus, Ban, Trash2, CheckCircle, Mail, User, FileText, Clock, MapPin } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Edit2, Plus, Ban, Archive, CheckCircle, Mail, User, FileText, Clock, MapPin, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import type { School } from '../../types/admin';
 import { API_ADMIN }   from '../../constants/api';
@@ -23,8 +23,24 @@ interface Props {
   onRefresh: () => void;
 }
 
+interface SchoolDocument { id: string; type: string; filename: string; mime_type: string; size: number; createdAt: string; }
+
+const DOC_LABEL: Record<string, string> = { rccm: 'RCCM' };
+const formatSize = (b: number) => b >= 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} Mo` : `${Math.max(1, Math.round(b / 1024))} Ko`;
+
 export function SchoolDetailPage({ school, onBack, onEdit, onRefresh }: Props) {
   const [busy, setBusy] = useState('');
+  // Pièces justificatives stockées en base (voir backend DocumentEcole) — métadonnées seulement
+  const [documents, setDocuments] = useState<SchoolDocument[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_ADMIN}/schools/${school.id}/documents`)
+      .then(r => r.ok ? r.json() : [])
+      .then(d => { if (!cancelled) setDocuments(Array.isArray(d) ? d : []); })
+      .catch(() => { if (!cancelled) setDocuments([]); });
+    return () => { cancelled = true; };
+  }, [school.id]);
 
   const callApi = async (path: string, body: object, successMsg: string) => {
     const res = await fetch(`${API_ADMIN}${path}`, {
@@ -66,13 +82,31 @@ export function SchoolDetailPage({ school, onBack, onEdit, onRefresh }: Props) {
     finally { setBusy(''); }
   };
 
+  const approveLevel = async (lvl: string) => {
+    setBusy('lvl-a-' + lvl);
+    try {
+      await callApi(`/schools/${school.id}/levels/approve`, { levels: [lvl] }, `Cycle "${lvl}" approuvé`);
+    } catch { toast.error('Erreur réseau'); }
+    finally { setBusy(''); }
+  };
+
+  const rejectLevel = async (lvl: string) => {
+    setBusy('lvl-r-' + lvl);
+    try {
+      await callApi(`/schools/${school.id}/levels/reject`, { levels: [lvl] }, `Cycle "${lvl}" rejeté`);
+    } catch { toast.error('Erreur réseau'); }
+    finally { setBusy(''); }
+  };
+
   const remove = async () => {
-    if (!confirm('Supprimer définitivement ?')) return;
+    if (!confirm(`Archiver « ${school.schoolName} » ?
+
+L'école ne pourra plus se connecter ni synchroniser. Toutes ses données sont conservées et elle peut être restaurée depuis Établissements → Archivées.`)) return;
     setBusy('del');
     try {
       const res = await fetch(`${API_ADMIN}/school/${school.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error();
-      toast.success('Établissement supprimé');
+      toast.success('Établissement archivé', { description: 'Restaurable depuis Établissements → Archivées.' });
       onRefresh();
       onBack();
     } catch { toast.error('Erreur réseau'); }
@@ -129,6 +163,27 @@ export function SchoolDetailPage({ school, onBack, onEdit, onRefresh }: Props) {
           ))}
         </div>
 
+        {/* Documents */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Documents</p>
+          {documents === null ? (
+            <p className="text-sm text-slate-400">Chargement…</p>
+          ) : documents.length === 0 ? (
+            <p className="text-sm text-slate-400">Aucun document fourni.</p>
+          ) : documents.map(d => (
+            <div key={d.id} className="flex items-center gap-3 py-2 border-b border-slate-50 last:border-0">
+              <span className="text-slate-400 flex-shrink-0"><FileText size={14} /></span>
+              <span className="text-xs text-slate-500 w-28 flex-shrink-0">{DOC_LABEL[d.type] ?? d.type}</span>
+              <span className="text-sm font-medium text-slate-900 truncate flex-1 min-w-0">{d.filename}</span>
+              <span className="text-xs text-slate-400 flex-shrink-0">{formatSize(d.size)}</span>
+              <a href={`${API_ADMIN}/documents/${d.id}`} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700 flex-shrink-0">
+                Ouvrir <ExternalLink size={12} />
+              </a>
+            </div>
+          ))}
+        </div>
+
         {/* Niveaux */}
         {(school.levels?.length ?? 0) > 0 && (
           <div className="bg-white border border-slate-200 rounded-2xl p-5">
@@ -138,6 +193,30 @@ export function SchoolDetailPage({ school, onBack, onEdit, onRefresh }: Props) {
                 <span key={lvl} className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold border ${LEVEL_CLS[lvl] ?? 'bg-slate-100 text-slate-600 border-slate-200'}`}>
                   {lvl}
                 </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Cycles en attente d'approbation */}
+        {(school.pendingLevels?.length ?? 0) > 0 && (
+          <div className="bg-white border border-amber-200 rounded-2xl p-5">
+            <p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-3">Cycles en attente d'approbation</p>
+            <div className="space-y-2">
+              {school.pendingLevels!.map(lvl => (
+                <div key={lvl} className="flex items-center justify-between gap-3 bg-amber-50 border border-amber-100 rounded-xl px-4 py-2.5">
+                  <span className="text-sm font-bold text-slate-900">{lvl}</span>
+                  <div className="flex items-center gap-2">
+                    <Button variant="success" size="sm" leftIcon={<CheckCircle size={14} />}
+                      onClick={() => approveLevel(lvl)} disabled={busy === 'lvl-a-' + lvl}>
+                      Approuver
+                    </Button>
+                    <Button variant="danger" size="sm" leftIcon={<Ban size={14} />}
+                      onClick={() => rejectLevel(lvl)} disabled={busy === 'lvl-r-' + lvl}>
+                      Rejeter
+                    </Button>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -190,8 +269,8 @@ export function SchoolDetailPage({ school, onBack, onEdit, onRefresh }: Props) {
                 Bloquer l'accès
               </Button>
             )}
-            <Button variant="danger" leftIcon={<Trash2 size={14} />} loading={busy === 'del'} disabled={!!busy} onClick={remove}>
-              Supprimer définitivement
+            <Button variant="danger" leftIcon={<Archive size={14} />} loading={busy === 'del'} disabled={!!busy} onClick={remove}>
+              Archiver l'établissement
             </Button>
           </div>
         </div>

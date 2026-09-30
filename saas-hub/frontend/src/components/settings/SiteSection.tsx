@@ -73,7 +73,6 @@ export function SiteSection() {
               label="Logo du site"
               value={data.logoUrl}
               onChange={v => set('logoUrl', v)}
-              accept="image/*"
               hint="PNG ou SVG avec fond transparent recommandé"
             />
           </div>

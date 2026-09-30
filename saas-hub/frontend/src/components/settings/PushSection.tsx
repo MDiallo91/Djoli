@@ -62,18 +62,18 @@ export function PushSection() {
   const [testBody, setTestBody] = useState('Ceci est une notification de test.');
   const [testing,  setTesting]  = useState(false);
 
+  const mergeProviders = (saved: PushProvider[]): PushProvider[] =>
+    DEFAULT_PROVIDERS.map(d => saved.find(s => s.id === d.id) ?? d);
+
+  const mergeTemplates = (saved: PushEventTemplate[]): PushEventTemplate[] =>
+    DEFAULT_TEMPLATES.map(d => saved.find(s => s.event === d.event) ?? d);
+
   useEffect(() => {
     fetchPushSettings().then(s => {
       if (s) setSettings({ providers: mergeProviders(s.providers), templates: mergeTemplates(s.templates) });
       setLoading(false);
     });
   }, []);
-
-  const mergeProviders = (saved: PushProvider[]): PushProvider[] =>
-    DEFAULT_PROVIDERS.map(d => saved.find(s => s.id === d.id) ?? d);
-
-  const mergeTemplates = (saved: PushEventTemplate[]): PushEventTemplate[] =>
-    DEFAULT_TEMPLATES.map(d => saved.find(s => s.event === d.event) ?? d);
 
   const toggleProvider = (id: PushProviderType, enabled: boolean) =>
     setSettings(p => ({
@@ -145,6 +145,12 @@ export function PushSection() {
               initials={prov.id === 'fcm' ? 'FCM' : 'OS'}
               enabled={prov.enabled}
               onToggle={v => toggleProvider(prov.id as PushProviderType, v)}
+              footer={
+                <button type="button" onClick={save} disabled={saving}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-primary-600 text-white rounded-lg text-xs hover:bg-primary-700 transition-all disabled:opacity-50">
+                  <ShieldCheck size={12}/> {saving ? 'Sauvegarde…' : 'Enregistrer'}
+                </button>
+              }
             >
               {fields.map(f => (
                 <div key={f.key}>

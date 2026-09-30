@@ -64,6 +64,10 @@ export const getStudentsDetailed = (yearId?: string) => apiClient.get(`${S}/stud
 export const getStudentBulletin = (studentId: string, yearId?: string) =>
     apiClient.get(`${S}/bulletin/${studentId}${yearId ? `?yearId=${yearId}` : ''}`).then(r => r.data);
 
+// Comptes/permissions du personnel d'école (édition seulement — création desktop-only)
+export const getSchoolUsers = () => apiClient.get(`${S}/users`).then(r => r.data);
+export const updateSchoolUserPermissions = (id: string, d: any) => apiClient.put(`${S}/users/${id}/permissions`, d).then(r => r.data);
+
 // Upload (Cloudinary signature)
 export const getUploadSignature = (folder: string) =>
     apiClient.get('/upload/signature', { params: { folder } }).then(r => r.data);

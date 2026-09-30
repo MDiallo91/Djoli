@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Layout, BookOpen, Plus, Trash2, Hash, GraduationCap, Layers, Calendar, CheckSquare, Check, Pencil } from 'lucide-react';
+import { BookOpen, Plus, Trash2, Hash, Layers, Calendar, CheckSquare, Check, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import * as api from '../../services/schoolApi';
+import { Tabs, Card, Button, IconButton, Modal, Input, Select, Checkbox, EmptyState, confirmDialog } from '../../ui/design_system';
 
 const LEVELS = ['Maternelle', 'Primaire', 'Collège', 'Lycée'] as const;
 
@@ -24,7 +25,6 @@ export default function StructureSection() {
   const [selectedClass, setSelectedClass]   = useState<any>(null);
   const [classSubjects, setClassSubjects]   = useState<any[]>([]);
   const [checkedSubjects, setCheckedSubjects] = useState<Set<string>>(new Set());
-  const [showSubjectAdd, setShowSubjectAdd] = useState(false);
 
   const fetchData = async () => {
     const [cls, sub, yrs] = await Promise.all([api.getClasses(), api.getSubjects(), api.getSchoolYears()]);
@@ -69,9 +69,18 @@ export default function StructureSection() {
     } catch { toast.error('Erreur'); }
   };
 
-  const handleDeleteClass   = async (id: string) => { if (!confirm('Supprimer cette classe ?')) return; await api.deleteClass(id); fetchData(); };
-  const handleDeleteSubject = async (id: string) => { if (!confirm('Supprimer cette matière ?')) return; await api.deleteSubject(id); fetchData(); };
-  const handleDeleteYear    = async (id: string) => { if (!confirm('Supprimer cette année ?')) return; await api.deleteSchoolYear(id); fetchData(); };
+  const handleDeleteClass = async (id: string) => {
+    if (!(await confirmDialog({ message: 'Supprimer cette classe ?', variant: 'danger' }))) return;
+    await api.deleteClass(id); fetchData();
+  };
+  const handleDeleteSubject = async (id: string) => {
+    if (!(await confirmDialog({ message: 'Supprimer cette matière ?', variant: 'danger' }))) return;
+    await api.deleteSubject(id); fetchData();
+  };
+  const handleDeleteYear = async (id: string) => {
+    if (!(await confirmDialog({ message: 'Supprimer cette année ?', variant: 'danger' }))) return;
+    await api.deleteSchoolYear(id); fetchData();
+  };
 
   const toggleSubjectForClass = async (subjectId: string) => {
     if (!selectedClass) return;
@@ -87,37 +96,34 @@ export default function StructureSection() {
   };
 
   const TABS = [
-    { id: 'classes', label: 'Classes', icon: Layers },
-    { id: 'subjects', label: 'Matières', icon: BookOpen },
-    { id: 'years', label: 'Années Scolaires', icon: Calendar },
+    { value: 'classes', label: 'Classes', icon: <Layers size={16} /> },
+    { value: 'subjects', label: 'Matières', icon: <BookOpen size={16} /> },
+    { value: 'years', label: 'Années Scolaires', icon: <Calendar size={16} /> },
   ] as const;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* ─── Sub-tab bar ─── */}
-      <div className="flex gap-2 bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm w-fit">
-        {TABS.map(t => (
-          <button key={t.id} onClick={() => { setActiveTab(t.id); setSelectedClass(null); }}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === t.id ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>
-            <t.icon size={16} /> {t.label}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        options={TABS}
+        value={activeTab}
+        onChange={t => { setActiveTab(t); setSelectedClass(null); }}
+        activeClassName="bg-blue-600 text-white shadow-sm"
+        className="w-fit bg-white border border-gray-100 shadow-sm p-1.5"
+      />
 
       {/* ─── CLASSES ─── */}
       {activeTab === 'classes' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* List */}
-          <div className="card-main">
+          <Card padding="none" className="overflow-hidden">
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Layers size={20} className="text-blue-600" />
                 <h3 className="font-black text-gray-900 tracking-tight">Classes</h3>
                 <span className="bg-blue-50 text-blue-600 text-xs font-black px-2 py-0.5 rounded-full">{classes.length}</span>
               </div>
-              <button onClick={() => setIsClassModal(true)} className="btn-primary flex items-center gap-1.5 py-2 text-xs">
-                <Plus size={14} /> Ajouter
-              </button>
+              <Button variant="primary" size="sm" leftIcon={<Plus size={14} />} onClick={() => setIsClassModal(true)}>Ajouter</Button>
             </div>
             <div className="divide-y divide-gray-50">
               {classes.length === 0 ? (
@@ -131,19 +137,19 @@ export default function StructureSection() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-black text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{c.student_count || 0} élèves</span>
-                    <button onClick={e => { e.stopPropagation(); handleDeleteClass(c.id); }}
-                      className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                      <Trash2 size={14} />
-                    </button>
+                    <IconButton
+                      icon={<Trash2 size={14} />} label="Supprimer" variant="danger"
+                      onClick={e => { e.stopPropagation(); handleDeleteClass(c.id); }}
+                    />
                   </div>
                 </button>
               ))}
             </div>
-          </div>
+          </Card>
 
           {/* Class subjects panel */}
           {selectedClass ? (
-            <div className="card-main">
+            <Card padding="none" className="overflow-hidden">
               <div className="p-6 border-b border-gray-100">
                 <h3 className="font-black text-gray-900 tracking-tight">Matières — {selectedClass.name}</h3>
                 <p className="text-gray-400 text-xs mt-0.5">Cochez les matières enseignées dans cette classe</p>
@@ -165,30 +171,29 @@ export default function StructureSection() {
                   );
                 })}
               </div>
-            </div>
+            </Card>
           ) : (
-            <div className="card-main flex items-center justify-center py-20 text-center">
-              <div>
-                <Layers className="text-gray-200 mx-auto mb-3" size={40} />
-                <p className="text-gray-400 font-bold text-sm">Sélectionnez une classe<br />pour gérer ses matières</p>
-              </div>
-            </div>
+            <Card padding="none" className="flex items-center justify-center py-20">
+              <EmptyState
+                icon={<Layers size={24} />}
+                message="Sélectionnez une classe"
+                hint="pour gérer ses matières"
+              />
+            </Card>
           )}
         </div>
       )}
 
       {/* ─── MATIÈRES ─── */}
       {activeTab === 'subjects' && (
-        <div className="card-main">
+        <Card padding="none" className="overflow-hidden">
           <div className="p-6 border-b border-gray-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <BookOpen size={20} className="text-blue-600" />
               <h3 className="font-black text-gray-900 tracking-tight">Matières</h3>
               <span className="bg-blue-50 text-blue-600 text-xs font-black px-2 py-0.5 rounded-full">{subjects.length}</span>
             </div>
-            <button onClick={() => setIsSubjectModal(true)} className="btn-primary flex items-center gap-1.5 py-2 text-xs">
-              <Plus size={14} /> Ajouter
-            </button>
+            <Button variant="primary" size="sm" leftIcon={<Plus size={14} />} onClick={() => setIsSubjectModal(true)}>Ajouter</Button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
@@ -213,31 +218,30 @@ export default function StructureSection() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button onClick={() => handleDeleteSubject(s.id)}
-                        className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                        <Trash2 size={15} />
-                      </button>
+                      <IconButton icon={<Trash2 size={15} />} label="Supprimer" variant="danger" onClick={() => handleDeleteSubject(s.id)} />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* ─── ANNÉES SCOLAIRES ─── */}
       {activeTab === 'years' && (
-        <div className="card-main">
+        <Card padding="none" className="overflow-hidden">
           <div className="p-6 border-b border-gray-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Calendar size={20} className="text-blue-600" />
               <h3 className="font-black text-gray-900 tracking-tight">Années Scolaires</h3>
             </div>
-            <button onClick={() => { setEditingYear(false); setNewYear({ id: null, name: '', start_date: '', end_date: '', is_active: false }); setIsYearModal(true); }}
-              className="btn-primary flex items-center gap-1.5 py-2 text-xs">
-              <Plus size={14} /> Ajouter
-            </button>
+            <Button
+              variant="primary" size="sm" leftIcon={<Plus size={14} />}
+              onClick={() => { setEditingYear(false); setNewYear({ id: null, name: '', start_date: '', end_date: '', is_active: false }); setIsYearModal(true); }}
+            >
+              Ajouter
+            </Button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
@@ -274,14 +278,11 @@ export default function StructureSection() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => { setEditingYear(true); setNewYear({ id: y.id, name: y.name, start_date: y.start_date || '', end_date: y.end_date || '', is_active: isActive }); setIsYearModal(true); }}
-                            className="p-1.5 text-gray-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
-                            <Pencil size={14} />
-                          </button>
-                          <button onClick={() => handleDeleteYear(y.id)}
-                            className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                            <Trash2 size={14} />
-                          </button>
+                          <IconButton
+                            icon={<Pencil size={14} />} label="Modifier"
+                            onClick={() => { setEditingYear(true); setNewYear({ id: y.id, name: y.name, start_date: y.start_date || '', end_date: y.end_date || '', is_active: isActive }); setIsYearModal(true); }}
+                          />
+                          <IconButton icon={<Trash2 size={14} />} label="Supprimer" variant="danger" onClick={() => handleDeleteYear(y.id)} />
                         </div>
                       </td>
                     </tr>
@@ -290,109 +291,59 @@ export default function StructureSection() {
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* ─── Modals ─── */}
-      {isClassModal && (
-        <Modal title="Nouvelle Classe" onClose={() => setIsClassModal(false)}>
-          <form onSubmit={handleAddClass} className="space-y-4">
-            <Field label="Nom de la classe">
-              <input required value={newClass.name} onChange={e => setNewClass(p => ({ ...p, name: e.target.value }))}
-                placeholder="Ex : 6ème A" className="input-field" />
-            </Field>
-            <Field label="Niveau">
-              <select value={newClass.level} onChange={e => setNewClass(p => ({ ...p, level: e.target.value }))} className="input-field">
-                {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
-              </select>
-            </Field>
-            <ModalActions onCancel={() => setIsClassModal(false)} />
-          </form>
-        </Modal>
-      )}
+      <Modal open={isClassModal} onClose={() => setIsClassModal(false)} title="Nouvelle Classe" size="sm">
+        <form onSubmit={handleAddClass} className="space-y-4">
+          <Input label="Nom de la classe" required value={newClass.name} onChange={e => setNewClass(p => ({ ...p, name: e.target.value }))} placeholder="Ex : 6ème A" />
+          <Select
+            label="Niveau" value={newClass.level} onChange={e => setNewClass(p => ({ ...p, level: e.target.value }))}
+            options={LEVELS.map(l => ({ value: l, label: l }))}
+          />
+          <div className="pt-4 flex gap-3">
+            <Button type="button" variant="outline" fullWidth onClick={() => setIsClassModal(false)}>Annuler</Button>
+            <Button type="submit" variant="primary" fullWidth>Enregistrer</Button>
+          </div>
+        </form>
+      </Modal>
 
-      {isSubjectModal && (
-        <Modal title="Nouvelle Matière" onClose={() => setIsSubjectModal(false)}>
-          <form onSubmit={handleAddSubject} className="space-y-4">
-            <Field label="Nom de la matière">
-              <input required value={newSubject.name} onChange={e => setNewSubject(p => ({ ...p, name: e.target.value }))}
-                placeholder="Ex : Mathématiques" className="input-field" />
-            </Field>
-            <Field label="Coefficient">
-              <input type="number" min="1" max="10" required value={newSubject.coefficient}
-                onChange={e => setNewSubject(p => ({ ...p, coefficient: parseInt(e.target.value) || 1 }))} className="input-field" />
-            </Field>
-            <ModalActions onCancel={() => setIsSubjectModal(false)} />
-          </form>
-        </Modal>
-      )}
+      <Modal open={isSubjectModal} onClose={() => setIsSubjectModal(false)} title="Nouvelle Matière" size="sm">
+        <form onSubmit={handleAddSubject} className="space-y-4">
+          <Input label="Nom de la matière" required value={newSubject.name} onChange={e => setNewSubject(p => ({ ...p, name: e.target.value }))} placeholder="Ex : Mathématiques" />
+          <Input
+            label="Coefficient" type="number" min="1" max="10" required value={newSubject.coefficient}
+            onChange={e => setNewSubject(p => ({ ...p, coefficient: parseInt(e.target.value) || 1 }))}
+          />
+          <div className="pt-4 flex gap-3">
+            <Button type="button" variant="outline" fullWidth onClick={() => setIsSubjectModal(false)}>Annuler</Button>
+            <Button type="submit" variant="primary" fullWidth>Enregistrer</Button>
+          </div>
+        </form>
+      </Modal>
 
-      {isYearModal && (
-        <Modal title={editingYear ? 'Modifier l\'année' : 'Nouvelle Année Scolaire'} onClose={() => setIsYearModal(false)}>
-          <form onSubmit={handleAddYear} className="space-y-4">
-            <Field label="Nom (ex : 2024-2025)">
-              <input required value={newYear.name} onChange={e => setNewYear(p => ({ ...p, name: e.target.value }))}
-                placeholder="2024-2025" className="input-field" />
-            </Field>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Date de début">
-                <input type="date" value={newYear.start_date} onChange={e => setNewYear(p => ({ ...p, start_date: e.target.value }))} className="input-field" />
-              </Field>
-              <Field label="Date de fin">
-                <input type="date" value={newYear.end_date} onChange={e => setNewYear(p => ({ ...p, end_date: e.target.value }))} className="input-field" />
-              </Field>
-            </div>
-            <label className="flex items-center gap-3 p-3 rounded-xl bg-blue-50 border-2 border-blue-100 cursor-pointer">
-              <input type="checkbox" checked={newYear.is_active} onChange={e => setNewYear(p => ({ ...p, is_active: e.target.checked }))}
-                className="w-4 h-4 accent-blue-600" />
-              <span className="text-sm font-bold text-blue-700">Définir comme année active</span>
-            </label>
-            <ModalActions onCancel={() => setIsYearModal(false)} label={editingYear ? 'Modifier' : 'Créer'} />
-          </form>
-        </Modal>
-      )}
+      <Modal open={isYearModal} onClose={() => setIsYearModal(false)} title={editingYear ? 'Modifier l\'année' : 'Nouvelle Année Scolaire'} size="sm">
+        <form onSubmit={handleAddYear} className="space-y-4">
+          <Input label="Nom (ex : 2024-2025)" required value={newYear.name} onChange={e => setNewYear(p => ({ ...p, name: e.target.value }))} placeholder="2024-2025" />
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Date de début" type="date" value={newYear.start_date} onChange={e => setNewYear(p => ({ ...p, start_date: e.target.value }))} />
+            <Input label="Date de fin" type="date" value={newYear.end_date} onChange={e => setNewYear(p => ({ ...p, end_date: e.target.value }))} />
+          </div>
+          <div className="p-3 rounded-xl bg-blue-50 border-2 border-blue-100">
+            <Checkbox
+              color="blue"
+              checked={newYear.is_active}
+              onChange={v => setNewYear(p => ({ ...p, is_active: v }))}
+              label={<span className="text-sm font-bold text-blue-700">Définir comme année active</span>}
+            />
+          </div>
+          <div className="pt-4 flex gap-3">
+            <Button type="button" variant="outline" fullWidth onClick={() => setIsYearModal(false)}>Annuler</Button>
+            <Button type="submit" variant="primary" fullWidth>{editingYear ? 'Modifier' : 'Créer'}</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
-
-// ── Shared sub-components ─────────────────────────────────────────────────────
-
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 font-bold text-2xl leading-none">×</button>
-        </div>
-        <div className="p-6">{children}</div>
-      </div>
-    </div>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label className="block text-sm font-bold text-gray-700 mb-1">{label}</label>
-      {children}
-    </div>
-  );
-}
-
-function ModalActions({ onCancel, label = 'Enregistrer' }: { onCancel: () => void; label?: string }) {
-  return (
-    <div className="pt-4 flex gap-3">
-      <button type="button" onClick={onCancel}
-        className="flex-1 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm transition-all">
-        Annuler
-      </button>
-      <button type="submit" className="flex-1 btn-primary py-3 shadow-lg shadow-blue-500/30">{label}</button>
-    </div>
-  );
-}
-
-// Inline style for form inputs used in modals
-const style = document.createElement('style');
-style.textContent = `.input-field { width: 100%; padding: 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; font-size: 14px; outline: none; } .input-field:focus { box-shadow: 0 0 0 3px rgba(37,99,235,0.15); border-color: #3b82f6; }`;
-if (typeof document !== 'undefined') document.head.appendChild(style);

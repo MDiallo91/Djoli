@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import apiClient from '../../lib/apiClient';
+import { Card, Badge, Spinner, Button } from '../../ui/design_system';
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -99,9 +100,7 @@ function StatusBanner({ info, schoolName }: { info: SubscriptionInfo; schoolName
               : sub.status === 'active'
                 ? <CheckCircle size={16} className="text-secondary-500" />
                 : <Clock size={16} className="text-amber-500" />}
-            <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${st.bg} ${st.color}`}>
-              {st.label}
-            </span>
+            <Badge label={st.label} cls={`${st.bg} ${st.color}`} />
           </div>
           <p className="font-semibold text-slate-900">{schoolName}</p>
           {sub.isExpired
@@ -124,7 +123,6 @@ function StatusBanner({ info, schoolName }: { info: SubscriptionInfo; schoolName
 
 function PlanCard({ plan, selected, onSelect }: { plan: Plan; selected: boolean; onSelect: () => void }) {
   const popular = plan.badge === 'Populaire';
-  const best    = plan.badge === 'Meilleure valeur';
 
   return (
     <button
@@ -183,7 +181,7 @@ function GatewayButton({ gw, selected, onSelect }: { gw: Gateway; selected: bool
 
 function PaymentInstructions({ result, onDone }: { result: PaymentResult; onDone: () => void }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-5">
+    <Card padding="lg" className="space-y-5">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 bg-secondary-50 rounded-xl flex items-center justify-center border border-secondary-200">
           <CheckCircle size={18} className="text-secondary-600" />
@@ -210,11 +208,8 @@ function PaymentInstructions({ result, onDone }: { result: PaymentResult; onDone
         <strong>Important :</strong> Votre abonnement sera activé après confirmation du paiement par notre équipe (délai max 24h).
       </div>
 
-      <button onClick={onDone}
-        className="w-full py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold text-sm hover:bg-slate-200 transition-all">
-        Terminer
-      </button>
-    </div>
+      <Button variant="outline" fullWidth onClick={onDone}>Terminer</Button>
+    </Card>
   );
 }
 
@@ -230,7 +225,7 @@ function ContactAdmin({ contact, planLabel, schoolName }: {
   const body    = encodeURIComponent(`Bonjour,\n\nJe suis l'école "${schoolName}" et je souhaite activer un abonnement ${planLabel} sur DJOLI.\n\nMerci de procéder à l'activation.\n\nCordialement`);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+    <Card padding="lg" className="space-y-4">
       <div className="text-center">
         <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
           <MessageCircle size={20} className="text-slate-500" />
@@ -268,14 +263,14 @@ function ContactAdmin({ contact, planLabel, schoolName }: {
           <p className="text-center text-sm text-slate-400">Aucun contact disponible pour le moment.</p>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 
 function PaymentHistory({ history }: { history: HistoryEntry[] }) {
   if (!history.length) return null;
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+    <Card padding="none" className="overflow-hidden">
       <div className="px-5 py-4 border-b border-slate-100">
         <p className="text-sm font-semibold text-slate-800">Historique des paiements</p>
       </div>
@@ -290,13 +285,13 @@ function PaymentHistory({ history }: { history: HistoryEntry[] }) {
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
                 <p className="text-sm font-semibold text-slate-700">{fmt(h.amount, h.currency)}</p>
-                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${st.cls}`}>{st.label}</span>
+                <Badge label={st.label} cls={st.cls} />
               </div>
             </div>
           );
         })}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -398,7 +393,7 @@ export function SubscriptionPage({ schoolName }: { schoolName: string }) {
       <StatusBanner info={info} schoolName={schoolName} />
 
       {/* Sélection du plan */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
+      <Card padding="md" className="space-y-4">
         <div className="flex items-center gap-2">
           <Star size={15} className="text-primary-500" />
           <p className="font-semibold text-slate-900 text-sm">Choisir un plan</p>
@@ -413,11 +408,11 @@ export function SubscriptionPage({ schoolName }: { schoolName: string }) {
             />
           ))}
         </div>
-      </div>
+      </Card>
 
       {/* Cas A : gateways disponibles */}
       {hasGateways && selectedPlanObj && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
+        <Card padding="md" className="space-y-4">
           <div className="flex items-center gap-2">
             <CreditCard size={15} className="text-primary-500" />
             <p className="font-semibold text-slate-900 text-sm">Moyen de paiement</p>
@@ -454,12 +449,12 @@ export function SubscriptionPage({ schoolName }: { schoolName: string }) {
                 style={{ background: 'linear-gradient(135deg, var(--primary-600), var(--primary-700))', boxShadow: '0 4px 14px rgba(var(--primary-600-rgb),0.35)' }}
               >
                 {paying
-                  ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Traitement…</>
+                  ? <><Spinner size="sm" />Traitement…</>
                   : <>Payer {fmt(selectedPlanObj.amount, selectedPlanObj.currency)} <ChevronRight size={15} /></>}
               </button>
             </div>
           )}
-        </div>
+        </Card>
       )}
 
       {/* Cas B : pas de gateway → contact admin */}

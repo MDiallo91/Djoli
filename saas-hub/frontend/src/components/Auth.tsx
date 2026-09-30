@@ -3,199 +3,176 @@ import { toast } from 'sonner';
 import {
   Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight,
   Upload, FileText, CheckCircle, User, Phone,
-  Building2, X, ShieldCheck, RefreshCw, WifiOff,
+  Building2, X, ShieldCheck, RefreshCw, WifiOff, Check, GraduationCap, Send,
 } from 'lucide-react';
 import apiClient from '../lib/apiClient';
-import DocumentUpload from './ui/DocumentUpload';
+import { useSiteConfig, themeVars, type SiteConfig } from './landing/useSiteConfig';
+import './landing/landing.css';
 
 interface AuthProps {
   onBack: () => void;
   onSuccess: (data: any) => void;
 }
 
-// ─── Design tokens — alignés sur LandingPage.tsx ────────────────
-const NAVY = '#14213D';
-const GOLD = '#C9992F';
-const CREAM = '#FAF6EF';
+// Même identité visuelle que la page d'accueil (landing/landing.css) :
+// couleurs de marque = paramètres admin (cfg.primaryColor / cfg.secondaryColor).
 
-const inputCls = 'dj-input';
-const labelCls = 'block text-xs font-semibold mb-1.5 uppercase tracking-wider dj-sans';
-
-// ─── Styles globaux partagés avec la landing page ───────────────
-function DjStyles() {
+// ─── Petits éléments partagés ──────────────────────────────────
+function Logo({ cfg, light }: { cfg: SiteConfig; light?: boolean }) {
   return (
-    <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,500;0,600;1,500;1,600&family=Work+Sans:wght@400;500;600;700&display=swap');
-
-      :root { --navy: ${NAVY}; --gold: ${GOLD}; --bg: ${CREAM}; --bdr: rgba(20,33,61,.16); }
-
-      .dj-serif { font-family: 'Source Serif 4', Georgia, serif; }
-      .dj-sans  { font-family: 'Work Sans', system-ui, sans-serif; }
-
-      .dj-btn-navy {
-        display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-        background: var(--navy); color: ${CREAM};
-        font-family: 'Work Sans', sans-serif; font-weight: 700; font-size: 12px;
-        letter-spacing: .08em; text-transform: uppercase;
-        padding: 16px 32px; border: none; cursor: pointer; text-decoration: none;
-        transition: background .25s, transform .25s, box-shadow .25s;
-      }
-      .dj-btn-navy:hover:not(:disabled) { background: var(--gold); color: var(--navy); transform: translateY(-2px); box-shadow: 0 14px 28px rgba(201,153,47,.35); }
-      .dj-btn-navy:disabled { opacity: .5; cursor: not-allowed; }
-
-      .dj-btn-ghost {
-        background: none; border: none; cursor: pointer; text-decoration: none;
-        font-family: 'Work Sans', sans-serif; font-weight: 600; font-size: 13px;
-        color: var(--navy); border-bottom: 1px solid var(--navy); padding-bottom: 3px;
-        transition: color .2s, border-color .2s;
-      }
-      .dj-btn-ghost:hover { color: var(--gold); border-color: var(--gold); }
-      .dj-btn-ghost-light { color: ${CREAM}; border-color: rgba(250,246,239,.5); }
-      .dj-btn-ghost-light:hover { color: var(--gold); border-color: var(--gold); }
-
-      .dj-section-no {
-        font-family: 'Work Sans', sans-serif; font-weight: 600; font-size: 12px;
-        letter-spacing: .16em; text-transform: uppercase; color: var(--gold);
-      }
-
-      .dj-input {
-        width: 100%; border: 1px solid var(--bdr); border-radius: 0;
-        padding: 13px 16px; font-family: 'Work Sans', sans-serif; font-size: 14px;
-        color: var(--navy); background: #fff; outline: none;
-        transition: border-color .2s;
-      }
-      .dj-input:focus { border-color: var(--gold); }
-      .dj-input::placeholder { color: #B4A995; }
-
-      .dj-orb {
-        position: absolute; border-radius: 50%; pointer-events: none;
-        background: radial-gradient(circle, rgba(201,153,47,.22) 0%, rgba(201,153,47,0) 70%);
-      }
-    `}</style>
+    <div className="lp-logo" style={light ? { color: '#fff' } : undefined}>
+      {cfg.logoUrl
+        ? <img src={cfg.logoUrl} alt="" className="w-10 h-10 object-contain" />
+        : <span className="lp-logo-mark" style={light ? { background: 'rgba(255,255,255,.14)' } : undefined}><GraduationCap size={24} /></span>}
+      {cfg.siteName || 'DJOLI'}
+    </div>
   );
 }
 
-// ─── Panneau gauche partagé ────────────────────────────────────
+const Spinner = () => <span className="au-spinner" />;
+
+function PasswordField({ value, onChange, placeholder, autoComplete }: {
+  value: string; onChange: (v: string) => void; placeholder: string; autoComplete?: string;
+}) {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="au-field">
+      <Lock size={17} />
+      <input required type={show ? 'text' : 'password'} autoComplete={autoComplete} placeholder={placeholder}
+        value={value} onChange={e => onChange(e.target.value)} className="lp-input has-toggle" />
+      <button type="button" onClick={() => setShow(!show)} className="au-toggle" aria-label={show ? 'Masquer' : 'Afficher'}>
+        {show ? <EyeOff size={17} /> : <Eye size={17} />}
+      </button>
+    </div>
+  );
+}
+
+// ─── Mise en page : panneau de marque à gauche + formulaire à droite ──
 function AuthPanel({ onBack, step, totalSteps, children }: {
   onBack: () => void;
   step?: number;
   totalSteps?: number;
   children: React.ReactNode;
 }) {
+  const cfg = useSiteConfig();
   return (
-    <div className="min-h-screen flex dj-sans" style={{ background: CREAM }}>
-      <DjStyles />
-
+    <div className="lp-root au-page" style={themeVars(cfg)}>
       {/* ── Colonne gauche ── */}
-      <div className="hidden lg:flex lg:w-[44%] flex-col relative overflow-hidden" style={{ background: NAVY }}>
-        <div className="dj-orb" style={{ top: -100, left: -100, width: 420, height: 420 }} />
-        <div className="dj-orb" style={{ bottom: -80, right: -80, width: 320, height: 320 }} />
+      <div className={`au-side hidden lg:flex lg:w-[46%] flex-col ${cfg.heroBgUrl ? 'has-image' : ''}`}
+        style={cfg.heroBgUrl ? { backgroundImage: `url(${cfg.heroBgUrl})` } : undefined}>
+        {!cfg.heroBgUrl && <div className="lp-hero-dots" />}
+        <div className="au-side-inner flex flex-col h-full p-12">
+          <div className="flex items-center justify-between">
+            <Logo cfg={cfg} light />
+            <button onClick={onBack} className="au-back"><ArrowLeft size={16} /> Retour au site</button>
+          </div>
 
-        <div className="relative flex flex-col h-full p-10">
-          {/* Top */}
-          <button onClick={onBack} className="dj-btn-ghost dj-btn-ghost-light flex items-center gap-2 w-fit border-none pb-0">
-            <ArrowLeft size={15} /> Retour au site
-          </button>
-
-          {/* Centre */}
-          <div className="flex-1 flex flex-col justify-center">
-            <div className="dj-serif font-semibold text-xl mb-10" style={{ color: CREAM }}>DJOLI</div>
-
-            <h2 className="dj-serif font-semibold leading-tight mb-4" style={{ fontSize: 38, color: CREAM }}>
-              La gestion scolaire<br />
-              <em style={{ fontStyle: 'italic', color: GOLD }}>réinventée.</em>
-            </h2>
-            <p className="text-sm leading-relaxed mb-10 max-w-xs" style={{ color: 'rgba(250,246,239,.55)' }}>
-              Pilotez élèves, notes, paiements et personnels depuis une seule plateforme — en ligne ou hors ligne.
+          <div className="flex-1 flex flex-col justify-center max-w-md">
+            <span className="lp-hero-tag mb-5" style={{ fontSize: 15 }}>Espace établissement</span>
+            <h2 className="mb-5">La gestion scolaire, <span>simplifiée.</span></h2>
+            <p className="mb-10" style={{ color: 'rgba(255,255,255,.8)', fontSize: 17 }}>
+              Pilotez élèves, notes, paiements et personnel depuis une seule plateforme — en ligne ou hors ligne.
             </p>
-
-            {/* Feature pills */}
-            <div className="space-y-3.5">
+            <div className="flex flex-col gap-4">
               {[
-                { Icon: RefreshCw, text: 'Synchronisation cloud automatique' },
-                { Icon: WifiOff,   text: 'Mode hors-ligne complet' },
+                { Icon: RefreshCw,   text: 'Synchronisation cloud automatique' },
+                { Icon: WifiOff,     text: 'Mode hors-ligne complet' },
                 { Icon: ShieldCheck, text: 'Données sécurisées & chiffrées' },
               ].map(f => (
-                <div key={f.text} className="flex items-center gap-3">
-                  <span className="w-7 h-7 flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(201,153,47,.15)' }}>
-                    <f.Icon size={14} style={{ color: GOLD }} />
-                  </span>
-                  <span className="text-sm" style={{ color: 'rgba(250,246,239,.7)' }}>{f.text}</span>
+                <div key={f.text} className="au-feature">
+                  <span className="au-feature-icon"><f.Icon size={19} /></span>
+                  {f.text}
                 </div>
               ))}
             </div>
 
-            {/* Progress steps */}
             {step !== undefined && totalSteps !== undefined && (
-              <div className="flex items-center gap-2 mt-10">
+              <div className="flex items-center gap-2 mt-12">
                 {Array.from({ length: totalSteps }).map((_, i) => (
-                  <div key={i} className="h-[3px] transition-all"
-                    style={{ background: i < step ? GOLD : 'rgba(250,246,239,.2)', flex: i === step - 1 ? 2 : 1 }} />
+                  <div key={i} className="au-progress"
+                    style={{ background: i < step ? 'var(--lp-accent)' : 'rgba(255,255,255,.2)', flex: i === step - 1 ? 2 : 1 }} />
                 ))}
               </div>
             )}
           </div>
 
-          <p className="text-xs" style={{ color: 'rgba(250,246,239,.3)' }}>© 2026 DJOLI — Tous droits réservés</p>
+          <p className="text-sm m-0" style={{ color: 'rgba(255,255,255,.5)' }}>© {new Date().getFullYear()} {cfg.siteName || 'DJOLI'} — Tous droits réservés</p>
         </div>
       </div>
 
       {/* ── Colonne droite ── */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-10">
+      <div className="flex-1 flex items-center justify-center p-5 sm:p-8 lg:p-12">
         <div className="w-full max-w-md">
-          <button onClick={onBack} className="lg:hidden dj-btn-ghost flex items-center gap-2 mb-8 border-none pb-0" style={{ color: '#8A7F70' }}>
-            <ArrowLeft size={15} /> Retour
-          </button>
-          {children}
+          <div className="lg:hidden flex items-center justify-between mb-7">
+            <Logo cfg={cfg} />
+            <button onClick={onBack} className="au-back au-back-dark"><ArrowLeft size={16} /> Retour</button>
+          </div>
+          <div className="au-card">{children}</div>
         </div>
       </div>
     </div>
   );
 }
 
+function CardTitle({ sub, title, text }: { sub: string; title: string; text?: React.ReactNode }) {
+  return (
+    <div className="mb-8">
+      <span className="lp-sub" style={{ fontSize: 14, marginBottom: 8 }}>{sub}</span>
+      <h1 className="text-3xl font-bold">{title}</h1>
+      {text && <p className="mt-2 mb-0">{text}</p>}
+    </div>
+  );
+}
+
 // ─── File uploader helper ─────────────────────────────────────
-function FileUpload({ label, value, onChange, accept, hint }: {
-  label: string; value: string; onChange: (v: string, name: string) => void; accept: string; hint?: string;
+const formatSize = (b: number) => b >= 1024 * 1024 ? `${(b / 1024 / 1024).toLocaleString('fr-FR')} Mo` : `${Math.round(b / 1024)} Ko`;
+const LOGO_MAX_BYTES = 500 * 1024;
+const RCCM_MAX_BYTES = 2.5 * 1024 * 1024;
+
+// Lecture locale en data URL (base64) — pas d'upload : le fichier part avec le
+// formulaire d'inscription. Limites alignées sur le backend (validate.ts).
+function FileUpload({ label, value, onChange, accept, types, maxBytes, hint, optional }: {
+  label: string; value: string; onChange: (v: string, name: string) => void; accept: string;
+  types: string[]; maxBytes: number; hint?: string; optional?: boolean;
 }) {
   const [fileName, setFileName] = useState('');
+  const pick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = ''; // permet de re-choisir le même fichier après une erreur
+    if (!f) return;
+    if (!types.includes(f.type)) { toast.error('Format de fichier non accepté.'); return; }
+    if (f.size > maxBytes) { toast.error(`Fichier trop volumineux (${formatSize(maxBytes)} maximum).`); return; }
+    setFileName(f.name);
+    const r = new FileReader();
+    r.onloadend = () => onChange(r.result as string, f.name);
+    r.readAsDataURL(f);
+  };
   return (
     <div>
-      <label className={labelCls} style={{ color: '#8A7F70' }}>{label}</label>
+      <label className="au-label">{label} {optional && <small>(optionnel)</small>}</label>
       {value ? (
-        <div className="flex items-center gap-3 px-4 py-3" style={{ border: `1px solid ${GOLD}`, background: 'rgba(201,153,47,.08)' }}>
+        <div className="au-file">
           {value.startsWith('data:image') ? (
-            <img src={value} alt="" className="w-10 h-10 object-contain" style={{ border: `1px solid ${GOLD}` }} />
+            <img src={value} alt="" className="w-11 h-11 object-contain rounded-lg bg-white" />
           ) : (
-            <div className="w-10 h-10 flex items-center justify-center" style={{ background: 'rgba(201,153,47,.15)' }}><FileText size={18} style={{ color: GOLD }} /></div>
+            <div className="w-11 h-11 rounded-lg grid place-items-center bg-white"><FileText size={18} style={{ color: 'var(--lp-accent)' }} /></div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate dj-sans" style={{ color: NAVY }}>{fileName || 'Fichier chargé'}</p>
-            <p className="text-xs dj-sans" style={{ color: '#8A7F70' }}>Cliquez pour remplacer</p>
+            <p className="text-sm font-medium truncate m-0" style={{ color: 'var(--lp-dark)' }}>{fileName || 'Fichier chargé'}</p>
+            <p className="text-xs m-0">Cliquez pour remplacer</p>
           </div>
-          <label className="cursor-pointer p-1" style={{ color: GOLD }}>
-            <Upload size={15} />
-            <input type="file" accept={accept} className="hidden" onChange={e => {
-              const f = e.target.files?.[0]; if (!f) return;
-              setFileName(f.name);
-              const r = new FileReader();
-              r.onloadend = () => onChange(r.result as string, f.name);
-              r.readAsDataURL(f);
-            }} />
+          <label className="cursor-pointer p-1" style={{ color: 'var(--lp-primary)' }}>
+            <Upload size={16} />
+            <input type="file" accept={accept} className="hidden" onChange={pick} />
           </label>
-          <button type="button" onClick={() => { onChange('', ''); setFileName(''); }} className="p-1" style={{ color: '#B4A995' }}><X size={14} /></button>
+          <button type="button" onClick={() => { onChange('', ''); setFileName(''); }} className="au-link p-1 grid" style={{ color: 'var(--lp-text)' }} aria-label="Retirer"><X size={15} /></button>
         </div>
       ) : (
-        <label className="flex flex-col items-center justify-center p-5 cursor-pointer transition-all group" style={{ border: `1px dashed var(--bdr)` }}>
-          <Upload size={20} className="mb-2 transition-colors" style={{ color: '#B4A995' }} />
-          <p className="text-sm font-medium dj-sans" style={{ color: '#8A7F70' }}>Cliquez pour uploader</p>
-          {hint && <p className="text-xs mt-1 dj-sans" style={{ color: '#B4A995' }}>{hint}</p>}
-          <input type="file" accept={accept} className="hidden" onChange={e => {
-            const f = e.target.files?.[0]; if (!f) return;
-            setFileName(f.name);
-            const r = new FileReader();
-            r.onloadend = () => onChange(r.result as string, f.name);
-            r.readAsDataURL(f);
-          }} />
+        <label className="au-drop">
+          <Upload size={22} className="mb-2" style={{ color: 'var(--lp-primary)' }} />
+          <p className="text-sm font-medium m-0" style={{ color: 'var(--lp-dark)' }}>Cliquez pour uploader</p>
+          {hint && <p className="text-xs mt-1 mb-0">{hint}</p>}
+          <input type="file" accept={accept} className="hidden" onChange={pick} />
         </label>
       )}
     </div>
@@ -243,30 +220,27 @@ function OTPStep({ email, onSuccess, onResend, onBack }: {
   return (
     <AuthPanel onBack={onBack}>
       <div className="text-center mb-8">
-        <div className="w-14 h-14 flex items-center justify-center mx-auto mb-5" style={{ background: 'rgba(201,153,47,.12)', border: `1px solid rgba(201,153,47,.3)` }}>
-          <ShieldCheck size={26} style={{ color: GOLD }} />
-        </div>
-        <h1 className="dj-serif font-semibold text-2xl mb-2" style={{ color: NAVY }}>Vérification email</h1>
-        <p className="text-sm dj-sans" style={{ color: '#8A7F70' }}>Code envoyé à <span className="font-semibold" style={{ color: NAVY }}>{email}</span></p>
+        <div className="lp-icon mx-auto mb-5"><ShieldCheck size={30} /></div>
+        <h1 className="text-3xl font-bold mb-2">Vérification email</h1>
+        <p className="m-0">Code envoyé à <span className="font-bold" style={{ color: 'var(--lp-dark)' }}>{email}</span></p>
       </div>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="flex gap-2.5 justify-center">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-7">
+        <div className="flex gap-2 justify-center">
           {otp.map((d, i) => (
             <input key={i} ref={el => { inputsRef.current[i] = el; }}
-              type="text" inputMode="numeric" maxLength={1} value={d}
+              type="text" inputMode="numeric" maxLength={1} value={d} aria-label={`Chiffre ${i + 1}`}
               onChange={e => handleChange(i, e.target.value)}
               onKeyDown={e => handleKey(i, e)}
-              className="w-12 h-14 text-center text-2xl font-bold outline-none transition-all dj-sans"
-              style={{ border: '1px solid var(--bdr)', color: NAVY, background: '#fff' }} />
+              className="au-otp" />
           ))}
         </div>
-        <button type="submit" disabled={loading || otp.join('').length < 6} className="w-full dj-btn-navy">
-          {loading ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Vérification…</> : 'Confirmer mon email'}
+        <button type="submit" disabled={loading || otp.join('').length < 6} className="lp-btn lp-btn-block">
+          {loading ? <><Spinner /> Vérification…</> : 'Confirmer mon email'}
         </button>
       </form>
-      <p className="text-center text-xs mt-5 dj-sans" style={{ color: '#B4A995' }}>
+      <p className="text-center text-sm mt-6 mb-0">
         Code valable 10 minutes.{' '}
-        <button onClick={handleResend} className="font-semibold" style={{ color: GOLD }}>Renvoyer</button>
+        <button onClick={handleResend} className="au-link">Renvoyer</button>
       </p>
     </AuthPanel>
   );
@@ -275,7 +249,6 @@ function OTPStep({ email, onSuccess, onResend, onBack }: {
 // ─── Login form ────────────────────────────────────────────────
 function LoginForm({ onBack, onSuccess, onRegister }: AuthProps & { onRegister: () => void }) {
   const [form, setForm]       = useState({ email: '', password: '' });
-  const [show, setShow]       = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -290,44 +263,29 @@ function LoginForm({ onBack, onSuccess, onRegister }: AuthProps & { onRegister: 
 
   return (
     <AuthPanel onBack={onBack}>
-      <div className="mb-8">
-        <span className="dj-section-no block mb-2">Espace établissement</span>
-        <h1 className="dj-serif font-semibold text-2xl" style={{ color: NAVY }}>Connexion</h1>
-      </div>
+      <CardTitle sub="Espace établissement" title="Connexion" text="Heureux de vous revoir ! Connectez-vous à votre école." />
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div>
-          <label className={labelCls} style={{ color: '#8A7F70' }}>Adresse email</label>
-          <div className="relative">
-            <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }} />
+          <label className="au-label">Adresse email</label>
+          <div className="au-field">
+            <Mail size={17} />
             <input required type="email" autoComplete="email" placeholder="contact@ecole.com"
-              value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
-              className={inputCls} style={{ paddingLeft: 40 }} />
+              value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="lp-input" />
           </div>
         </div>
         <div>
-          <label className={labelCls} style={{ color: '#8A7F70' }}>Mot de passe</label>
-          <div className="relative">
-            <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }} />
-            <input required type={show ? 'text' : 'password'} autoComplete="current-password" placeholder="••••••••"
-              value={form.password} onChange={e => setForm({ ...form, password: e.target.value })}
-              className={inputCls} style={{ paddingLeft: 40, paddingRight: 40 }} />
-            <button type="button" onClick={() => setShow(!show)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }}>
-              {show ? <EyeOff size={15} /> : <Eye size={15} />}
-            </button>
-          </div>
+          <label className="au-label">Mot de passe</label>
+          <PasswordField value={form.password} onChange={v => setForm({ ...form, password: v })} placeholder="••••••••" autoComplete="current-password" />
         </div>
-        <button type="submit" disabled={loading} className="w-full dj-btn-navy mt-2">
-          {loading
-            ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Connexion…</>
-            : 'Se connecter'}
+        <button type="submit" disabled={loading} className="lp-btn lp-btn-block mt-2">
+          {loading ? <><Spinner /> Connexion…</> : <>Se connecter <ArrowRight size={18} /></>}
         </button>
       </form>
 
-      <p className="text-center text-sm mt-6 dj-sans" style={{ color: '#8A7F70' }}>
+      <p className="text-center mt-7 mb-0">
         Pas encore de compte ?{' '}
-        <button onClick={onRegister} className="font-semibold" style={{ color: GOLD }}>Créer un compte école</button>
+        <button onClick={onRegister} className="au-link">Créer un compte école</button>
       </p>
     </AuthPanel>
   );
@@ -338,9 +296,6 @@ function RegisterStep1({ onBack, onNext, onLogin, data, setData }: {
   onBack: () => void; onNext: () => void; onLogin: () => void;
   data: any; setData: (d: any) => void;
 }) {
-  const [show, setShow]   = useState(false);
-  const [show2, setShow2] = useState(false);
-
   const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
     if (data.password !== data.confirmPassword) { toast.error('Les mots de passe ne correspondent pas.'); return; }
@@ -351,67 +306,44 @@ function RegisterStep1({ onBack, onNext, onLogin, data, setData }: {
 
   return (
     <AuthPanel onBack={onBack} step={1} totalSteps={2}>
-      <span className="dj-section-no block mb-2">Étape 1 / 2</span>
-      <h1 className="dj-serif font-semibold text-2xl mb-1" style={{ color: NAVY }}>Créer un compte</h1>
-      <p className="text-sm mb-7 dj-sans" style={{ color: '#8A7F70' }}>Vos identifiants de connexion.</p>
+      <CardTitle sub="Étape 1 / 2" title="Créer un compte" text="Vos identifiants de connexion." />
 
-      <form onSubmit={handleNext} className="space-y-4">
+      <form onSubmit={handleNext} className="flex flex-col gap-5">
         <div>
-          <label className={labelCls} style={{ color: '#8A7F70' }}>Email de connexion *</label>
-          <div className="relative">
-            <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }} />
+          <label className="au-label">Email de connexion *</label>
+          <div className="au-field">
+            <Mail size={17} />
             <input required type="email" placeholder="contact@ecole.com" value={data.email}
-              onChange={e => setData({ ...data, email: e.target.value })} className={inputCls} style={{ paddingLeft: 40 }} />
+              onChange={e => setData({ ...data, email: e.target.value })} className="lp-input" />
           </div>
         </div>
         <div>
-          <label className={labelCls} style={{ color: '#8A7F70' }}>Mot de passe *</label>
-          <div className="relative">
-            <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }} />
-            <input required type={show ? 'text' : 'password'} placeholder="Minimum 8 caractères" value={data.password}
-              onChange={e => setData({ ...data, password: e.target.value })} className={inputCls} style={{ paddingLeft: 40, paddingRight: 40 }} />
-            <button type="button" onClick={() => setShow(!show)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }}>
-              {show ? <EyeOff size={15} /> : <Eye size={15} />}
-            </button>
-          </div>
+          <label className="au-label">Mot de passe *</label>
+          <PasswordField value={data.password} onChange={v => setData({ ...data, password: v })} placeholder="Minimum 8 caractères" autoComplete="new-password" />
         </div>
         <div>
-          <label className={labelCls} style={{ color: '#8A7F70' }}>Confirmer le mot de passe *</label>
-          <div className="relative">
-            <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }} />
-            <input required type={show2 ? 'text' : 'password'} placeholder="Répétez le mot de passe" value={data.confirmPassword}
-              onChange={e => setData({ ...data, confirmPassword: e.target.value })} className={inputCls} style={{ paddingLeft: 40, paddingRight: 40 }} />
-            <button type="button" onClick={() => setShow2(!show2)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }}>
-              {show2 ? <EyeOff size={15} /> : <Eye size={15} />}
-            </button>
-          </div>
+          <label className="au-label">Confirmer le mot de passe *</label>
+          <PasswordField value={data.confirmPassword} onChange={v => setData({ ...data, confirmPassword: v })} placeholder="Répétez le mot de passe" autoComplete="new-password" />
         </div>
 
-        <label className="flex items-start gap-3 cursor-pointer group pt-1">
-          <div
-            className="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all"
-            style={{ background: data.terms ? NAVY : '#fff', border: `2px solid ${data.terms ? NAVY : 'var(--bdr)'}` }}
-            onClick={() => setData({ ...data, terms: !data.terms })}>
-            {data.terms && <CheckCircle size={11} style={{ color: CREAM }} />}
-          </div>
-          <span className="text-sm leading-relaxed dj-sans" style={{ color: '#8A7F70' }}>
+        <label className="flex items-start gap-3 cursor-pointer pt-1" onClick={() => setData({ ...data, terms: !data.terms })}>
+          <span className={`au-check mt-0.5 ${data.terms ? 'is-on' : ''}`}>{data.terms && <Check size={14} strokeWidth={3} />}</span>
+          <span className="text-sm">
             J'accepte les{' '}
-            <a href="#" className="font-semibold" style={{ color: GOLD }}>Conditions d'utilisation</a>{' '}
+            <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="au-link" onClick={e => e.stopPropagation()}>Conditions d'utilisation</a>{' '}
             et la{' '}
-            <a href="#" className="font-semibold" style={{ color: GOLD }}>Politique de confidentialité</a>
+            <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="au-link" onClick={e => e.stopPropagation()}>Politique de confidentialité</a>
           </span>
         </label>
 
-        <button type="submit" className="w-full dj-btn-navy">
-          Continuer <ArrowRight size={15} />
+        <button type="submit" className="lp-btn lp-btn-block">
+          Continuer <ArrowRight size={18} />
         </button>
       </form>
 
-      <p className="text-center text-sm mt-6 dj-sans" style={{ color: '#8A7F70' }}>
+      <p className="text-center mt-7 mb-0">
         Déjà un compte ?{' '}
-        <button onClick={onLogin} className="font-semibold" style={{ color: GOLD }}>Se connecter</button>
+        <button onClick={onLogin} className="au-link">Se connecter</button>
       </p>
     </AuthPanel>
   );
@@ -422,6 +354,7 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
   onBack: () => void; onSubmit: (e: React.FormEvent) => void;
   data: any; setData: (d: any) => void; loading: boolean;
 }) {
+  const cfg = useSiteConfig();
   const set = (k: string, v: string) => setData({ ...data, [k]: v });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -437,133 +370,132 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
   };
 
   return (
-    <div className="min-h-screen dj-sans" style={{ background: CREAM }}>
-      <DjStyles />
-
-      {/* Topbar sticky */}
-      <div className="sticky top-0 z-10 px-6 py-3.5 flex items-center gap-4" style={{ background: '#fff', borderBottom: '1px solid var(--bdr)' }}>
-        <button onClick={onBack} className="dj-btn-ghost flex items-center gap-2 border-none pb-0" style={{ color: '#8A7F70' }}>
-          <ArrowLeft size={15} /> Retour
-        </button>
-        <div className="flex-1 flex items-center gap-3">
-          <span className="dj-section-no">Étape 2 / 2</span>
-          <span className="text-sm hidden sm:block" style={{ color: '#B4A995' }}>Informations de l'établissement & responsable</span>
-        </div>
-        <div className="hidden md:flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full" style={{ background: GOLD }} />
-          <div className="w-12 h-[3px]" style={{ background: GOLD }} />
-          <div className="w-2.5 h-2.5 rounded-full" style={{ background: GOLD }} />
+    <div className="lp-root min-h-screen" style={{ ...themeVars(cfg), background: 'var(--lp-bg-light)' }}>
+      {/* Barre du haut */}
+      <div className="lp-header is-scrolled">
+        <div className="lp-container flex items-center gap-4 py-3">
+          <button onClick={onBack} className="au-back au-back-dark"><ArrowLeft size={16} /> Retour</button>
+          <div className="flex-1 flex items-center gap-3 min-w-0">
+            <span className="lp-sub" style={{ fontSize: 14, marginBottom: 0 }}>Étape 2 / 2</span>
+            <span className="text-sm hidden sm:block truncate">Informations de l'établissement & responsable</span>
+          </div>
+          <div className="hidden md:flex items-center gap-2 w-40">
+            <div className="au-progress flex-1" style={{ background: 'var(--lp-accent)' }} />
+            <div className="au-progress" style={{ background: 'var(--lp-accent)', flex: 2 }} />
+          </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-6 py-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+        <div className="mb-8">
+          <span className="lp-sub" style={{ fontSize: 14 }}>Dernière étape</span>
+          <h1 className="lp-title">Parlez-nous de <span>votre école</span></h1>
+          <div className="lp-divider" />
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           {/* ── École ── */}
-          <div style={{ background: '#fff', border: '1px solid var(--bdr)' }}>
-            <div className="flex items-center gap-3 px-6 py-4" style={{ borderBottom: '1px solid var(--bdr)', background: 'rgba(20,33,61,.02)' }}>
-              <div className="w-8 h-8 flex items-center justify-center flex-shrink-0" style={{ background: NAVY }}>
-                <Building2 size={14} style={{ color: CREAM }} />
-              </div>
-              <h2 className="text-sm font-semibold dj-sans" style={{ color: NAVY }}>Informations de l'école</h2>
+          <div className="au-card p-0 overflow-hidden" style={{ padding: 0 }}>
+            <div className="au-section-head">
+              <div className="lp-icon lp-icon-sm" style={{ width: 44, height: 44 }}><Building2 size={20} /></div>
+              <h2 className="text-xl font-bold">Informations de l'école</h2>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 sm:p-7 flex flex-col gap-5">
               <div>
-                <label className={labelCls} style={{ color: '#8A7F70' }}>Nom de l'établissement *</label>
-                <input className={inputCls} value={data.schoolName || ''} onChange={e => set('schoolName', e.target.value)} placeholder="École Excellence 224" />
+                <label className="au-label">Nom de l'établissement *</label>
+                <input className="lp-input" value={data.schoolName || ''} onChange={e => set('schoolName', e.target.value)} placeholder="École Excellence 224" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-2 gap-5">
                 <div>
-                  <label className={labelCls} style={{ color: '#8A7F70' }}>Pays *</label>
-                  <input className={inputCls} value={data.country || ''} onChange={e => set('country', e.target.value)} placeholder="Guinée" />
+                  <label className="au-label">Pays *</label>
+                  <input className="lp-input" value={data.country || ''} onChange={e => set('country', e.target.value)} placeholder="Guinée" />
                 </div>
                 <div>
-                  <label className={labelCls} style={{ color: '#8A7F70' }}>Ville *</label>
-                  <input className={inputCls} value={data.city || ''} onChange={e => set('city', e.target.value)} placeholder="Conakry" />
+                  <label className="au-label">Ville *</label>
+                  <input className="lp-input" value={data.city || ''} onChange={e => set('city', e.target.value)} placeholder="Conakry" />
                 </div>
                 <div>
-                  <label className={labelCls} style={{ color: '#8A7F70' }}>Préfecture / Commune *</label>
-                  <input className={inputCls} value={data.prefecture || ''} onChange={e => set('prefecture', e.target.value)} placeholder="RATOMA" />
+                  <label className="au-label">Préfecture / Commune *</label>
+                  <input className="lp-input" value={data.prefecture || ''} onChange={e => set('prefecture', e.target.value)} placeholder="RATOMA" />
                 </div>
                 <div>
-                  <label className={labelCls} style={{ color: '#8A7F70' }}>Sous-préfecture <span className="normal-case font-normal" style={{ color: '#B4A995' }}>(optionnel)</span></label>
-                  <input className={inputCls} value={data.sousPrefecture || ''} onChange={e => set('sousPrefecture', e.target.value)} placeholder="YATTAYA" />
-                </div>
-                <div className="col-span-2">
-                  <label className={labelCls} style={{ color: '#8A7F70' }}>Cycles scolaires * <span className="normal-case font-normal" style={{ color: '#B4A995' }}>(un ou plusieurs)</span></label>
-                  <div className="grid grid-cols-2 gap-2 mt-1.5">
-                    {(['Maternelle', 'Primaire', 'Collège', 'Lycée'] as const).map(lvl => {
-                      const checked = (data.levels || []).includes(lvl);
-                      return (
-                        <label key={lvl}
-                          className="flex items-center gap-3 px-4 py-2.5 cursor-pointer select-none transition-all"
-                          style={{ border: `1px solid ${checked ? NAVY : 'var(--bdr)'}`, background: checked ? 'rgba(20,33,61,.04)' : 'transparent', color: checked ? NAVY : '#6B6258' }}
-                          onClick={() => {
-                            const cur = data.levels || [];
-                            setData({ ...data, levels: checked ? cur.filter((l: string) => l !== lvl) : [...cur, lvl] });
-                          }}>
-                          <div className="w-4 h-4 flex items-center justify-center flex-shrink-0 transition-all" style={{ background: checked ? NAVY : '#fff', border: `2px solid ${checked ? NAVY : 'var(--bdr)'}` }}>
-                            {checked && <CheckCircle size={10} style={{ color: CREAM }} />}
-                          </div>
-                          <span className="text-sm font-medium dj-sans">{lvl}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
+                  <label className="au-label">Sous-préfecture <small>(optionnel)</small></label>
+                  <input className="lp-input" value={data.sousPrefecture || ''} onChange={e => set('sousPrefecture', e.target.value)} placeholder="YATTAYA" />
                 </div>
               </div>
-              <FileUpload label="Logo de l'école" value={data.logoUrl || ''} onChange={v => setData({ ...data, logoUrl: v })} accept="image/*" hint="PNG, JPG, SVG — max 5 Mo" />
-              <DocumentUpload label="Document RCCM" value={data.rccmUrl || ''} onChange={v => setData({ ...data, rccmUrl: v })} hint="PDF ou image — max 10 Mo" optional />
+              <div>
+                <label className="au-label">Cycles scolaires * <small>(un ou plusieurs)</small></label>
+                <div className="grid grid-cols-2 gap-3">
+                  {(['Maternelle', 'Primaire', 'Collège', 'Lycée'] as const).map(lvl => {
+                    const checked = (data.levels || []).includes(lvl);
+                    return (
+                      <div key={lvl} role="checkbox" aria-checked={checked} tabIndex={0}
+                        className={`au-option ${checked ? 'is-on' : ''}`}
+                        onClick={() => {
+                          const cur = data.levels || [];
+                          setData({ ...data, levels: checked ? cur.filter((l: string) => l !== lvl) : [...cur, lvl] });
+                        }}>
+                        <span className={`au-check ${checked ? 'is-on' : ''}`}>{checked && <Check size={14} strokeWidth={3} />}</span>
+                        {lvl}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <FileUpload label="Logo de l'école" value={data.logoUrl || ''} onChange={v => setData({ ...data, logoUrl: v })}
+                accept="image/png,image/jpeg,image/svg+xml,image/webp" types={['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp']}
+                maxBytes={LOGO_MAX_BYTES} hint="PNG, JPG, SVG — 500 Ko maximum" />
+              <FileUpload label="Document RCCM" optional value={data.rccmFile?.dataUrl || ''}
+                onChange={(v, name) => setData({ ...data, rccmFile: v ? { dataUrl: v, name } : null })}
+                accept="application/pdf,image/jpeg,image/png" types={['application/pdf', 'image/jpeg', 'image/png']}
+                maxBytes={RCCM_MAX_BYTES} hint="PDF, JPG ou PNG — 2,5 Mo maximum · conservé de façon confidentielle" />
             </div>
           </div>
 
           {/* ── Responsable ── */}
-          <div style={{ background: '#fff', border: '1px solid var(--bdr)' }}>
-            <div className="flex items-center gap-3 px-6 py-4" style={{ borderBottom: '1px solid var(--bdr)', background: 'rgba(20,33,61,.02)' }}>
-              <div className="w-8 h-8 flex items-center justify-center flex-shrink-0" style={{ background: GOLD }}>
-                <User size={14} style={{ color: NAVY }} />
-              </div>
-              <h2 className="text-sm font-semibold dj-sans" style={{ color: NAVY }}>Informations du responsable</h2>
+          <div className="au-card overflow-hidden" style={{ padding: 0 }}>
+            <div className="au-section-head">
+              <div className="lp-icon lp-icon-sm" style={{ width: 44, height: 44, background: 'var(--lp-accent)', color: '#fff' }}><User size={20} /></div>
+              <h2 className="text-xl font-bold">Informations du responsable</h2>
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={labelCls} style={{ color: '#8A7F70' }}>Nom complet *</label>
-                  <div className="relative">
-                    <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }} />
-                    <input className={inputCls} style={{ paddingLeft: 40 }} value={data.directorName || ''} onChange={e => set('directorName', e.target.value)} placeholder="M. Diallo Mamadou" />
-                  </div>
+            <div className="p-6 sm:p-7 grid sm:grid-cols-2 gap-5">
+              <div>
+                <label className="au-label">Nom complet *</label>
+                <div className="au-field">
+                  <User size={17} />
+                  <input className="lp-input" value={data.directorName || ''} onChange={e => set('directorName', e.target.value)} placeholder="M. Diallo Mamadou" />
                 </div>
-                <div>
-                  <label className={labelCls} style={{ color: '#8A7F70' }}>Titre / Fonction *</label>
-                  <select className={inputCls} value={data.directorTitle || ''} onChange={e => set('directorTitle', e.target.value)}>
-                    <option value="">Sélectionner…</option>
-                    {['Directeur général', 'Directrice générale', 'Proviseur', 'Proviseure', 'Gérant', 'Administrateur'].map(t => <option key={t}>{t}</option>)}
-                  </select>
+              </div>
+              <div>
+                <label className="au-label">Titre / Fonction *</label>
+                <select className="lp-input" value={data.directorTitle || ''} onChange={e => set('directorTitle', e.target.value)}>
+                  <option value="">Sélectionner…</option>
+                  {['Directeur général', 'Directrice générale', 'Proviseur', 'Proviseure', 'Gérant', 'Administrateur'].map(t => <option key={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="au-label">Téléphone *</label>
+                <div className="au-field">
+                  <Phone size={17} />
+                  <input type="tel" className="lp-input" value={data.directorPhone || ''} onChange={e => set('directorPhone', e.target.value)} placeholder="+224 620 00 00 00" />
                 </div>
-                <div>
-                  <label className={labelCls} style={{ color: '#8A7F70' }}>Téléphone *</label>
-                  <div className="relative">
-                    <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }} />
-                    <input type="tel" className={inputCls} style={{ paddingLeft: 40 }} value={data.directorPhone || ''} onChange={e => set('directorPhone', e.target.value)} placeholder="+224 620 00 00 00" />
-                  </div>
-                </div>
-                <div>
-                  <label className={labelCls} style={{ color: '#8A7F70' }}>Email du responsable</label>
-                  <div className="relative">
-                    <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#B4A995' }} />
-                    <input type="email" className={inputCls} style={{ paddingLeft: 40 }} value={data.directorEmail || ''} onChange={e => set('directorEmail', e.target.value)} placeholder={data.email || 'email@ecole.com'} />
-                  </div>
+              </div>
+              <div>
+                <label className="au-label">Email du responsable</label>
+                <div className="au-field">
+                  <Mail size={17} />
+                  <input type="email" className="lp-input" value={data.directorEmail || ''} onChange={e => set('directorEmail', e.target.value)} placeholder={data.email || 'email@ecole.com'} />
                 </div>
               </div>
             </div>
           </div>
 
-          <button type="submit" disabled={loading} className="w-full dj-btn-navy" style={{ padding: '18px 32px' }}>
+          <button type="submit" disabled={loading} className="lp-btn lp-btn-block" style={{ padding: '17px 30px' }}>
             {loading
-              ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Envoi en cours…</>
-              : <><CheckCircle size={17} /> Soumettre ma demande d'inscription</>}
+              ? <><Spinner /> Envoi en cours…</>
+              : <><Send size={18} /> Soumettre ma demande d'inscription</>}
           </button>
-          <p className="text-center text-xs dj-sans" style={{ color: '#B4A995' }}>Votre demande sera examinée sous 24–48h.</p>
+          <p className="text-center text-sm m-0">Votre demande sera examinée sous 24–48 h.</p>
         </form>
       </div>
     </div>
@@ -572,26 +504,29 @@ function RegisterStep2({ onBack, onSubmit, data, setData, loading }: {
 
 // ─── Success ──────────────────────────────────────────────────
 function RegisterSuccess({ schoolName, onBack }: { schoolName: string; onBack: () => void }) {
+  const cfg = useSiteConfig();
   return (
-    <div className="min-h-screen flex items-center justify-center p-8 dj-sans" style={{ background: CREAM }}>
-      <DjStyles />
-      <div className="max-w-sm w-full text-center">
-        <div className="w-16 h-16 flex items-center justify-center mx-auto mb-6" style={{ background: 'rgba(201,153,47,.12)', border: `1px solid rgba(201,153,47,.3)` }}>
-          <CheckCircle size={30} style={{ color: GOLD }} />
-        </div>
-        <h1 className="dj-serif font-semibold text-2xl mb-3" style={{ color: NAVY }}>Demande envoyée !</h1>
-        <p className="text-sm leading-relaxed mb-2" style={{ color: '#6B6258' }}>
-          Votre dossier pour <span className="font-semibold" style={{ color: NAVY }}>"{schoolName}"</span> a été reçu.
+    <div className="lp-root min-h-screen flex items-center justify-center p-5" style={{ ...themeVars(cfg), background: 'var(--lp-bg-light)' }}>
+      <div className="au-card max-w-md w-full text-center">
+        <div className="lp-icon mx-auto mb-6" style={{ width: 80, height: 80 }}><CheckCircle size={38} /></div>
+        <h1 className="text-3xl font-bold mb-3">Demande envoyée !</h1>
+        <p className="mb-2">
+          Votre dossier pour <span className="font-bold" style={{ color: 'var(--lp-dark)' }}>« {schoolName} »</span> a été reçu.
         </p>
-        <p className="text-sm mb-8" style={{ color: '#8A7F70' }}>
-          Notre équipe vous contactera par email sous <strong>24–48h</strong> pour l'activation.
+        <p className="mb-8">
+          Notre équipe vous contactera par email sous <strong style={{ color: 'var(--lp-dark)' }}>24–48 h</strong> pour l'activation.
         </p>
-        <button onClick={onBack} className="dj-btn-navy" style={{ padding: '14px 32px' }}>
-          Retour à l'accueil
-        </button>
+        <button onClick={onBack} className="lp-btn">Retour à l'accueil</button>
       </div>
     </div>
   );
+}
+
+// data URL → { name, type, data } attendu par le backend (base64 sans préfixe)
+function toDocumentPayload(file: { dataUrl: string; name: string } | null) {
+  if (!file) return undefined;
+  const m = file.dataUrl.match(/^data:([^;]+);base64,(.*)$/);
+  return m ? { name: file.name, type: m[1], data: m[2] } : undefined;
 }
 
 // ─── Main Auth component ──────────────────────────────────────
@@ -603,7 +538,8 @@ export const Auth: React.FC<AuthProps> = ({ onBack, onSuccess }) => {
   const [regData, setRegData] = useState({
     email: '', password: '', confirmPassword: '', terms: false,
     schoolName: '', country: '', city: '', prefecture: '', sousPrefecture: '',
-    district: '', levels: [] as string[], logoUrl: '', rccm: '', rccmUrl: '',
+    district: '', levels: [] as string[], logoUrl: '', rccm: '',
+    rccmFile: null as { dataUrl: string; name: string } | null,
     directorName: '', directorTitle: '', directorPhone: '', directorEmail: '',
   });
 
@@ -621,7 +557,7 @@ export const Auth: React.FC<AuthProps> = ({ onBack, onSuccess }) => {
         sousPrefecture: regData.sousPrefecture,
         directorName:   regData.directorName,
         rccm:           regData.rccm,
-        rccmUrl:        regData.rccmUrl,
+        rccmFile:       toDocumentPayload(regData.rccmFile),
         logoUrl:        regData.logoUrl,
       });
       if (res.data?.step === 'otp') {

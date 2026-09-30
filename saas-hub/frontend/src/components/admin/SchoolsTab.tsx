@@ -6,8 +6,10 @@
  * Consommé par : App.tsx (route /admin/etablissements)
  */
 
-import { useState } from 'react';
-import { Plus, Search, Eye, Edit2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Search, Eye, Edit2, RotateCcw } from 'lucide-react';
+import { toast } from 'sonner';
+import { API_ADMIN } from '../../constants/api';
 import { useAdminContext }          from '../../context/AdminContext';
 import type { SubView, School }     from '../../types/admin';
 import { daysLeft }                 from '../../lib/utils';
@@ -23,6 +25,27 @@ export function SchoolsTab() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
 
+  // Écoles archivées (suppression douce côté backend) — chargées à la demande.
+  const [archived, setArchived]   = useState<School[] | null>(null);
+  const [restoring, setRestoring] = useState('');
+  const loadArchived = () =>
+    fetch(`${API_ADMIN}/schools/archived`).then(r => r.ok ? r.json() : []).then(setArchived).catch(() => setArchived([]));
+  // Rechargée à chaque ouverture du filtre : une école peut avoir été archivée entre-temps.
+  useEffect(() => { if (filter === 'archived') loadArchived(); }, [filter]);
+
+  const restore = async (s: School) => {
+    setRestoring(s.id);
+    try {
+      const r = await fetch(`${API_ADMIN}/schools/${s.id}/restore`, { method: 'PUT' });
+      if (!r.ok) throw new Error();
+      toast.success(`« ${s.schoolName} » restaurée`);
+      setArchived(a => (a ?? []).filter(x => x.id !== s.id));
+      fetchSchools();
+    } catch { toast.error('Restauration impossible'); }
+    finally { setRestoring(''); }
+  };
+
+
   if (sub.kind === 'form') return (
     <SchoolFormPage school={sub.school} onBack={() => setSub({ kind: 'list' })} onSave={fetchSchools} />
   );
@@ -36,9 +59,10 @@ export function SchoolsTab() {
   );
 
   const approved = schools.filter(s => s.approvalStatus === 'approved');
-  const filtered = approved.filter(s => {
+  const source   = filter === 'archived' ? (archived ?? []) : approved;
+  const filtered = source.filter(s => {
     const matchSearch = s.schoolName.toLowerCase().includes(search.toLowerCase()) || s.email.toLowerCase().includes(search.toLowerCase());
-    return matchSearch && (filter === 'all' || s.subscriptionStatus === filter);
+    return matchSearch && (filter === 'all' || filter === 'archived' || s.subscriptionStatus === filter);
   });
 
   return (
@@ -66,10 +90,10 @@ export function SchoolsTab() {
           />
         </div>
         <div className="flex items-center gap-0.5 bg-white border border-slate-200 rounded-lg p-1">
-          {(['all','active','trial','expired','suspended'] as const).map(s => (
+          {(['all','active','trial','expired','suspended','archived'] as const).map(s => (
             <button key={s} onClick={() => setFilter(s)}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filter === s ? 'bg-primary-600 text-white' : 'text-slate-500 hover:text-slate-900'}`}>
-              {s === 'all' ? 'Tous' : SUB_LABEL[s]}
+              {s === 'all' ? 'Tous' : s === 'archived' ? 'Archivées' : SUB_LABEL[s]}
             </button>
           ))}
         </div>
@@ -81,14 +105,16 @@ export function SchoolsTab() {
           <table className="w-full min-w-[600px]">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/70">
-                {['École','Localisation','Statut','Expiration','Actions'].map(h => (
+                {['École','Localisation','Statut', filter === 'archived' ? 'Archivée le' : 'Expiration','Actions'].map(h => (
                   <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {filtered.length === 0 && (
-                <tr><td colSpan={5} className="px-5 py-12 text-center text-sm text-slate-400">Aucun résultat</td></tr>
+                <tr><td colSpan={5} className="px-5 py-12 text-center text-sm text-slate-400">
+                  {filter === 'archived' && archived === null ? 'Chargement…' : filter === 'archived' ? 'Aucune école archivée' : 'Aucun résultat'}
+                </td></tr>
               )}
               {filtered.map((s: School) => {
                 const dl = daysLeft(s.subscriptionExpiry);
@@ -109,15 +135,25 @@ export function SchoolsTab() {
                     <td className="px-5 py-3 text-xs text-slate-500">{[s.city, s.country].filter(Boolean).join(', ') || '—'}</td>
                     <td className="px-5 py-3"><Badge label={SUB_LABEL[s.subscriptionStatus] ?? s.subscriptionStatus} cls={SUB_CLS[s.subscriptionStatus] ?? SUB_CLS.suspended} /></td>
                     <td className="px-5 py-3">
-                      <span className={`text-xs font-medium ${dl !== null && dl <= 7 && dl >= 0 ? 'text-amber-600' : 'text-slate-500'}`}>
-                        {dl === null ? '—' : dl < 0 ? 'Expiré' : `J-${dl}`}
-                      </span>
+                      {filter === 'archived' ? (
+                        <span className="text-xs font-medium text-slate-500">{s.deletedAt ? new Date(s.deletedAt).toLocaleDateString('fr-FR') : '—'}</span>
+                      ) : (
+                        <span className={`text-xs font-medium ${dl !== null && dl <= 7 && dl >= 0 ? 'text-amber-600' : 'text-slate-500'}`}>
+                          {dl === null ? '—' : dl < 0 ? 'Expiré' : `J-${dl}`}
+                        </span>
+                      )}
                     </td>
                     <td className="px-5 py-3">
+                      {filter === 'archived' ? (
+                        <Button variant="outline" size="sm" leftIcon={<RotateCcw size={13} />} loading={restoring === s.id} disabled={!!restoring} onClick={() => restore(s)}>
+                          Restaurer
+                        </Button>
+                      ) : (
                       <div className="flex items-center gap-1">
                         <button onClick={() => setSub({ kind: 'detail', school: s })} className="p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all" title="Voir détails"><Eye size={14} /></button>
                         <button onClick={() => setSub({ kind: 'form', school: s })}   className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all" title="Modifier"><Edit2 size={14} /></button>
                       </div>
+                      )}
                     </td>
                   </tr>
                 );

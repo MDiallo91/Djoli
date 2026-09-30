@@ -8,7 +8,7 @@ function useLegal() {
   const [legal, setLegal] = useState(DEFAULT_LEGAL);
   useEffect(() => {
     const load = () => {
-      try { const s = localStorage.getItem('hub_legal'); if (s) setLegal({ ...DEFAULT_LEGAL, ...JSON.parse(s) }); } catch {}
+      try { const s = localStorage.getItem('hub_legal'); if (s) setLegal({ ...DEFAULT_LEGAL, ...JSON.parse(s) }); } catch { /* localStorage indisponible ou JSON invalide */ }
     };
     load();
     window.addEventListener('site-config-updated', load);
@@ -24,7 +24,7 @@ function useSiteCfg() {
   });
   useEffect(() => {
     const load = () => {
-      try { const s = localStorage.getItem('hub_site_config'); if (s) setCfg(p => ({ ...p, ...JSON.parse(s) })); } catch {}
+      try { const s = localStorage.getItem('hub_site_config'); if (s) setCfg(p => ({ ...p, ...JSON.parse(s) })); } catch { /* localStorage indisponible ou JSON invalide */ }
     };
     window.addEventListener('site-config-updated', load);
     return () => window.removeEventListener('site-config-updated', load);

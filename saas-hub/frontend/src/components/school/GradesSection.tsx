@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Plus, Printer, TrendingUp, Award, FileText, GraduationCap, Save } from 'lucide-react';
+import { Search, Plus, TrendingUp, Award, FileText, GraduationCap, Save, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import * as api from '../../services/schoolApi';
+import { Card, Tabs, Select, Input, Button, IconButton, Modal, EmptyState } from '../../ui/design_system';
 
 const TERMS = ['1er Trimestre', '2ème Trimestre', '3ème Trimestre'];
 const EXAM_TYPES = ['Devoir', 'Composition', 'Moyenne'];
@@ -156,7 +157,7 @@ export default function GradesSection() {
           { label: 'Notes saisies', icon: FileText, iconBg: 'linear-gradient(135deg,#7c3aed,#a78bfa)', shadow: 'rgba(124,58,237,0.3)',
             value: String(activeStudent ? grades.length : students.length > 0 ? '—' : '0'), sub: 'Entrées au total' },
         ].map((s, i) => (
-          <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+          <Card key={i} hover className="flex items-center gap-4">
             <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white flex-shrink-0"
               style={{ background: s.iconBg, boxShadow: `0 4px 12px ${s.shadow}` }}>
               <s.icon size={19} />
@@ -167,44 +168,42 @@ export default function GradesSection() {
                 style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{s.value}</p>
               <p className="text-[10px] text-gray-400 font-medium mt-0.5">{s.sub}</p>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
       {/* ─── Mode toggle + Year + filtres ─── */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-3 lg:p-4 shadow-sm space-y-3">
+      <Card padding="sm" className="lg:p-4 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex bg-gray-100 p-1 rounded-xl w-full sm:w-auto">
-            {(['individual', 'class'] as const).map(m => (
-              <button key={m} onClick={() => { setViewMode(m); setMobileView('list'); }}
-                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg font-bold text-sm transition-all ${viewMode === m ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-                {m === 'individual' ? 'Individuelle' : 'Par Classe'}
-              </button>
-            ))}
-          </div>
-          <select value={selectedYear} onChange={e => { setSelectedYear(e.target.value); setActiveStudent(null); reloadStudents(e.target.value); }}
-            className="w-full sm:w-auto p-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none">
-            {years.map(y => <option key={y.id} value={y.id}>{y.name}{y.is_active ? ' ✓' : ''}</option>)}
-          </select>
+          <Tabs
+            options={[{ value: 'individual', label: 'Individuelle' }, { value: 'class', label: 'Par Classe' }]}
+            value={viewMode}
+            onChange={m => { setViewMode(m); setMobileView('list'); }}
+            activeClassName="bg-white text-blue-600 shadow-sm"
+          />
+          <Select
+            value={selectedYear}
+            onChange={e => { setSelectedYear(e.target.value); setActiveStudent(null); reloadStudents(e.target.value); }}
+            options={years.map(y => ({ value: y.id, label: `${y.name}${y.is_active ? ' ✓' : ''}` }))}
+          />
         </div>
         {viewMode === 'class' && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <select value={selectedClassId} onChange={e => setSelectedClassId(e.target.value)}
-              className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none">
-              <option value="">— Classe</option>
-              {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-            <select value={selectedSubject} onChange={e => setSelectedSubject(e.target.value)}
-              className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none">
-              {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-            <select value={selectedTerm} onChange={e => setSelectedTerm(e.target.value)}
-              className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none">
-              {TERMS.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
+            <Select
+              value={selectedClassId} onChange={e => setSelectedClassId(e.target.value)}
+              options={[{ value: '', label: '— Classe' }, ...classes.map(c => ({ value: c.id, label: c.name }))]}
+            />
+            <Select
+              value={selectedSubject} onChange={e => setSelectedSubject(e.target.value)}
+              options={subjects.map(s => ({ value: s.id, label: s.name }))}
+            />
+            <Select
+              value={selectedTerm} onChange={e => setSelectedTerm(e.target.value)}
+              options={TERMS.map(t => ({ value: t, label: t }))}
+            />
           </div>
         )}
-      </div>
+      </Card>
 
       {/* ─── Panel split ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
@@ -212,12 +211,8 @@ export default function GradesSection() {
         <div className={`lg:col-span-4 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col ${mobileView === 'detail' ? 'hidden lg:flex' : 'flex'}`}
           style={{ height: typeof window !== 'undefined' && window.innerWidth >= 1024 ? 600 : undefined, minHeight: 300 }}>
           <div className="p-4 border-b border-gray-200 bg-gray-50">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-              <input type="text" placeholder="Chercher un élève…" value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none" />
-            </div>
+            <Input type="text" placeholder="Chercher un élève…" value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)} leftIcon={<Search size={16} />} />
           </div>
           <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
             {loading ? (
@@ -250,29 +245,23 @@ export default function GradesSection() {
               <>
                 <div className="p-4 lg:p-6 border-b border-gray-200 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <button onClick={() => setMobileView('list')} className="lg:hidden p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all flex-shrink-0">
-                      ←
-                    </button>
+                    <IconButton
+                      icon={<ArrowLeft size={18} />} label="Retour à la liste" size="lg"
+                      onClick={() => setMobileView('list')} className="lg:hidden flex-shrink-0"
+                    />
                     <div className="min-w-0">
                       <h3 className="font-bold text-gray-900 text-base lg:text-lg leading-tight">Relevé de Notes</h3>
                       <p className="text-gray-500 text-sm truncate">{activeStudent.first_name} {activeStudent.last_name}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <div className="flex bg-gray-100 rounded-xl p-0.5 gap-0.5">
-                      {(['1er Trim.', '2ème Trim.', '3ème Trim.'] as const).map((label, i) => {
-                        const term = TERMS[i];
-                        return (
-                          <button key={term} onClick={() => setSelectedTerm(term)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedTerm === term ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <button onClick={() => setIsModalOpen(true)} className="btn-primary flex items-center gap-2">
-                      <Plus size={18} /> Ajouter
-                    </button>
+                    <Tabs
+                      size="sm"
+                      options={TERMS.map((term, i) => ({ value: term, label: ['1er Trim.', '2ème Trim.', '3ème Trim.'][i] }))}
+                      value={selectedTerm}
+                      onChange={setSelectedTerm}
+                    />
+                    <Button variant="primary" leftIcon={<Plus size={18} />} onClick={() => setIsModalOpen(true)}>Ajouter</Button>
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto">
@@ -311,14 +300,12 @@ export default function GradesSection() {
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-12 bg-gray-50/30">
-                <div className="w-20 h-20 bg-white rounded-full shadow-sm flex items-center justify-center mb-6">
-                  <GraduationCap className="text-gray-200" size={40} />
-                </div>
-                <h3 className="text-lg font-bold text-gray-400">Sélectionnez un élève</h3>
-                <p className="text-gray-400 text-sm max-w-xs mx-auto mt-2">
-                  Choisissez un élève dans la liste à gauche pour consulter ses notes ou en ajouter de nouvelles.
-                </p>
+              <div className="flex-1 flex items-center justify-center bg-gray-50/30">
+                <EmptyState
+                  icon={<GraduationCap size={28} />}
+                  message="Sélectionnez un élève"
+                  hint="Choisissez un élève dans la liste à gauche pour consulter ses notes ou en ajouter de nouvelles."
+                />
               </div>
             )
           ) : (
@@ -369,10 +356,14 @@ export default function GradesSection() {
                 </table>
               </div>
               <div className="px-5 py-3 border-t border-gray-100 bg-white flex items-center justify-end">
-                <button onClick={handleSaveBulk} disabled={!selectedClassId || classGrades.length === 0 || saving}
-                  className="btn-primary flex items-center gap-2 disabled:opacity-40">
-                  <Save size={15} /> {saving ? 'Enregistrement…' : 'Enregistrer les notes'}
-                </button>
+                <Button
+                  variant="primary" leftIcon={<Save size={15} />}
+                  disabled={!selectedClassId || classGrades.length === 0 || saving}
+                  loading={saving}
+                  onClick={handleSaveBulk}
+                >
+                  Enregistrer les notes
+                </Button>
               </div>
             </div>
           )}
@@ -380,54 +371,33 @@ export default function GradesSection() {
       </div>
 
       {/* ─── Modal nouvelle note ─── */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <h2 className="text-xl font-bold text-gray-900">Nouvelle Note</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 font-bold text-2xl leading-none">×</button>
-            </div>
-            <form onSubmit={handleSaveGrade} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Matière</label>
-                <select value={newGrade.subject_id} onChange={e => setNewGrade({ ...newGrade, subject_id: e.target.value })}
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none text-sm">
-                  {subjects.map(s => <option key={s.id} value={s.id}>{s.name} (coeff {s.coefficient})</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Note (sur 20)</label>
-                <input type="number" step="0.25" min="0" max="20" required
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none text-sm"
-                  value={newGrade.score} onChange={e => setNewGrade({ ...newGrade, score: e.target.value })} />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Trimestre</label>
-                <select value={newGrade.term} onChange={e => setNewGrade({ ...newGrade, term: e.target.value })}
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none text-sm">
-                  {TERMS.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Type d'examen</label>
-                <select value={newGrade.exam_type} onChange={e => setNewGrade({ ...newGrade, exam_type: e.target.value })}
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none text-sm">
-                  {EXAM_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-              <div className="pt-4 flex gap-3">
-                <button type="button" onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm transition-all">
-                  Annuler
-                </button>
-                <button type="submit" className="flex-1 btn-primary py-3 shadow-lg shadow-blue-500/30">
-                  Enregistrer
-                </button>
-              </div>
-            </form>
+      <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} title="Nouvelle Note" size="sm">
+        <form onSubmit={handleSaveGrade} className="space-y-4">
+          <Select
+            label="Matière"
+            value={newGrade.subject_id} onChange={e => setNewGrade({ ...newGrade, subject_id: e.target.value })}
+            options={subjects.map(s => ({ value: s.id, label: `${s.name} (coeff ${s.coefficient})` }))}
+          />
+          <Input
+            label="Note (sur 20)" type="number" step="0.25" min="0" max="20" required
+            value={newGrade.score} onChange={e => setNewGrade({ ...newGrade, score: e.target.value })}
+          />
+          <Select
+            label="Trimestre"
+            value={newGrade.term} onChange={e => setNewGrade({ ...newGrade, term: e.target.value })}
+            options={TERMS.map(t => ({ value: t, label: t }))}
+          />
+          <Select
+            label="Type d'examen"
+            value={newGrade.exam_type} onChange={e => setNewGrade({ ...newGrade, exam_type: e.target.value })}
+            options={EXAM_TYPES.map(t => ({ value: t, label: t }))}
+          />
+          <div className="pt-4 flex gap-3">
+            <Button type="button" variant="outline" fullWidth onClick={() => setIsModalOpen(false)}>Annuler</Button>
+            <Button type="submit" variant="primary" fullWidth>Enregistrer</Button>
           </div>
-        </div>
-      )}
+        </form>
+      </Modal>
     </div>
   );
 }

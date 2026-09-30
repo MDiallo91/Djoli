@@ -26,7 +26,10 @@ interface ButtonProps {
 }
 
 const VARIANT_CLS: Record<ButtonVariant, string> = {
-  primary: 'bg-primary-600 text-white border-primary-600 hover:bg-primary-700 hover:border-primary-700',
+  primary:
+    'text-white border-transparent shadow-[0_2px_8px_rgba(37,99,235,0.3)] ' +
+    'hover:shadow-[0_4px_16px_rgba(37,99,235,0.4)] hover:-translate-y-px active:translate-y-0 ' +
+    'bg-linear-to-br from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800',
   ghost:   'bg-transparent text-slate-600 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
   danger:  'bg-red-50 text-red-600 border-red-200 hover:bg-red-600 hover:text-white hover:border-red-600',
   outline: 'bg-white text-slate-700 border-slate-200 hover:border-slate-400 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700',

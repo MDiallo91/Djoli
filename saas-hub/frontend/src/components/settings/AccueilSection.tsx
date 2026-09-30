@@ -10,12 +10,16 @@
 import { useState, useEffect } from 'react';
 import { Upload, X, CheckCircle, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { fetchSetting, saveSetting } from '../../services/settingsApi';
+import { fetchSetting, saveSetting, uploadMedia } from '../../services/settingsApi';
 import { useAdminContext }           from '../../context/AdminContext';
 import { StatutToggle }              from '../../ui/component/StatutToggle';
 import { Spinner }                   from '../../ui/design_system/Spinner';
+import { MODULES }                   from '../landing/landingData';
 
-const DEFAULT = { heroBgUrl: '', featureImages: ['','',''] as string[], clientSchoolIds: [] as string[] };
+// Un emplacement d'image par carte « module » de la page d'accueil — même liste,
+// même ordre (landingData.MODULES) : ajouter une carte là-bas ajoute son image ici.
+const EMPTY_IMAGES = () => MODULES.map(() => '');
+const DEFAULT = { heroBgUrl: '', featureImages: EMPTY_IMAGES(), clientSchoolIds: [] as string[] };
 type AccueilData = typeof DEFAULT;
 
 const inputCls = 'w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all bg-white placeholder:text-slate-400';
@@ -26,6 +30,16 @@ export function AccueilSection() {
   const [data,    setData]    = useState<AccueilData>(DEFAULT);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
+  const [uploading, setUploading] = useState<string | null>(null); // 'hero' | 'f0' | 'f1'…
+
+  // Image → stockée en base via /api/media ; on ne garde que son URL dans les paramètres.
+  const upload = async (slot: string, file: File | undefined, apply: (url: string) => void) => {
+    if (!file) return;
+    setUploading(slot);
+    try { apply(await uploadMedia(file)); }
+    catch (e: any) { toast.error(e.response?.data?.message || e.message || "Échec de l'upload"); }
+    finally { setUploading(null); }
+  };
 
   useEffect(() => {
     fetchSetting<AccueilData>('accueil').then(res => {
@@ -40,7 +54,7 @@ export function AccueilSection() {
   const set = <K extends keyof AccueilData>(k: K, v: AccueilData[K]) => setData(p => ({ ...p, [k]: v }));
 
   const setFeatureImg = (idx: number, val: string) => {
-    const next = [...(data.featureImages ?? ['','',''])];
+    const next = MODULES.map((_, i) => data.featureImages?.[i] ?? '');
     next[idx] = val;
     set('featureImages', next);
   };
@@ -67,7 +81,7 @@ export function AccueilSection() {
   );
 
   const approvedSchools = schools.filter(s => s.approvalStatus === 'approved');
-  const imgs = Array.isArray(data.featureImages) ? data.featureImages : ['','',''];
+  const imgs = MODULES.map((_, i) => (Array.isArray(data.featureImages) ? data.featureImages[i] : '') || '');
 
   return (
     <div className="space-y-4">
@@ -77,15 +91,16 @@ export function AccueilSection() {
         {/* Hero */}
         <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
           <p className="text-xs text-black">Image de fond (Hero)</p>
+          <p className="text-[11px] text-slate-500 -mt-2">PNG, JPG, WEBP ou GIF — 3 Mo maximum. Pensez à sauvegarder après l'upload.</p>
           <div className="flex items-center gap-2">
-            <input type="url" placeholder="URL de l'image…" value={data.heroBgUrl || ''}
+            <input type="text" placeholder="URL de l'image…" value={data.heroBgUrl || ''}
               onChange={e => set('heroBgUrl', e.target.value)}
               className={inputCls + ' text-xs'} />
             <label title="Uploader" className="flex-shrink-0 cursor-pointer w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-500 hover:bg-primary-50 hover:border-primary-400 hover:text-primary-600 transition-all">
-              <Upload size={15} />
-              <input type="file" accept="image/*" className="hidden" onChange={e => {
-                const f = e.target.files?.[0]; if (!f) return;
-                const r = new FileReader(); r.onloadend = () => set('heroBgUrl', r.result as string); r.readAsDataURL(f);
+              {uploading === 'hero' ? <Spinner size="sm" /> : <Upload size={15} />}
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" disabled={!!uploading} onChange={e => {
+                const f = e.target.files?.[0]; e.target.value = '';
+                upload('hero', f, url => set('heroBgUrl', url));
               }} />
             </label>
             {data.heroBgUrl && (
@@ -107,20 +122,21 @@ export function AccueilSection() {
         </div>
 
         {/* Fonctionnalités */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-          <p className="text-xs text-black">Aperçus des fonctionnalités</p>
-          {(['Inscriptions & Élèves','Finance & Caisse','Notes & Bulletins'] as const).map((label, i) => (
-            <div key={i} className="space-y-1.5">
-              <label className="block text-xs text-black">{label}</label>
+        <div className="col-span-2 bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+          <p className="text-xs text-black">Images des cartes « Fonctionnalités » ({MODULES.length})</p>
+          <div className="grid grid-cols-3 gap-5">
+          {MODULES.map(({ title }, i) => (
+            <div key={title} className="space-y-1.5">
+              <label className="block text-xs text-black">{title}</label>
               <div className="flex items-center gap-2">
-                <input type="url" placeholder="Lien image…" value={imgs[i] && !imgs[i].startsWith('data:') ? imgs[i] : ''}
+                <input type="text" placeholder="Lien image…" value={imgs[i] && !imgs[i].startsWith('data:') ? imgs[i] : ''}
                   onChange={e => setFeatureImg(i, e.target.value)}
                   className={inputCls + ' text-xs'} />
                 <label title="Uploader" className="flex-shrink-0 cursor-pointer w-9 h-9 flex items-center justify-center border border-slate-200 rounded-xl text-slate-500 hover:bg-primary-50 hover:border-primary-400 hover:text-primary-600 transition-all">
-                  <Upload size={15} />
-                  <input type="file" accept="image/*" className="hidden" onChange={e => {
-                    const f = e.target.files?.[0]; if (!f) return;
-                    const r = new FileReader(); r.onloadend = () => setFeatureImg(i, r.result as string); r.readAsDataURL(f);
+                  {uploading === `f${i}` ? <Spinner size="sm" /> : <Upload size={15} />}
+                  <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" disabled={!!uploading} onChange={e => {
+                    const f = e.target.files?.[0]; e.target.value = '';
+                    upload(`f${i}`, f, url => setFeatureImg(i, url));
                   }} />
                 </label>
                 {imgs[i] && (
@@ -138,6 +154,7 @@ export function AccueilSection() {
               )}
             </div>
           ))}
+          </div>
         </div>
 
         {/* Écoles de confiance */}

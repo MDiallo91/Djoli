@@ -35,7 +35,6 @@ export function FileUpload({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isImage   = value.startsWith('data:image') || /\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(value);
-  const isDocument = !isImage && value.length > 0;
 
   const handleFile = async (file: File) => {
     setError('');

@@ -16,7 +16,7 @@ import { fetchSetting, saveSetting }    from '../../services/settingsApi';
 import { StatutToggle }                  from '../../ui/component/StatutToggle';
 import { Spinner }                        from '../../ui/design_system/Spinner';
 import type {
-  PricingConfig, SchoolLevel, DurationPlan, MultiLevelDiscount,
+  PricingConfig, SchoolLevel, DurationPlan,
 } from '../../types/admin';
 import { DEFAULT_PRICING } from '../../types/admin';
 
@@ -73,7 +73,7 @@ export function TarificationSection() {
     fetchSetting<PricingConfig>('tarification').then(res => {
       if (res?.data && 'levelPrices' in res.data) {
         setStatut(res.statut ?? 1);
-        setData(p => ({ ...DEFAULT_PRICING, ...res.data }));
+        setData({ ...DEFAULT_PRICING, ...res.data });
       }
       setLoading(false);
     });

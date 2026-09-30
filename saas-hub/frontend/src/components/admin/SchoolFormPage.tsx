@@ -25,10 +25,10 @@ interface Props {
 const LEVELS = ['Maternelle', 'Primaire', 'Collège', 'Lycée', 'Mixte'];
 
 export function SchoolFormPage({ school, onBack, onSave }: Props) {
-  const [form, setForm] = useState<Record<string, string>>(school ?? {
+  const [form, setForm] = useState<Record<string, string>>((school ?? {
     schoolName: '', email: '', password: '', country: '', city: '',
     level: '', directorName: '', prefecture: '', sousPrefecture: '', rccm: '', logoUrl: '',
-  });
+  }) as unknown as Record<string, string>);
   const [saving, setSaving] = useState(false);
 
   const set = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));

@@ -88,15 +88,15 @@ export function PaymentSection() {
   const [secrets,  setSecrets]  = useState<Record<string, boolean>>({});
   const [testing,  setTesting]  = useState<PaymentProviderType | null>(null);
 
+  const mergeProviders = (saved: PaymentProvider[]): PaymentProvider[] =>
+    DEFAULT_PROVIDERS.map(d => saved.find(s => s.id === d.id) ?? d);
+
   useEffect(() => {
     fetchPaymentSettings().then(s => {
       if (s) setSettings({ providers: mergeProviders(s.providers) });
       setLoading(false);
     });
   }, []);
-
-  const mergeProviders = (saved: PaymentProvider[]): PaymentProvider[] =>
-    DEFAULT_PROVIDERS.map(d => saved.find(s => s.id === d.id) ?? d);
 
   const toggleProvider = (id: PaymentProviderType, enabled: boolean) =>
     setSettings(p => ({ ...p, providers: p.providers.map(pr => pr.id === id ? { ...pr, enabled } : pr) }));
@@ -170,14 +170,20 @@ export function PaymentSection() {
                 ) : undefined
               }
               footer={
-                prov.id !== 'bank_transfer' ? (
-                  <button type="button"
-                    onClick={() => testGateway(prov.id as PaymentProviderType)}
-                    disabled={testing === prov.id}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-primary-50 text-primary-700 border border-primary-200 rounded-lg hover:bg-primary-100 transition-all disabled:opacity-50">
-                    <Zap size={11}/> {testing === prov.id ? 'Test…' : 'Tester connexion'}
+                <>
+                  {prov.id !== 'bank_transfer' && (
+                    <button type="button"
+                      onClick={() => testGateway(prov.id as PaymentProviderType)}
+                      disabled={testing === prov.id}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-primary-50 text-primary-700 border border-primary-200 rounded-lg hover:bg-primary-100 transition-all disabled:opacity-50">
+                      <Zap size={11}/> {testing === prov.id ? 'Test…' : 'Tester connexion'}
+                    </button>
+                  )}
+                  <button type="button" onClick={save} disabled={saving}
+                    className="flex items-center gap-1.5 px-4 py-1.5 bg-primary-600 text-white rounded-lg text-xs hover:bg-primary-700 transition-all disabled:opacity-50">
+                    <ShieldCheck size={11}/> {saving ? 'Sauvegarde…' : 'Enregistrer'}
                   </button>
-                ) : undefined
+                </>
               }
             >
               {/* Champs credentials */}

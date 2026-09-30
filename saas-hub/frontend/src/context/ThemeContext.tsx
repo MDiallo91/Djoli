@@ -35,14 +35,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     try {
       const s = localStorage.getItem(STORAGE_SITE);
       if (s) return JSON.parse(s).primaryColor || DEFAULT_PRIMARY;
-    } catch {}
+    } catch { /* localStorage indisponible ou JSON invalide */ }
     return DEFAULT_PRIMARY;
   });
   const [secondary, setSecondary] = useState(() => {
     try {
       const s = localStorage.getItem(STORAGE_SITE);
       if (s) return JSON.parse(s).secondaryColor || DEFAULT_SECONDARY;
-    } catch {}
+    } catch { /* localStorage indisponible ou JSON invalide */ }
     return DEFAULT_SECONDARY;
   });
   const [dark, setDark] = useState(() => localStorage.getItem(STORAGE_DARK) === '1');

@@ -5,6 +5,7 @@ import { Users, Download, CheckSquare, Square, Calendar, Filter } from 'lucide-r
 import { toast } from 'sonner';
 import * as api from '../../services/schoolApi';
 import SchoolCardDocument, { type CardStudent, type CardOptions, formatDate, initials } from './SchoolCardPDF';
+import { Card, Select, Input, Spinner, EmptyState } from '../../ui/design_system';
 
 // ─── Couleurs ───────────────────────────────────────────────────────────────
 const THEMES = [
@@ -298,7 +299,7 @@ export default function SchoolCardsPage({ user }: Props) {
   }, [filtered]);
 
   const toggleOne = (id: string) => {
-    setChecked(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setChecked(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
     setPreviewId(id);
   };
   const toggleAll = () => {
@@ -376,36 +377,31 @@ export default function SchoolCardsPage({ user }: Props) {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
         {/* ─── Gauche : Filtres + Liste ─── */}
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm space-y-4">
+          <Card padding="sm" className="space-y-4">
             {/* Année + Classe */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="flex items-center gap-1 text-xs font-semibold text-slate-500 mb-1.5">
                   <Calendar size={11} /> Année scolaire
                 </label>
-                <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)}
-                  className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white">
-                  {years.map((y: any) => <option key={y.id} value={String(y.id)}>{y.label || y.name}</option>)}
-                </select>
+                <Select
+                  value={selectedYear} onChange={e => setSelectedYear(e.target.value)}
+                  options={years.map((y: any) => ({ value: String(y.id), label: y.label || y.name }))}
+                />
               </div>
               <div>
                 <label className="flex items-center gap-1 text-xs font-semibold text-slate-500 mb-1.5">
                   <Filter size={11} /> Classe
                 </label>
-                <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)}
-                  className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white">
-                  <option value="all">Toutes les classes</option>
-                  {classes.map((c: any) => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
-                </select>
+                <Select
+                  value={selectedClass} onChange={e => setSelectedClass(e.target.value)}
+                  options={[{ value: 'all', label: 'Toutes les classes' }, ...classes.map((c: any) => ({ value: String(c.id), label: c.name }))]}
+                />
               </div>
             </div>
 
             {/* Date de validité */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1.5">Date de validité</label>
-              <input type="date" value={expiryDate} onChange={e => setExpiryDate(e.target.value)}
-                className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white" />
-            </div>
+            <Input label="Date de validité" type="date" value={expiryDate} onChange={e => setExpiryDate(e.target.value)} />
 
             {/* Modèles */}
             <div>
@@ -433,10 +429,10 @@ export default function SchoolCardsPage({ user }: Props) {
                 ))}
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* Liste élèves */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <Card padding="none" className="overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
               <button onClick={toggleAll} className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-primary-600 transition-colors">
                 {allChecked ? <CheckSquare size={14} className="text-primary-600" /> : <Square size={14} />}
@@ -449,10 +445,10 @@ export default function SchoolCardsPage({ user }: Props) {
 
             {loading ? (
               <div className="py-12 flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-primary-400 border-t-transparent rounded-full animate-spin" />
+                <Spinner size="lg" color="primary" />
               </div>
             ) : filtered.length === 0 ? (
-              <div className="py-12 text-center text-slate-400 text-sm">Aucun élève trouvé</div>
+              <EmptyState message="Aucun élève trouvé" />
             ) : (
               <div className="divide-y divide-slate-50 max-h-[380px] overflow-y-auto">
                 {filtered.map((st: any) => {
@@ -484,11 +480,11 @@ export default function SchoolCardsPage({ user }: Props) {
                 })}
               </div>
             )}
-          </div>
+          </Card>
         </div>
 
         {/* ─── Droite : Aperçu ─── */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex flex-col items-center gap-4">
+        <Card padding="md" className="flex flex-col items-center gap-4">
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider self-start">Aperçu en temps réel</p>
           {previewStudent ? (
             <>
@@ -512,7 +508,7 @@ export default function SchoolCardsPage({ user }: Props) {
               Le PDF contiendra <strong>{selectedStudents.length}</strong> carte{selectedStudents.length > 1 ? 's' : ''} avec QR code, 2 par ligne sur pages A4.
             </div>
           )}
-        </div>
+        </Card>
       </div>
     </div>
   );

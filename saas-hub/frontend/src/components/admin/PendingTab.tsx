@@ -105,10 +105,10 @@ export function PendingTab() {
                     Voir les détails
                   </Button>
                   <Button variant="success" size="sm" loading={busy === s.id + 'a'} disabled={busy.startsWith(s.id)} onClick={() => approve(s.id)}>
-                    ✓ Approuver
+                     Approuver
                   </Button>
                   <Button variant="danger" size="sm" loading={busy === s.id + 'r'} disabled={busy.startsWith(s.id)} onClick={() => reject(s.id)}>
-                    ✗ Rejeter
+                     Rejeter
                   </Button>
                 </div>
               </div>

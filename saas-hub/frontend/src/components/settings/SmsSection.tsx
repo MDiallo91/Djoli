@@ -75,19 +75,19 @@ export function SmsSection() {
   const [testing,  setTesting]  = useState(false);
   const [secrets,  setSecrets]  = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    fetchSmsSettings().then(s => {
-      if (s) setSettings({ providers: mergeProviders(s.providers), templates: mergeTemplates(s.templates) });
-      setLoading(false);
-    });
-  }, []);
-
   // Fusionne les providers sauvegardés avec les defaults (preserve new providers)
   const mergeProviders = (saved: SmsProvider[]): SmsProvider[] =>
     DEFAULT_PROVIDERS.map(d => saved.find(s => s.id === d.id) ?? d);
 
   const mergeTemplates = (saved: SmsEventTemplate[]): SmsEventTemplate[] =>
     DEFAULT_TEMPLATES.map(d => saved.find(s => s.event === d.event) ?? d);
+
+  useEffect(() => {
+    fetchSmsSettings().then(s => {
+      if (s) setSettings({ providers: mergeProviders(s.providers), templates: mergeTemplates(s.templates) });
+      setLoading(false);
+    });
+  }, []);
 
   // Exclusion mutuelle : activer un provider désactive les autres
   const toggleProvider = (id: SmsProviderType, enabled: boolean) =>
@@ -161,6 +161,12 @@ export function SmsSection() {
               initials={prov.name.slice(0, 2).toUpperCase()}
               enabled={prov.enabled}
               onToggle={v => toggleProvider(prov.id as SmsProviderType, v)}
+              footer={
+                <button type="button" onClick={save} disabled={saving}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-primary-600 text-white rounded-lg text-xs hover:bg-primary-700 transition-all disabled:opacity-50">
+                  <ShieldCheck size={12}/> {saving ? 'Sauvegarde…' : 'Enregistrer'}
+                </button>
+              }
             >
               {fields.map(f => (
                 <div key={f.key}>

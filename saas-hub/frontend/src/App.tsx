@@ -23,6 +23,7 @@ import { SchoolsTab }       from './components/admin/SchoolsTab';
 import { PendingTab }       from './components/admin/PendingTab';
 import { SubscriptionsTab } from './components/admin/SubscriptionsTab';
 import { SettingsPage }     from './page/admin/SettingsPage';
+import { ConfirmModalHost } from './ui/design_system';
 
 export { toast };
 
@@ -105,6 +106,7 @@ function App() {
           duration: 4000,
         }}
       />
+      <ConfirmModalHost />
       <Routes>
         <Route path="/"          element={<LandingRoute />} />
         <Route path="/login"     element={<AuthRoute />} />

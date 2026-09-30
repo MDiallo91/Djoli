@@ -1,6 +1,7 @@
 /**
  * components/settings/ApplicationSection.tsx
- * Config de l'application desktop : URL de téléchargement + dépôt GitHub.
+ * Config de l'application desktop : installateur stocké en base (AppInstallerCard)
+ * + lien externe de secours (URL directe / dépôt GitHub).
  * Extrait de : AdminDashboard.tsx SettingsTab section === 'application' (~lignes 1234-1270)
  * Données : fetchSetting / saveSetting → clé 'application'
  * Consommé par : page/admin/SettingsPage.tsx
@@ -12,6 +13,7 @@ import { toast } from 'sonner';
 import { fetchSetting, saveSetting } from '../../services/settingsApi';
 import { StatutToggle } from '../../ui/component/StatutToggle';
 import { Spinner }      from '../../ui/design_system/Spinner';
+import { AppInstallerCard } from './AppInstallerCard';
 
 const DEFAULT = { appVersion: '2.0', githubRepo: '', downloadUrl: '' };
 type AppData   = typeof DEFAULT;
@@ -54,16 +56,22 @@ export function ApplicationSection() {
 
   return (
     <div className="space-y-4">
+      <AppInstallerCard />
+
       <StatutToggle value={statut} onChange={setStatut} />
 
       <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+        <div>
+          <p className="text-sm font-semibold text-slate-900">Lien externe (secours)</p>
+          <p className="text-xs text-slate-500 mt-0.5">Utilisé uniquement si aucun installateur n'est publié ci-dessus.</p>
+        </div>
         {/* URL directe */}
         <div>
           <label className="block text-xs text-black mb-1.5">URL de téléchargement direct (.exe)</label>
           <input className={inputCls} value={data.downloadUrl}
             onChange={e => set('downloadUrl', e.target.value)}
             placeholder="https://exemple.com/djoli-setup.exe" />
-          <p className="text-xs text-black mt-1">Lien direct vers le fichier .exe (Google Drive, GitHub, serveur…). Prioritaire sur le dépôt GitHub ci-dessous.</p>
+          <p className="text-xs text-black mt-1">Lien direct vers le fichier .exe. Prioritaire sur le dépôt GitHub ci-dessous.</p>
         </div>
 
         {data.downloadUrl && (
